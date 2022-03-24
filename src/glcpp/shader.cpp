@@ -1,7 +1,5 @@
 #include "shader.h"
 
-glm::mat4 Shader::projection_matrix;
-
 Shader::Shader(const char *vertexPath, const char *fragmentPath, const char *geometryPath)
 {
     // 1. retrieve the vertex/fragment source code from filePath
@@ -93,7 +91,6 @@ Shader::~Shader()
 void Shader::use()
 {
     glUseProgram(ID);
-    setMat4("Projection", projection_matrix);
 }
 // utility uniform functions
 // ------------------------------------------------------------------------

@@ -24,13 +24,13 @@ namespace glcpp
         glBindTexture(GL_TEXTURE_CUBE_MAP, texture_id_);
 
         int width, height, nrChannels;
-        for (unsigned int i = 0; i < faces_.size(); i++)
+        for (uint32_t i = 0; i < faces_.size(); i++)
         {
-            unsigned char *data = stbi_load(faces_[i].c_str(), &width, &height, &nrChannels, 0);
+            unsigned char *data = stbi_load(faces_[i].c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
             if (data)
             {
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                             0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+                             0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
                 stbi_image_free(data);
             }
             else
@@ -68,10 +68,15 @@ namespace glcpp
     {
         glGenVertexArrays(1, &VAO_);
         glGenBuffers(1, &VBO_);
+
         glBindVertexArray(VAO_);
         glBindBuffer(GL_ARRAY_BUFFER, VBO_);
+
         glBufferData(GL_ARRAY_BUFFER, sizeof(vertices_), &vertices_, GL_STATIC_DRAW);
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+
+        glBindVertexArray(0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }

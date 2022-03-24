@@ -12,7 +12,6 @@
 class Shader
 {
 public:
-    static glm::mat4 projection_matrix;
     unsigned int ID;
     // constructor generates the shader on the fly
     // ------------------------------------------------------------------------

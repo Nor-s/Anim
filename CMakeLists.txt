@@ -13,6 +13,8 @@ message(STATUS " - ID       \t: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS " - Version  \t: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS " - Path     \t: ${CMAKE_CXX_COMPILER}")
 
+add_subdirectory(external/glad/)
+add_subdirectory(external/imgui/)
+add_subdirectory(external/assimp)
+
 add_subdirectory(src)
-# add_subdirectory(examples)
-#add_subdirectory(./test)

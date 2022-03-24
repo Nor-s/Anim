@@ -1,12 +1,14 @@
 set(GLCPP_SRC_FILES
-    main.cpp
     shader.h
     shader.cpp
+    mesh.h
+    model.h
+    camera.h
     )
-add_executable(glcpp  ${GLCPP_SRC_FILES})
+add_library(glcpp  ${GLCPP_SRC_FILES})
 
 # 컴파일 옵션 설정
-target_compile_options(glcpp PRIVATE -Wall -Werror -O3 -std=c++17)
+target_compile_options(glcpp PRIVATE -std=c++17)
 
 if(WIN32)
   target_include_directories(glcpp PUBLIC ./ ./../../external)
@@ -21,3 +23,14 @@ if(WIN32)
     -lopengl32
     -static)
 endif(WIN32)
+
+if(APPLE) 
+target_include_directories(glcpp PUBLIC ./ ../ ./../../external)
+target_link_libraries(glcpp PUBLIC
+  assimp
+  imgui
+  glm::glm
+  glad
+  -ldl
+  -lpthread)
+endif(APPLE)

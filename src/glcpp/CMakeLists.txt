@@ -8,6 +8,8 @@ set(GLCPP_SRC_FILES
     window.h
     cubemap.cpp
     cubemap.h
+    framebuffer.cpp
+    framebuffer.h
     )
 add_library(glcpp  ${GLCPP_SRC_FILES})
 

@@ -25,9 +25,9 @@ namespace glcpp
 
     private:
         std::vector<std::string> faces_;
-        unsigned int texture_id_;
-        unsigned int VAO_;
-        unsigned int VBO_;
+        uint32_t texture_id_;
+        uint32_t VAO_;
+        uint32_t VBO_;
         Shader shader_;
         float vertices_[18 * 6] = {
             // positions

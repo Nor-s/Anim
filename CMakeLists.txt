@@ -16,5 +16,6 @@ message(STATUS " - Path     \t: ${CMAKE_CXX_COMPILER}")
 add_subdirectory(external/glad/)
 add_subdirectory(external/imgui/)
 add_subdirectory(external/assimp)
+add_library(STB_IMAGE "external/stb/stb_image.cpp")
 
 add_subdirectory(src)

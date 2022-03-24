@@ -4,6 +4,10 @@ set(GLCPP_SRC_FILES
     mesh.h
     model.h
     camera.h
+    window.cpp
+    window.h
+    cubemap.cpp
+    cubemap.h
     )
 add_library(glcpp  ${GLCPP_SRC_FILES})
 
@@ -27,6 +31,7 @@ endif(WIN32)
 if(APPLE) 
 target_include_directories(glcpp PUBLIC ./ ../ ./../../external)
 target_link_libraries(glcpp PUBLIC
+  STB_IMAGE
   assimp
   imgui
   glm::glm

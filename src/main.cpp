@@ -1,14 +1,10 @@
-#define STB_IMAGE_IMPLEMENTATION
-#define STBI_MSC_SECURE_CRT
-#define STB_IMAGE_WRITE_IMPLEMENTATION
+
 //개발동기- 단점,
 // 요구사항- 분석 - 설계 /////- 구현 - 개발 - 유지보수
 //       설계툴(카카오오븐 등)
 // 서론 / 개발동기/ 문제점/ 관련연구(국내 , 국외)ㅏ/ 문제점, 장점, 단점
 // 본론/ 전체 시스템 구성도
 // 결론/ 기여도 (사회 기여도)
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -16,8 +12,14 @@
 #include <glcpp/shader.h>
 #include <glcpp/camera.h>
 #include <glcpp/model.h>
+#include <glcpp/window.h>
+#include <glcpp/cubemap.h>
+
+#include <imgui/imgui_impl_opengl3.h>
+#include <imgui/imgui_impl_glfw.h>
 
 #include <iostream>
+#include <vector>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
@@ -29,7 +31,7 @@ const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 800;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 5.0f));
 float lastX = SCR_WIDTH / 2.0f;
 float lastY = SCR_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -37,45 +39,10 @@ bool firstMouse = true;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
+glcpp::Window g_window(SCR_WIDTH, SCR_HEIGHT, "glcpp-test");
 
 int main()
 {
-    // glfw: initialize and configure
-    // ------------------------------
-    glfwInit();
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-#ifdef __APPLE__
-    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-
-    // glfw window creation
-    // --------------------
-    GLFWwindow *window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
-    if (window == NULL)
-    {
-        std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
-        return -1;
-    }
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
-
-    // tell GLFW to capture our mouse
-    //  glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
-    // glad: load all OpenGL function pointers
-    // ---------------------------------------
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
-
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
     stbi_set_flip_vertically_on_load(true);
 
@@ -83,20 +50,41 @@ int main()
     // -----------------------------
     glEnable(GL_DEPTH_TEST);
 
+    glfwSetFramebufferSizeCallback(g_window.get_handle(), framebuffer_size_callback);
+    // glfwSetCursorPosCallback(g_window.get_handle(), mouse_callback);
+    glfwSetScrollCallback(g_window.get_handle(), scroll_callback);
+
     // build and compile shaders
     // -------------------------
     Shader ourShader("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs");
 
     // load models
     // -----------
-    Model ourModel("./../../resources/models/nanosuit/nanosuit.obj"); // backpack/backpack.obj");
+    Model ourModel("./../../resources/models/backpack/backpack.obj"); // backpack/backpack.obj");
+    std::vector<std::string> skybox_faces{"./../../resources/textures/skybox/right.jpg",
+                                          "./../../resources/textures/skybox/left.jpg",
+                                          "./../../resources/textures/skybox/top.jpg",
+                                          "./../../resources/textures/skybox/bottom.jpg",
+                                          "./../../resources/textures/skybox/front.jpg",
+                                          "./../../resources/textures/skybox/back.jpg"};
+    glcpp::Cubemap skybox(skybox_faces,
+                          "./../../resources/shaders/skybox.vs",
+                          "./../../resources/shaders/skybox.fs");
 
     // draw in wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
+    // Setup Dear ImGui context
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO &io = ImGui::GetIO();
+    // Setup Platform/Renderer bindings
+    ImGui_ImplGlfw_InitForOpenGL(g_window.get_handle(), true);
+    ImGui_ImplOpenGL3_Init("#version 330");
+    //  Setup Dear ImGui style
+    ImGui::StyleColorsDark();
     // render loop
     // -----------
-    while (!glfwWindowShouldClose(window))
+    while (!g_window.should_close())
     {
         // per-frame time logic
         // --------------------
@@ -106,19 +94,25 @@ int main()
 
         // input
         // -----
-        processInput(window);
+        processInput(g_window.get_handle());
 
         // render
         // ------
-        glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        // feed inputs to dear imgui, start new frame
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
 
         // don't forget to enable shader before setting uniforms
-        ourShader.use();
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), g_window.get_aspect(), 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
+
+        ourShader.use();
+
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
@@ -129,12 +123,28 @@ int main()
         ourShader.setMat4("model", model);
         ourModel.Draw(ourShader);
 
+        skybox.draw(camera, projection);
+        // render your GUI
+        ImGui::Begin("animation");
+        ImGui::Button("RUN");
+        ImGui::Button("STOP");
+        ImGui::End();
+        // render your GUI
+        ImGui::Begin("palette");
+        ImGui::Button(std::to_string(g_window.get_aspect()).c_str());
+        ImGui::End();
+        // Render dear imgui into screen
+        ImGui::Render();
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(g_window.get_handle());
         glfwPollEvents();
     }
-
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
     // glfw: terminate, clearing all previously allocated GLFW resources.
     // ------------------------------------------------------------------
     glfwTerminate();
@@ -165,6 +175,7 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     // make sure the viewport matches the new window dimensions; note that width and
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
+    g_window.update_window();
 }
 
 // glfw: whenever the mouse moves, this callback is called

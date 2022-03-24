@@ -61,7 +61,7 @@ public:
     }
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
-    glm::mat4 GetViewMatrix()
+    glm::mat4 GetViewMatrix() const
     {
         return glm::lookAt(Position, Position + Front, Up);
     }
@@ -108,8 +108,8 @@ public:
         Zoom -= (float)yoffset;
         if (Zoom < 1.0f)
             Zoom = 1.0f;
-        if (Zoom > 45.0f)
-            Zoom = 45.0f;
+        if (Zoom > 89.0f)
+            Zoom = 89.0f;
     }
 
 private:

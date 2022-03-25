@@ -9,4 +9,4 @@ add_executable(render ./main.cpp)
 
 target_compile_options(render PRIVATE -std=c++17)
 target_include_directories(render PUBLIC ./)
-target_link_libraries(render glcpp)
+target_link_libraries(render glcpp nfd)

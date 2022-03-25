@@ -21,12 +21,14 @@
 
 #include <iostream>
 #include <vector>
+#include <nfd.h>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void draw_imgui();
+void draw_model(Model &ourModel, Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -51,8 +53,10 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 glcpp::Window g_window(SCR_WIDTH, SCR_HEIGHT, "glcpp-test");
 
+Model ourModel("./../../resources/models/cyborg/cyborg.obj");
 int main()
 {
+    NFD_Init();
     // tell stb_image.h to flip loaded texture's on the y-axis (before loading model).
     stbi_set_flip_vertically_on_load(true);
 
@@ -73,7 +77,6 @@ int main()
 
     // load models
     // -----------
-    Model ourModel("./../../resources/models/res/model.dae");
     std::vector<std::string> skybox_faces{"./../../resources/textures/skybox/right.jpg",
                                           "./../../resources/textures/skybox/left.jpg",
                                           "./../../resources/textures/skybox/top.jpg",
@@ -85,6 +88,8 @@ int main()
                           "./../../resources/shaders/skybox.fs");
 
     glcpp::Framebuffer framebuffer(SCR_WIDTH, SCR_HEIGHT, "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
+    glcpp::Framebuffer framebuffer1(SCR_WIDTH / 4, SCR_HEIGHT / 4, "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
+    glcpp::Framebuffer framebuffer2(SCR_WIDTH / 4, SCR_HEIGHT / 4, "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
 
     // draw in wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -96,7 +101,7 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(g_window.get_handle(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
     //  Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    ImGui::StyleColorsLight();
     // render loop
     // -----------
     while (!g_window.should_close())
@@ -117,6 +122,7 @@ int main()
 
         // capture model
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.get_fbo());
+        glViewport(0, 0, framebuffer.get_width(), framebuffer.get_height());
 
         // render
         // ------
@@ -128,24 +134,23 @@ int main()
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), g_window.get_aspect(), 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
+        draw_model(ourModel, ourShader, view, projection);
 
-        ourShader.use();
+        // capture model
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer1.get_fbo());
+        glViewport(0, 0, framebuffer1.get_width(), framebuffer1.get_height());
 
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
-
-        // render the loaded model
-        glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, model_translation);                         // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(model_size, model_size, model_size)); // it's a bit too big for our scene, so scale it down
-        model = glm::rotate(model, model_rotation_z, glm::vec3(0.0f, 0.0f, 1.0f));
-        model = glm::rotate(model, model_rotation_x, glm::vec3(1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, model_rotation_y, glm::vec3(0.0f, 1.0f, 1.0f));
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
+        // render
+        // ------
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        // don't forget to enable shader before setting uniforms
+        draw_model(ourModel, ourShader, view, projection);
 
         // end capture
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, g_window.get_width(), g_window.get_height());
         // glDisable(GL_DEPTH_TEST);
         glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -156,10 +161,30 @@ int main()
 
         framebuffer.draw();
 
+        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2.get_fbo());
+        glViewport(0, 0, framebuffer2.get_width(), framebuffer2.get_height());
+        // render
+        // ------
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_DEPTH_TEST);
+        framebuffer1.set_pixelate_factor(pixelate_factor);
+        framebuffer1.draw();
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // framebuffer.print_color_texture("file.png");
 
+        ImGui::Begin("GameWindow");
+        {
+            // Using a Child allow to fill all the space of the window.
+            // It also alows customization
+            ImGui::BeginChild("GameRender");
+            // Because I use the texture from OpenGL, I need to invert the V from the UV.
+            ImGui::Image((ImTextureID) static_cast<int>(framebuffer2.get_color_texture()), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::EndChild();
+            ImGui::Button("to png");
+        }
+        ImGui::End();
         draw_imgui();
-
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(g_window.get_handle());
@@ -248,20 +273,59 @@ void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 void draw_imgui()
 {
     // render your GUI
-    ImGui::Begin("animation");
-    ImGui::Button("RUN");
-    ImGui::Button("STOP");
-    ImGui::SliderFloat("model rotate z", &model_rotation_z, 0.0f, 6.5f);
-    ImGui::SliderFloat("model rotate x", &model_rotation_x, 0.0f, 6.5f);
-    ImGui::SliderFloat("model rotate y", &model_rotation_y, 0.0f, 6.5f);
-    ImGui::SliderFloat("model size", &model_size, 0.0f, 5.0f);
-    ImGui::SliderInt("size", &pixelate_factor, 32, SCR_WIDTH * 2);
-    ImGui::End();
-    // render your GUI
-    ImGui::Begin("palette");
-    ImGui::Button(std::to_string(g_window.get_aspect()).c_str());
+    ImGui::Begin("model");
+    {
+        // open Dialog Simple
+        if (ImGui::Button("OPEN"))
+        {
+            nfdchar_t *outPath;
+            nfdfilteritem_t filterItem[2] = {{"model file", "obj,dae"}, {"error format", "gltf, dae"}};
+            nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 2, NULL);
+
+            if (result == NFD_OKAY)
+            {
+                puts("Success!");
+                puts(outPath);
+                ourModel = Model(outPath);
+                NFD_FreePath(outPath);
+            }
+            else if (result == NFD_CANCEL)
+            {
+                puts("User pressed cancel.");
+            }
+            else
+            {
+                printf("Error: %s\n", NFD_GetError());
+            }
+
+            NFD_Quit();
+        }
+
+        ImGui::SliderFloat("model rotate z", &model_rotation_z, 0.0f, 6.5f);
+        ImGui::SliderFloat("model rotate x", &model_rotation_x, 0.0f, 6.5f);
+        ImGui::SliderFloat("model rotate y", &model_rotation_y, 0.0f, 6.5f);
+        ImGui::SliderFloat("model size", &model_size, 0.0f, 5.0f);
+        ImGui::SliderInt("size", &pixelate_factor, 32, SCR_WIDTH * 2);
+    }
     ImGui::End();
     // Render dear imgui into screen
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+void draw_model(Model &ourModel, Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection)
+{
+    ourShader.use();
+
+    ourShader.setMat4("projection", projection);
+    ourShader.setMat4("view", view);
+
+    // render the loaded model
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, model_translation);                         // translate it down so it's at the center of the scene
+    model = glm::scale(model, glm::vec3(model_size, model_size, model_size)); // it's a bit too big for our scene, so scale it down
+    model = glm::rotate(model, model_rotation_z, glm::vec3(0.0f, 0.0f, 1.0f));
+    model = glm::rotate(model, model_rotation_x, glm::vec3(1.0f, 0.0f, 0.0f));
+    model = glm::rotate(model, model_rotation_y, glm::vec3(0.0f, 1.0f, 1.0f));
+    ourShader.setMat4("model", model);
+    ourModel.Draw(ourShader);
 }

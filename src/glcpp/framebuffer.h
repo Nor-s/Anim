@@ -42,7 +42,18 @@ namespace glcpp
         {
             return FBO_;
         }
-
+        uint32_t get_color_texture() const
+        {
+            return color_texture_id_;
+        }
+        uint32_t get_width() const
+        {
+            return width_;
+        }
+        uint32_t get_height() const
+        {
+            return height_;
+        }
         Shader &get_shader()
         {
             return shader_;

@@ -5,6 +5,7 @@ in vec2 TexCoords;
 
 uniform sampler2D screenTexture;
 uniform int pixelateFactor;
+uniform vec2 iResolution;
 
 void main()
 {

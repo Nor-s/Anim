@@ -22,13 +22,14 @@
 #include <iostream>
 #include <vector>
 #include <nfd.h>
+#include <memory>
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void draw_imgui();
-void draw_model(Model &ourModel, Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection);
+void draw_model(glcpp::Model &ourModel, Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -53,7 +54,9 @@ float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 glcpp::Window g_window(SCR_WIDTH, SCR_HEIGHT, "glcpp-test");
 
-Model ourModel("./../../resources/models/cyborg/cyborg.obj");
+glcpp::Model ourModel("./../../resources/models/nanosuit/nanosuit.obj");
+std::unique_ptr<glcpp::Framebuffer> model_framebuffer;
+std::unique_ptr<glcpp::Framebuffer> skybox_framebuffer;
 int main()
 {
     NFD_Init();
@@ -87,9 +90,12 @@ int main()
                           "./../../resources/shaders/skybox.vs",
                           "./../../resources/shaders/skybox.fs");
 
-    glcpp::Framebuffer framebuffer(SCR_WIDTH, SCR_HEIGHT, "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
-    glcpp::Framebuffer framebuffer1(SCR_WIDTH / 4, SCR_HEIGHT / 4, "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
-    glcpp::Framebuffer framebuffer2(SCR_WIDTH / 4, SCR_HEIGHT / 4, "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
+    g_window.set_factor();
+
+    model_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
+    skybox_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
+    glcpp::Framebuffer framebuffer1(128, 128, "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
+    glcpp::Framebuffer framebuffer2(framebuffer1.get_width(), framebuffer1.get_height(), "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
 
     // draw in wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -101,7 +107,7 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(g_window.get_handle(), true);
     ImGui_ImplOpenGL3_Init("#version 330");
     //  Setup Dear ImGui style
-    ImGui::StyleColorsLight();
+    ImGui::StyleColorsDark();
     // render loop
     // -----------
     while (!g_window.should_close())
@@ -120,58 +126,67 @@ int main()
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // capture model
-        glBindFramebuffer(GL_FRAMEBUFFER, framebuffer.get_fbo());
-        glViewport(0, 0, framebuffer.get_width(), framebuffer.get_height());
-
-        // render
-        // ------
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        // don't forget to enable shader before setting uniforms
-
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), g_window.get_aspect(), 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        draw_model(ourModel, ourShader, view, projection);
+        glBindFramebuffer(GL_FRAMEBUFFER, skybox_framebuffer->get_fbo());
+        {
+            // skybox capture
+            glViewport(0, 0, skybox_framebuffer->get_width(), skybox_framebuffer->get_height());
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            skybox.draw(camera, projection);
+        }
 
-        // capture model
+        glBindFramebuffer(GL_FRAMEBUFFER, model_framebuffer->get_fbo());
+        {
+            // model capture
+            glViewport(0, 0, model_framebuffer->get_width(), model_framebuffer->get_height());
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_DEPTH_TEST);
+            draw_model(ourModel, ourShader, view, projection);
+        }
+
+        // model capture for preview
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer1.get_fbo());
-        glViewport(0, 0, framebuffer1.get_width(), framebuffer1.get_height());
+        {
+            glViewport(0, 0, framebuffer1.get_width(), framebuffer1.get_height());
 
-        // render
-        // ------
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        // don't forget to enable shader before setting uniforms
-        draw_model(ourModel, ourShader, view, projection);
+            // render
+            // ------
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_DEPTH_TEST);
+            // don't forget to enable shader before setting uniforms
+            draw_model(ourModel, ourShader, view, projection);
+        }
 
-        // end capture
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glViewport(0, 0, g_window.get_width(), g_window.get_height());
-        // glDisable(GL_DEPTH_TEST);
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        {
+            // draw model with pixelate shader
+            glViewport(0, 0, g_window.get_width(), g_window.get_height());
+            glDisable(GL_DEPTH_TEST);
+            glClearColor(0.05f, 0.05f, 0.05f, 1.0f);
+            glClear(GL_COLOR_BUFFER_BIT);
 
-        skybox.draw(camera, projection);
+            skybox_framebuffer->draw();
+            model_framebuffer->set_pixelate_factor(pixelate_factor);
 
-        framebuffer.set_pixelate_factor(pixelate_factor);
-
-        framebuffer.draw();
+            model_framebuffer->draw();
+        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer2.get_fbo());
-        glViewport(0, 0, framebuffer2.get_width(), framebuffer2.get_height());
-        // render
-        // ------
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glEnable(GL_DEPTH_TEST);
-        framebuffer1.set_pixelate_factor(pixelate_factor);
-        framebuffer1.draw();
+        {
+            // framebuffer capture for pixelated preview
+            glViewport(0, 0, framebuffer2.get_width(), framebuffer2.get_height());
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glEnable(GL_DEPTH_TEST);
+            framebuffer1.set_pixelate_factor(pixelate_factor);
+            framebuffer1.draw();
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        // framebuffer.print_color_texture("file.png");
 
         ImGui::Begin("GameWindow");
         {
@@ -179,9 +194,12 @@ int main()
             // It also alows customization
             ImGui::BeginChild("GameRender");
             // Because I use the texture from OpenGL, I need to invert the V from the UV.
-            ImGui::Image((ImTextureID) static_cast<int>(framebuffer2.get_color_texture()), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
+            ImGui::Image(reinterpret_cast<ImTextureID>(framebuffer2.get_color_texture()), ImGui::GetWindowSize(), ImVec2(0, 1), ImVec2(1, 0));
             ImGui::EndChild();
-            ImGui::Button("to png");
+            if (ImGui::Button("to png"))
+            {
+                framebuffer2.print_color_texture("file.png", 0, g_window.get_width(), g_window.get_height());
+            }
         }
         ImGui::End();
         draw_imgui();
@@ -234,6 +252,11 @@ void framebuffer_size_callback(GLFWwindow *window, int width, int height)
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
     g_window.update_window();
+
+    model_framebuffer.reset();
+    skybox_framebuffer.reset();
+    model_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
+    skybox_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), "./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
 }
 
 // glfw: whenever the mouse moves, this callback is called
@@ -286,7 +309,7 @@ void draw_imgui()
             {
                 puts("Success!");
                 puts(outPath);
-                ourModel = Model(outPath);
+                ourModel = glcpp::Model(outPath);
                 NFD_FreePath(outPath);
             }
             else if (result == NFD_CANCEL)
@@ -312,7 +335,7 @@ void draw_imgui()
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-void draw_model(Model &ourModel, Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection)
+void draw_model(glcpp::Model &ourModel, Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection)
 {
     ourShader.use();
 
@@ -327,5 +350,5 @@ void draw_model(Model &ourModel, Shader &ourShader, const glm::mat4 &view, const
     model = glm::rotate(model, model_rotation_x, glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, model_rotation_y, glm::vec3(0.0f, 1.0f, 1.0f));
     ourShader.setMat4("model", model);
-    ourModel.Draw(ourShader);
+    ourModel.draw(ourShader);
 }

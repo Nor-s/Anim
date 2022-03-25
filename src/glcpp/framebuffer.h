@@ -10,7 +10,7 @@
 
 namespace glcpp
 {
-
+    // TODO: 셰이더와 분리.
     class Framebuffer
     {
     public:
@@ -27,6 +27,7 @@ namespace glcpp
             shader_.use();
             shader_.setInt("screenTexture", 0);
             shader_.setInt("pixelateFactor", pixelate_factor_);
+            shader_.setVec2("iResolution", glm::vec2(width, height));
         }
 
         virtual ~Framebuffer()
@@ -67,8 +68,20 @@ namespace glcpp
             glBindTexture(GL_TEXTURE_2D, color_texture_id_);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
-        void print_color_texture(std::string const &file_name)
+        void print_color_texture(std::string const &file_name, int current_framebuffer, int current_viewport_width, int current_viewport_height)
         {
+            stbi_flip_vertically_on_write(true);
+
+            glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
+            glViewport(0, 0, width_, height_);
+            GLubyte *pixels = (GLubyte *)malloc(width_ * height_ * sizeof(GLubyte) * 4);
+            glReadPixels(0, 0, width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+
+            // Bind your main FBO again
+            glBindFramebuffer(GL_FRAMEBUFFER, current_framebuffer);
+            // set the viewport as the FBO won't be the same dimension as the screen
+            glViewport(0, 0, current_viewport_width, current_viewport_height);
+            stbi_write_png(file_name.c_str(), width_, height_, 4, pixels, 0);
         }
 
     private:

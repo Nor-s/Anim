@@ -135,11 +135,11 @@ namespace glcpp
     }
     uint32_t Window::get_width()
     {
-        return width_;
+        return width_ * factor_;
     }
     uint32_t Window::get_height()
     {
-        return height_;
+        return height_ * factor_;
     }
     std::string Window::get_title()
     {
@@ -174,5 +174,6 @@ namespace glcpp
         glfwGetWindowSize(handle_, &width, &height);
         width_ = width;
         height_ = height;
+        set_factor();
     }
 }

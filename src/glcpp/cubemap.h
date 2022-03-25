@@ -13,14 +13,17 @@
 
 namespace glcpp
 {
+    // TODO: shader 와 분리
     class Cubemap
     {
     public:
         Cubemap() = delete;
         Cubemap(std::vector<std::string> faces, std::string const &vert_path, std::string const &frag_path);
         virtual ~Cubemap();
-        void load_cubemap();
         void draw(const Camera &camera, glm::mat4 &projection);
+
+    private:
+        void load_cubemap();
         void set_VAO();
 
     private:

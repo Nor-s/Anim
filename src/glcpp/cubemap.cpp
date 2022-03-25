@@ -1,5 +1,6 @@
 #include "cubemap.h"
 #include <stb/stb_image.h>
+#include <stb/stb_image_write.h>
 
 namespace glcpp
 {
@@ -27,17 +28,17 @@ namespace glcpp
         for (uint32_t i = 0; i < faces_.size(); i++)
         {
             unsigned char *data = stbi_load(faces_[i].c_str(), &width, &height, &nrChannels, STBI_rgb_alpha);
+
             if (data)
             {
                 glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                              0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-                stbi_image_free(data);
             }
             else
             {
                 std::cout << "Cubemap tex failed to load at path: " << faces_[i] << std::endl;
-                stbi_image_free(data);
             }
+            stbi_image_free(data);
         }
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

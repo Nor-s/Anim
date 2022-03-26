@@ -13,9 +13,13 @@ message(STATUS " - ID       \t: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS " - Version  \t: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS " - Path     \t: ${CMAKE_CXX_COMPILER}")
 
+set(BUILD_SHARED_LIBS OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
 add_subdirectory(external/glad/)
 add_subdirectory(external/imgui/)
 add_subdirectory(external/assimp)
+
 add_subdirectory(external/nfd)
 add_library(STB_IMAGE "external/stb/stb_image.cpp")
 

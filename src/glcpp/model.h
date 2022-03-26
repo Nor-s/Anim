@@ -99,7 +99,7 @@ namespace glcpp
         void load_model(const string &path)
         {
             Assimp::Importer import;
-            const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
+            const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 
             if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
             {
@@ -112,6 +112,7 @@ namespace glcpp
         }
         void process_node(aiNode *node, const aiScene *scene)
         {
+            std::cout << "---" << node->mName.C_Str() << "\n";
             // process all the node's meshes (if any)
             for (unsigned int i = 0; i < node->mNumMeshes; i++)
             {
@@ -193,6 +194,7 @@ namespace glcpp
             std::vector<Texture> heightMaps = load_material_textures(material, aiTextureType_AMBIENT, "texture_height");
             textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
             // ExtractBoneWeightForVertices(vertices, mesh, scene);
+            cout << diffuseMaps.size() << "\n";
 
             return Mesh(vertices, indices, textures);
         }
@@ -331,6 +333,7 @@ namespace glcpp
         unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
         if (data)
         {
+            std::cout << filename << "\n";
             GLenum format;
             if (nrComponents == 1)
                 format = GL_RED;

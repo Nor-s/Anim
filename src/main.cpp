@@ -57,6 +57,30 @@ glcpp::Window g_window(SCR_WIDTH, SCR_HEIGHT, "glcpp-test");
 glcpp::Model ourModel("./../../resources/models/nanosuit/nanosuit.obj");
 std::unique_ptr<glcpp::Framebuffer> model_framebuffer;
 std::unique_ptr<glcpp::Framebuffer> skybox_framebuffer;
+
+// skybox
+std::vector<std::string> skybox_faces[3]{
+    {"./../../resources/textures/skybox/right.jpg",
+     "./../../resources/textures/skybox/left.jpg",
+     "./../../resources/textures/skybox/top.jpg",
+     "./../../resources/textures/skybox/bottom.jpg",
+     "./../../resources/textures/skybox/front.jpg",
+     "./../../resources/textures/skybox/back.jpg"},
+    {"./../../resources/textures/cube/Bridge2/px.jpg",
+     "./../../resources/textures/cube/Bridge2/nx.jpg",
+     "./../../resources/textures/cube/Bridge2/py.jpg",
+     "./../../resources/textures/cube/Bridge2/ny.jpg",
+     "./../../resources/textures/cube/Bridge2/pz.jpg",
+     "./../../resources/textures/cube/Bridge2/nz.jpg"},
+    {"./../../resources/textures/cube/pisa/px.png",
+     "./../../resources/textures/cube/pisa/nx.png",
+     "./../../resources/textures/cube/pisa/py.png",
+     "./../../resources/textures/cube/pisa/ny.png",
+     "./../../resources/textures/cube/pisa/pz.png",
+     "./../../resources/textures/cube/pisa/nz.png"}
+
+};
+
 int main()
 {
     NFD_Init();
@@ -80,13 +104,7 @@ int main()
 
     // load models
     // -----------
-    std::vector<std::string> skybox_faces{"./../../resources/textures/skybox/right.jpg",
-                                          "./../../resources/textures/skybox/left.jpg",
-                                          "./../../resources/textures/skybox/top.jpg",
-                                          "./../../resources/textures/skybox/bottom.jpg",
-                                          "./../../resources/textures/skybox/front.jpg",
-                                          "./../../resources/textures/skybox/back.jpg"};
-    glcpp::Cubemap skybox(skybox_faces,
+    glcpp::Cubemap skybox(skybox_faces[1],
                           "./../../resources/shaders/skybox.vs",
                           "./../../resources/shaders/skybox.fs");
 
@@ -133,6 +151,7 @@ int main()
         {
             // skybox capture
             glViewport(0, 0, skybox_framebuffer->get_width(), skybox_framebuffer->get_height());
+            glEnable(GL_DEPTH_TEST);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             skybox.draw(camera, projection);
@@ -142,9 +161,9 @@ int main()
         {
             // model capture
             glViewport(0, 0, model_framebuffer->get_width(), model_framebuffer->get_height());
+            glEnable(GL_DEPTH_TEST);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glEnable(GL_DEPTH_TEST);
             draw_model(ourModel, ourShader, view, projection);
         }
 
@@ -152,12 +171,11 @@ int main()
         glBindFramebuffer(GL_FRAMEBUFFER, framebuffer1.get_fbo());
         {
             glViewport(0, 0, framebuffer1.get_width(), framebuffer1.get_height());
-
+            glEnable(GL_DEPTH_TEST);
             // render
             // ------
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glEnable(GL_DEPTH_TEST);
             // don't forget to enable shader before setting uniforms
             draw_model(ourModel, ourShader, view, projection);
         }
@@ -172,7 +190,6 @@ int main()
 
             skybox_framebuffer->draw();
             model_framebuffer->set_pixelate_factor(pixelate_factor);
-
             model_framebuffer->draw();
         }
 
@@ -180,9 +197,9 @@ int main()
         {
             // framebuffer capture for pixelated preview
             glViewport(0, 0, framebuffer2.get_width(), framebuffer2.get_height());
+            glEnable(GL_DEPTH_TEST);
             glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            glEnable(GL_DEPTH_TEST);
             framebuffer1.set_pixelate_factor(pixelate_factor);
             framebuffer1.draw();
         }

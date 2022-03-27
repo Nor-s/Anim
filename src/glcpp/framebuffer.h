@@ -14,8 +14,8 @@ namespace glcpp
     class Framebuffer
     {
     public:
-        Framebuffer(uint32_t width, uint32_t height, std::string const &vert_path, std::string const &frag_path)
-            : width_(width), height_(height), pixelate_factor_(100), shader_(vert_path.c_str(), frag_path.c_str())
+        Framebuffer(uint32_t width, uint32_t height, GLenum format = GL_RGB)
+            : width_(width), height_(height), format_(format)
         {
             create_framebuffer();
             attach_color_attachment_texture();
@@ -24,10 +24,6 @@ namespace glcpp
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
                 std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
             glBindFramebuffer(GL_FRAMEBUFFER, 0);
-            shader_.use();
-            shader_.setInt("screenTexture", 0);
-            shader_.setInt("pixelateFactor", pixelate_factor_);
-            shader_.setVec2("iResolution", glm::vec2(width, height));
         }
 
         virtual ~Framebuffer()
@@ -55,33 +51,29 @@ namespace glcpp
         {
             return height_;
         }
-        Shader &get_shader()
-        {
-            return shader_;
-        }
 
-        void draw()
+        void draw(Shader &shader)
         {
-            shader_.use();
-            shader_.setInt("pixelateFactor", pixelate_factor_);
+            shader.use();
+            shader.setInt("pixelateFactor", pixelate_factor_);
+            shader.setVec2("iResolution", glm::vec2(width_, height_));
             glBindVertexArray(quad_VAO_);
             glBindTexture(GL_TEXTURE_2D, color_texture_id_);
             glDrawArrays(GL_TRIANGLES, 0, 6);
         }
-        void print_color_texture(std::string const &file_name, int current_framebuffer, int current_viewport_width, int current_viewport_height)
+        void print_color_texture(std::string const &file_name)
         {
             stbi_flip_vertically_on_write(true);
 
             glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
             glViewport(0, 0, width_, height_);
             GLubyte *pixels = (GLubyte *)malloc(width_ * height_ * sizeof(GLubyte) * 4);
-            glReadPixels(0, 0, width_, height_, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
+            glReadPixels(0, 0, width_, height_, format_, GL_UNSIGNED_BYTE, pixels);
 
-            // Bind your main FBO again
-            glBindFramebuffer(GL_FRAMEBUFFER, current_framebuffer);
-            // set the viewport as the FBO won't be the same dimension as the screen
-            glViewport(0, 0, current_viewport_width, current_viewport_height);
-            stbi_write_png(file_name.c_str(), width_, height_, 4, pixels, 0);
+            if (format_ == GL_RGBA)
+                stbi_write_png(file_name.c_str(), width_, height_, 4, pixels, 0);
+            else if (format_ == GL_RGB)
+                stbi_write_png(file_name.c_str(), width_, height_, 3, pixels, 0);
         }
 
     private:
@@ -96,7 +88,7 @@ namespace glcpp
             glGenTextures(1, &color_texture_id_);
             glBindTexture(GL_TEXTURE_2D, color_texture_id_);
 
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+            glTexImage2D(GL_TEXTURE_2D, 0, format_, width_, height_, 0, format_, GL_UNSIGNED_BYTE, nullptr);
 
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -140,7 +132,7 @@ namespace glcpp
         uint32_t width_;
         uint32_t height_;
         uint32_t pixelate_factor_;
-        Shader shader_;
+        GLenum format_;
         float quad_vertices_[24] = {
             // positions   // texCoords
             -1.0f, 1.0f, 0.0f, 1.0f,

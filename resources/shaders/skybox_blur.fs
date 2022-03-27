@@ -37,7 +37,7 @@ void main()
     
     // Output to screen
     Color /= Quality * Directions - 15.0;
-    FragColor =  Color;
+    FragColor =   Color;
 } 
 
 

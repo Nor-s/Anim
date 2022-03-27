@@ -8,13 +8,12 @@ set(GLCPP_SRC_FILES
     window.h
     cubemap.cpp
     cubemap.h
-    framebuffer.cpp
     framebuffer.h
     )
 add_library(glcpp  ${GLCPP_SRC_FILES})
 
 # 컴파일 옵션 설정
-target_compile_options(glcpp PRIVATE -std=c++17)
+target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
 if(WIN32)
   target_include_directories(glcpp PUBLIC ./ ../ ./../../external)
@@ -28,7 +27,7 @@ if(WIN32)
     -lpthread
     -lgdi32
     -lopengl32
-    -static)
+    )
 endif(WIN32)
 
 if(APPLE) 

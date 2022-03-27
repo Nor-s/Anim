@@ -20,7 +20,7 @@ namespace glcpp
         Cubemap() = delete;
         Cubemap(std::vector<std::string> faces, std::string const &vert_path, std::string const &frag_path);
         virtual ~Cubemap();
-        void draw(const Camera &camera, glm::mat4 &projection);
+        void draw(const glm::mat4 &view, const glm::mat4 &projection);
 
     private:
         void load_cubemap();

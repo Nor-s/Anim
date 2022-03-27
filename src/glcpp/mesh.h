@@ -40,11 +40,6 @@ namespace glcpp
     {
 
     public:
-        // mesh data
-        std::vector<Vertex> vertices_;
-        std::vector<unsigned int> indices_;
-        std::vector<Texture> textures_;
-
         Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
             : vertices_(vertices), indices_(indices), textures_(textures)
         {
@@ -87,7 +82,10 @@ namespace glcpp
             glActiveTexture(GL_TEXTURE0);
         }
 
-    private:
+    private: // mesh data
+        std::vector<Vertex> vertices_;
+        std::vector<unsigned int> indices_;
+        std::vector<Texture> textures_;
         //  render data
         unsigned int VAO_, VBO_, EBO_;
 
@@ -116,7 +114,7 @@ namespace glcpp
             // vertex texture coords
             glEnableVertexAttribArray(2);
             glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, tex_coords));
-            /*
+
             // vertex tangent
             glEnableVertexAttribArray(3);
             glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, tangent));
@@ -129,7 +127,6 @@ namespace glcpp
             // weights
             glEnableVertexAttribArray(6);
             glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void *)offsetof(Vertex, weights));
-*/
             glBindVertexArray(0);
         }
     };

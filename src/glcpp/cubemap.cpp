@@ -47,14 +47,13 @@ namespace glcpp
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
         stbi_set_flip_vertically_on_load(true);
     }
-    void Cubemap::draw(const Camera &camera, glm::mat4 &projection)
+    void Cubemap::draw(const glm::mat4 &view, const glm::mat4 &projection)
     {
         // draw skybox as last
         glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
         shader_.use();
         // remove translation from the view matrix
-        glm::mat4 view = glm::mat4(glm::mat3(camera.GetViewMatrix()));
-        shader_.setMat4("view", view);
+        shader_.setMat4("view", glm::mat4(glm::mat3(view)));
         shader_.setMat4("projection", projection);
         // skybox cube
         glBindVertexArray(VAO_);

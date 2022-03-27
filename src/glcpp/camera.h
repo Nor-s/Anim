@@ -20,7 +20,7 @@ enum Camera_Movement
 const float YAW = -90.0f;
 const float PITCH = 0.0f;
 const float SPEED = 6.0f;
-const float SENSITIVITY = 0.1f;
+const float SENSITIVITY = 0.05f;
 const float ZOOM = 45.0f;
 
 // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
@@ -40,6 +40,8 @@ public:
     float MovementSpeed;
     float MouseSensitivity;
     float Zoom;
+    float xAngle;
+    float yAngle;
 
     // constructor with vectors
     Camera(glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f), float yaw = YAW, float pitch = PITCH) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
@@ -63,7 +65,10 @@ public:
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
     glm::mat4 GetViewMatrix() const
     {
-        return glm::lookAt(Position, Position + Front, Up);
+
+        glm::mat4 mat = glm::lookAt(Position, Position + Front, Up);
+        mat = glm::rotate(mat, xAngle, glm::vec3(1.0f, 0.0f, 0.0f));
+        return glm::rotate(mat, yAngle, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
     // processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
@@ -80,36 +85,26 @@ public:
             Position += Right * velocity;
     }
 
-    // processes input received from a mouse input system. Expects the offset value in both the x and y direction.
-    void ProcessMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true)
+    //http://www.gisdeveloper.co.kr/?p=206
+    // TODO: arcball (trackball)
+    void ProcessMouseMovement(float x_angle, float y_angle)
     {
-        xoffset *= MouseSensitivity;
-        yoffset *= MouseSensitivity;
-
-        Yaw += xoffset;
-        Pitch += yoffset;
-
-        // make sure that when pitch is out of bounds, screen doesn't get flipped
-        if (constrainPitch)
-        {
-            if (Pitch > 89.0f)
-                Pitch = 89.0f;
-            if (Pitch < -89.0f)
-                Pitch = -89.0f;
-        }
-
-        // update Front, Right and Up Vectors using the updated Euler angles
-        updateCameraVectors();
+        xAngle += x_angle * SENSITIVITY;
+        yAngle += y_angle * SENSITIVITY;
     }
 
     // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
     void ProcessMouseScroll(float yoffset)
     {
-        Zoom -= (float)yoffset;
-        if (Zoom < 1.0f)
-            Zoom = 1.0f;
-        if (Zoom > 89.0f)
-            Zoom = 89.0f;
+
+        if (yoffset > 0)
+            Position += Front * MovementSpeed;
+        if (yoffset < 0)
+            Position -= Front * MovementSpeed;
+    }
+    void ProcessMouseScrollPress(float yoffset, float xoffset)
+    {
+        // TODO: MOVE To CAMERA
     }
 
 private:

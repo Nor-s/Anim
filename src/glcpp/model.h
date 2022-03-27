@@ -20,11 +20,11 @@
 #include <iostream>
 #include <map>
 #include <vector>
-using namespace std;
+#include <filesystem>
 
 namespace glcpp
 {
-    unsigned int TextureFromFile(const char *path, const string &directory, bool gamma = false);
+    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, bool gamma = false);
     inline glm::vec3 get_glm_vec(const aiVector3D &vec)
     {
         return glm::vec3(vec.x, vec.y, vec.z);
@@ -51,10 +51,6 @@ namespace glcpp
         to[3][3] = from.d4;
         return to;
     }
-    inline glm::quat GetGLMQuat(const aiQuaternion &pOrientation)
-    {
-        return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
-    }
 
     struct Bone
     {
@@ -69,6 +65,7 @@ namespace glcpp
     public:
         Model(const char *path, bool gamma = false) : gamma_correction(gamma)
         {
+
             load_model(path);
         }
         void draw(Shader &shader)
@@ -89,30 +86,31 @@ namespace glcpp
 
     private:
         // model data
-        vector<Mesh> meshes_;
-        string directory_;
-        vector<Texture> textures_loaded_;
+        std::vector<Mesh> meshes_;
+        std::filesystem::path directory_;
+        std::vector<Texture> textures_loaded_;
         bool gamma_correction;
         std::map<std::string, Bone> bone_map_;
         int bone_count_;
 
-        void load_model(const string &path)
+        void load_model(const std::string &path)
         {
             Assimp::Importer import;
             const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_JoinIdenticalVertices | aiProcess_GenSmoothNormals | aiProcess_CalcTangentSpace);
 
             if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
             {
-                cout << "ERROR::ASSIMP::" << import.GetErrorString() << endl;
+                std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
                 return;
             }
-            directory_ = path.substr(0, path.find_last_of('/'));
+            std::filesystem::path tmp(path);
+            directory_ = tmp;
+            std::cout << "directory---------------" << directory_.string() << " ===== \n";
 
             process_node(scene->mRootNode, scene);
         }
         void process_node(aiNode *node, const aiScene *scene)
         {
-            std::cout << "---" << node->mName.C_Str() << "\n";
             // process all the node's meshes (if any)
             for (unsigned int i = 0; i < node->mNumMeshes; i++)
             {
@@ -134,16 +132,15 @@ namespace glcpp
          */
         Mesh process_mesh(aiMesh *mesh, const aiScene *scene)
         {
-            vector<Vertex> vertices;
-            vector<unsigned int> indices;
-            vector<Texture> textures;
+            std::vector<Vertex> vertices;
+            std::vector<unsigned int> indices;
+            std::vector<Texture> textures;
 
             // process vertex
             for (unsigned int i = 0; i < mesh->mNumVertices; i++)
             {
                 Vertex vertex;
                 set_bone_vertex_to_default(vertex);
-                glm::vec3 vector;
                 vertex.position = get_glm_vec(mesh->mVertices[i]);
                 vertex.normal = get_glm_vec(mesh->mNormals[i]);
                 // texcoord
@@ -182,10 +179,10 @@ namespace glcpp
             // process material
             aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-            vector<Texture> diffuseMaps = load_material_textures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+            std::vector<Texture> diffuseMaps = load_material_textures(material, aiTextureType_DIFFUSE, "texture_diffuse");
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-            vector<Texture> specularMaps = load_material_textures(material, aiTextureType_SPECULAR, "texture_specular");
+            std::vector<Texture> specularMaps = load_material_textures(material, aiTextureType_SPECULAR, "texture_specular");
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
             std::vector<Texture> normalMaps = load_material_textures(material, aiTextureType_HEIGHT, "texture_normal");
@@ -194,14 +191,13 @@ namespace glcpp
             std::vector<Texture> heightMaps = load_material_textures(material, aiTextureType_AMBIENT, "texture_height");
             textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
             // ExtractBoneWeightForVertices(vertices, mesh, scene);
-            cout << diffuseMaps.size() << "\n";
 
             return Mesh(vertices, indices, textures);
         }
-        vector<Texture> load_material_textures(aiMaterial *mat, aiTextureType type,
-                                               string typeName)
+        std::vector<Texture> load_material_textures(aiMaterial *mat, aiTextureType type,
+                                                    std::string typeName)
         {
-            vector<Texture> textures;
+            std::vector<Texture> textures;
             for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
             {
                 aiString str;
@@ -289,9 +285,9 @@ namespace glcpp
                 }
                 // checks all material textures of a given type and loads the textures if they're not loaded yet.
                 // the required info is returned as a Texture struct.
-                vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
+               std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, string typeName)
                 {
-                    vector<Texture> textures;
+                   std::vector<Texture> textures;
                     for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
                     {
                         aiString str;
@@ -321,11 +317,12 @@ namespace glcpp
                 }
                 */
     };
-    unsigned int TextureFromFile(const char *path, const string &directory, bool gamma)
+    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, bool gamma)
     {
-        string filename = string(path);
-        filename = directory + '/' + filename;
-
+        std::string filename = std::string(path);
+        std::filesystem::path tmp = directory;
+        filename = tmp.replace_filename(filename).string();
+        std::cout << "filename: " << filename << std::endl;
         unsigned int textureID;
         glGenTextures(1, &textureID);
 
@@ -333,7 +330,6 @@ namespace glcpp
         unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
         if (data)
         {
-            std::cout << filename << "\n";
             GLenum format;
             if (nrComponents == 1)
                 format = GL_RED;

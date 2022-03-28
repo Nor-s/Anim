@@ -53,8 +53,9 @@ Camera camera(glm::vec3(0.0f, 0.0f, 20.0f));
 bool is_pressed = false;
 bool is_pressed_scroll = false;
 glm::vec2 prev_mouse{-1.0f, -1.0f}, cur_mouse{-1.0f, -1.0f};
+int viewport_size = SCR_WIDTH;
+int before_viewport_size = SCR_WIDTH;
 
-int pixelate_factor = 1000;
 // timing
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
@@ -112,7 +113,9 @@ int main()
     Shader ourShader("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs");
     Shader pixelateShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/pixelate_framebuffer.fs");
     Shader frameShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
+    Shader blurShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
     Shader debugShader("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/debug_model.fs");
+    Shader alphaframeShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/alpha_model.fs");
 
     // load models
     // -----------
@@ -125,8 +128,7 @@ int main()
     model_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), GL_RGB);
     skybox_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height());
     RGB_fb = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), GL_RGB);
-    RGBA_fb = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), GL_RGBA);
-    target_fb = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), GL_RGBA);
+    RGBA_fb = std::make_unique<glcpp::Framebuffer>(g_window.get_width() / 10, g_window.get_height() / 10, GL_RGBA);
     // draw in wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // Setup Dear ImGui context
@@ -159,16 +161,25 @@ int main()
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), g_window.get_aspect(), 0.1f, 1000.0f);
         glm::mat4 view = camera.GetViewMatrix();
+        glBindFramebuffer(GL_FRAMEBUFFER, skybox_framebuffer->get_fbo());
+        {
+            glEnable(GL_DEPTH_TEST);
+            glViewport(0, 0, skybox_framebuffer->get_width(), skybox_framebuffer->get_height());
+            glClearColor(0.3f, 0.3f, 0.3f, 0.3f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            skybox.draw(view, projection);
+        }
 
         glBindFramebuffer(GL_FRAMEBUFFER, RGB_fb->get_fbo());
         {
+            glDisable(GL_BLEND);
             glEnable(GL_DEPTH_TEST);
             // model capture
             glViewport(0, 0, RGB_fb->get_width(), RGB_fb->get_height());
-            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClearColor(0.3f, 0.3f, 0.3f, 0.3f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             draw_model(ourModel, ourShader, view, projection);
-            RGB_fb->print_color_texture("RGB.png");
+            // RGB_fb->print_color_texture("RGB.png");
         }
         glBindFramebuffer(GL_FRAMEBUFFER, RGBA_fb->get_fbo());
         {
@@ -187,24 +198,35 @@ int main()
             glStencilFunc(GL_EQUAL, 1, 0xFF);
             glStencilMask(0x00);
             glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
             RGB_fb->draw(frameShader);
+            // RGBA_fb->print_color_texture("RGBA.png");
 
             glStencilMask(0xFF);
             glStencilFunc(GL_ALWAYS, 1, 0xFF);
             glEnable(GL_DEPTH_TEST);
-            RGBA_fb->print_color_texture("RGBA.png");
+            glDisable(GL_STENCIL_TEST);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         {
-            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
             glViewport(0, 0, g_window.get_width(), g_window.get_height());
-            glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glClearColor(1.0f, 1.0f, 0.0f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            skybox.draw(view, projection);
+            if (is_skybox_blur)
+            {
+                glDepthMask(false);
+                skybox_framebuffer->draw(blurShader);
+                glDepthMask(true);
+            }
+            else
+            {
+                skybox.draw(view, projection);
+            }
             RGBA_fb->draw(frameShader);
-            glDisable(GL_BLEND);
         }
 
         draw_imgui();
@@ -326,12 +348,22 @@ void draw_imgui()
         {
             is_skybox_blur = !is_skybox_blur;
         }
+        if (ImGui::Button("Print"))
+        {
+            RGBA_fb->print_color_texture("pixel" + std::to_string(viewport_size) + "x" + std::to_string(viewport_size) + ".png");
+        }
 
         ImGui::SliderFloat("model rotate z", &model_rotation_z, 0.0f, 6.5f);
         ImGui::SliderFloat("model rotate x", &model_rotation_x, 0.0f, 6.5f);
         ImGui::SliderFloat("model rotate y", &model_rotation_y, 0.0f, 6.5f);
         ImGui::SliderFloat("model size", &model_size, 0.0f, 5.0f);
-        ImGui::SliderInt("size", &pixelate_factor, 32, SCR_WIDTH * 2);
+        ImGui::SliderInt("width_size", &viewport_size, 8, g_window.get_width());
+        if (viewport_size != before_viewport_size)
+        {
+            RGBA_fb.reset();
+            RGBA_fb = std::make_unique<glcpp::Framebuffer>(viewport_size, viewport_size, GL_RGBA);
+        }
+        before_viewport_size = viewport_size;
     }
     ImGui::End();
     // Render dear imgui into screen

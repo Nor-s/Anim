@@ -24,7 +24,7 @@
 
 namespace glcpp
 {
-    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, bool gamma = false);
+    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory);
     inline glm::vec3 get_glm_vec(const aiVector3D &vec)
     {
         return glm::vec3(vec.x, vec.y, vec.z);
@@ -63,7 +63,7 @@ namespace glcpp
     class Model
     {
     public:
-        Model(const char *path, bool gamma = false) : gamma_correction(gamma)
+        Model(const char *path)
         {
 
             load_model(path);
@@ -89,7 +89,7 @@ namespace glcpp
         std::vector<Mesh> meshes_;
         std::filesystem::path directory_;
         std::vector<Texture> textures_loaded_;
-        bool gamma_correction;
+        // bool gamma_correction;
         std::map<std::string, Bone> bone_map_;
         int bone_count_;
 
@@ -317,7 +317,7 @@ namespace glcpp
                 }
                 */
     };
-    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, bool gamma)
+    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory)
     {
         std::string filename = std::string(path);
         std::filesystem::path tmp = directory;
@@ -330,7 +330,7 @@ namespace glcpp
         unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
         if (data)
         {
-            GLenum format;
+            GLenum format = GL_RGB;
             if (nrComponents == 1)
                 format = GL_RED;
             else if (nrComponents == 3)

@@ -55,6 +55,7 @@ namespace glcpp
         void draw(Shader &shader)
         {
             shader.use();
+            glUniform1i(glGetUniformLocation(shader.ID, "texture_diffuse1"), 0);
             shader.setInt("pixelateFactor", pixelate_factor_);
             shader.setVec2("iResolution", glm::vec2(width_, height_));
             glBindVertexArray(quad_VAO_);

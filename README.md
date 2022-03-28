@@ -2,6 +2,18 @@
 
 opengl project
 
+## TODO: 주기능
+
+-   애니메이션 재생/ 스탑
+
+## TODO: 부기능
+
+-   viewport 고정: IMGUI 창에 보여주기.
+
+-   object 셀렉트
+
+-   그리드 평면
+
 ## external
 
 -   glfw

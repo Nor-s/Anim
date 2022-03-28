@@ -68,6 +68,10 @@ namespace glcpp
 
             load_model(path);
         }
+        ~Model()
+        {
+        }
+
         void draw(Shader &shader)
         {
             for (unsigned int i = 0; i < meshes_.size(); i++)
@@ -115,7 +119,7 @@ namespace glcpp
             for (unsigned int i = 0; i < node->mNumMeshes; i++)
             {
                 aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-                meshes_.push_back(process_mesh(mesh, scene));
+                meshes_.emplace_back(process_mesh(mesh, scene));
             }
             // then do the same for each of its children
             for (unsigned int i = 0; i < node->mNumChildren; i++)

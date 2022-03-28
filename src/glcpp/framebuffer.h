@@ -28,7 +28,11 @@ namespace glcpp
 
         virtual ~Framebuffer()
         {
+            glDeleteVertexArrays(1, &quad_VAO_);
+            glDeleteBuffers(1, &quad_VBO_);
             glDeleteFramebuffers(1, &FBO_);
+            glDeleteTextures(1, &color_texture_id_);
+            glDeleteRenderbuffers(1, &d24s8_RBO_);
         }
         void set_pixelate_factor(int factor)
         {
@@ -125,11 +129,11 @@ namespace glcpp
         }
 
     private:
-        uint32_t FBO_;
-        uint32_t color_texture_id_;
-        uint32_t d24s8_RBO_;
-        uint32_t quad_VAO_;
-        uint32_t quad_VBO_;
+        uint32_t FBO_ = 0;
+        uint32_t color_texture_id_ = 0;
+        uint32_t d24s8_RBO_ = 0;
+        uint32_t quad_VAO_ = 0;
+        uint32_t quad_VBO_ = 0;
         uint32_t width_;
         uint32_t height_;
         uint32_t pixelate_factor_;

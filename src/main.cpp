@@ -128,7 +128,7 @@ int main()
     model_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), GL_RGB);
     skybox_framebuffer = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height());
     RGB_fb = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), GL_RGB);
-    RGBA_fb = std::make_unique<glcpp::Framebuffer>(g_window.get_width() / 10, g_window.get_height() / 10, GL_RGBA);
+    RGBA_fb = std::make_unique<glcpp::Framebuffer>(g_window.get_width(), g_window.get_height(), GL_RGBA);
     // draw in wireframe
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
     // Setup Dear ImGui context
@@ -159,7 +159,7 @@ int main()
         ImGui::NewFrame();
 
         // view/projection transformations
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), g_window.get_aspect(), 0.1f, 1000.0f);
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), g_window.get_aspect(), 0.1f, 10000.0f);
         glm::mat4 view = camera.GetViewMatrix();
         glBindFramebuffer(GL_FRAMEBUFFER, skybox_framebuffer->get_fbo());
         {

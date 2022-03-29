@@ -2,13 +2,11 @@
 
 opengl project
 
-## TODO: 주기능
+## TODO
 
 -   애니메이션 재생/ 스탑
 
-## TODO: 부기능
-
--   viewport 고정: IMGUI 창에 보여주기.
+-   GUI 작업
 
 -   object 셀렉트
 
@@ -16,13 +14,19 @@ opengl project
 
 ## external
 
--   glfw
--   glad
--   glm
--   assimp
--   imgui
--   stb
--   nfd
+-   glad: https://glad.dav1d.de/
+
+-   GLFW: https://www.glfw.org/
+
+-   GLM: https://glm.g-truc.net/0.9.9/index.html
+
+-   Assimp: https://github.com/assimp/assimp
+
+-   ImGUI: https://github.com/ocornut/imgui
+
+-   stb: https://github.com/nothings/stb
+
+-   nfd(extended): https://github.com/btzy/nativefiledialog-extended
 
 ## screenshot
 

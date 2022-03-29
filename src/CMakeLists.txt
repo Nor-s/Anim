@@ -1,12 +1,49 @@
-find_package(glfw3 REQUIRED FATAL_ERROR)
+# opengl library wrapper
+set(GLCPP_SRC
+    glcpp/window.cpp
+    glcpp/window.h
+    glcpp/shader.h
+    glcpp/shader.cpp
+    glcpp/mesh.cpp
+    glcpp/mesh.h
+    glcpp/model.cpp
+    glcpp/model.h
+    glcpp/camera.cpp
+    glcpp/camera.h
+    glcpp/cubemap.cpp
+    glcpp/cubemap.h
+    glcpp/framebuffer.cpp
+    glcpp/framebuffer.h
+    glcpp/application.h
+    glcpp/application.cpp
+    glcpp/transform_component.h
+)
 
-find_package(glm REQUIRED FATAL_ERROR)
+add_library(glcpp STATIC ${GLCPP_SRC})
+target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
-add_subdirectory(glcpp)
+set(LIBs STB_IMAGE assimp imgui glad nfd)
+
+if(WIN32)
+    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
+    target_link_libraries(glcpp PUBLIC ${LIBs} glm -lpthread -lgdi32 -lopengl32)
+endif(WIN32)
+
+if(APPLE) 
+    target_include_directories(glcpp PUBLIC ./ ../ ${CMAKE_HOME_DIRECTORY}/external)
+    target_link_libraries(glcpp PUBLIC ${LIBs} glm::glm -ldl -lpthread)
+endif(APPLE)
 
 
-add_executable(render ./main.cpp ./class/3d_to_pixel.h)
+add_executable(test ./test/main.cpp)
 
-target_compile_options(render PRIVATE -Wall -Werror -std=c++17)
-target_include_directories(render PUBLIC ./)
-target_link_libraries(render glcpp nfd)
+target_compile_options(test PRIVATE -Wall -Werror -std=c++17)
+target_include_directories(test PUBLIC ./)
+target_link_libraries(test glcpp)
+
+
+add_executable(pixel3D ./main.cpp ./pixelate_framebuffer.cpp)
+
+target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)
+target_include_directories(pixel3D  PUBLIC ./)
+target_link_libraries(pixel3D  glcpp)

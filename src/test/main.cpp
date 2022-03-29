@@ -24,7 +24,6 @@
 #include <vector>
 #include <nfd.h>
 #include <memory>
-#include "pixelate_framebuffer.h"
 
 #include <filesystem>
 
@@ -36,7 +35,7 @@ void mouse_callback(GLFWwindow *window, double xpos, double ypos);
 void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 void draw_imgui();
-void draw_model(std::shared_ptr<glcpp::Model> &ourModel, glcpp::Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection);
+void draw_model(glcpp::Model &ourModel, glcpp::Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection);
 
 // settings
 const unsigned int SCR_WIDTH = 800;
@@ -61,7 +60,7 @@ int before_viewport_size = SCR_WIDTH;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 glcpp::Window g_window(SCR_WIDTH, SCR_HEIGHT, "glcpp-test");
-std::shared_ptr<glcpp::Model> ourModel = std::make_shared<glcpp::Model>(fs::canonical(fs::path("./../../resources/models/nanosuit/nanosuit.obj")).string().c_str());
+glcpp::Model ourModel(fs::canonical(fs::path("./../../resources/models/nanosuit/nanosuit.obj")).string().c_str());
 std::unique_ptr<glcpp::Framebuffer> model_framebuffer;
 std::unique_ptr<glcpp::Framebuffer> skybox_framebuffer;
 std::unique_ptr<glcpp::Framebuffer> RGB_fb;
@@ -96,7 +95,7 @@ std::vector<std::string> skybox_faces[]{
      "./../../resources/textures/cube/pisa/nz.png"}};
 
 bool is_skybox_blur = false;
-std::unique_ptr<PixelateFramebuffer> pixelate_fb;
+
 int main()
 {
     NFD_Init();
@@ -112,17 +111,11 @@ int main()
     // build and compile shaders
     // -------------------------
     glcpp::Shader ourShader("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs");
+    glcpp::Shader pixelateShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/pixelate_framebuffer.fs");
     glcpp::Shader frameShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
     glcpp::Shader blurShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
     glcpp::Shader debugShader("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/debug_model.fs");
     glcpp::Shader alphaframeShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/alpha_model.fs");
-
-    std::shared_ptr<glcpp::Shader> frameShd = std::make_shared<glcpp::Shader>("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
-    std::shared_ptr<glcpp::Shader> debugShd = std::make_shared<glcpp::Shader>("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/debug_model.fs");
-    pixelate_fb = std::make_unique<PixelateFramebuffer>(SCR_WIDTH, SCR_HEIGHT);
-    pixelate_fb->set_pixelate_shader(frameShd);
-    pixelate_fb->set_RGB_shader(frameShd);
-    pixelate_fb->set_tmp_shader(debugShd);
 
     // load models
     // -----------
@@ -178,9 +171,44 @@ int main()
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             skybox.draw(view, projection);
         }
-        ourModel->get_transform().set_translation(glm::vec3(0.0f, 0.0f, 0.0f)).set_scale(glm::vec3(1.0f, 1.0f, 1.0f)).set_rotation(glm::vec3(0.0f, 0.0f, 0.0f));
 
-        pixelate_fb->pre_draw(ourModel, ourShader, view, projection);
+        // model capture to RGB for blend
+        //(https://community.khronos.org/t/alpha-blending-issues-when-drawing-frame-buffer-into-default-buffer/73958)
+        //(https://stackoverflow.com/questions/2171085/opengl-blending-with-previous-contents-of-framebuffer/4076268)
+        glBindFramebuffer(GL_FRAMEBUFFER, RGB_fb->get_fbo());
+        {
+            glDisable(GL_BLEND);
+            glEnable(GL_DEPTH_TEST);
+            glViewport(0, 0, RGB_fb->get_width(), RGB_fb->get_height());
+            glClearColor(0.3f, 0.3f, 0.3f, 0.3f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            draw_model(ourModel, ourShader, view, projection);
+        }
+        // model capture to RGBA for png and rendering
+        glBindFramebuffer(GL_FRAMEBUFFER, RGBA_fb->get_fbo());
+        {
+            glEnable(GL_STENCIL_TEST);
+            glEnable(GL_DEPTH_TEST);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+            glViewport(0, 0, RGBA_fb->get_width(), RGBA_fb->get_height());
+            glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glStencilMask(0xFF);
+            draw_model(ourModel, debugShader, view, projection);
+
+            glStencilFunc(GL_EQUAL, 1, 0xFF);
+            glStencilMask(0x00);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            RGB_fb->draw(frameShader);
+
+            glStencilMask(0xFF);
+            glStencilFunc(GL_ALWAYS, 1, 0xFF);
+            glEnable(GL_DEPTH_TEST);
+            glDisable(GL_STENCIL_TEST);
+        }
 
         //  render skybox and captured pixelated model
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -202,8 +230,7 @@ int main()
             {
                 skybox.draw(view, projection);
             }
-            // ourModel->draw(ourShader, view, projection);
-            pixelate_fb->draw();
+            RGBA_fb->draw(frameShader);
         }
 
         draw_imgui();
@@ -309,8 +336,7 @@ void draw_imgui()
             {
                 puts("Success!");
                 puts(outPath);
-                ourModel.reset();
-                ourModel = std::make_shared<glcpp::Model>(outPath);
+                ourModel = glcpp::Model(outPath);
                 NFD_FreePath(outPath);
             }
             else if (result == NFD_CANCEL)
@@ -340,7 +366,6 @@ void draw_imgui()
         ImGui::SliderInt("width_size", &viewport_size, 8, g_window.get_width());
         if (viewport_size != before_viewport_size)
         {
-            pixelate_fb->set_size(viewport_size, viewport_size);
             RGBA_fb.reset();
 
             RGBA_fb = std::make_unique<glcpp::Framebuffer>(viewport_size, viewport_size, GL_RGBA);
@@ -353,7 +378,7 @@ void draw_imgui()
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
-void draw_model(std::shared_ptr<glcpp::Model> &ourModel, glcpp::Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection)
+void draw_model(glcpp::Model &ourModel, glcpp::Shader &ourShader, const glm::mat4 &view, const glm::mat4 &projection)
 {
     ourShader.use();
 
@@ -368,5 +393,5 @@ void draw_model(std::shared_ptr<glcpp::Model> &ourModel, glcpp::Shader &ourShade
     model = glm::rotate(model, model_rotation_x, glm::vec3(1.0f, 0.0f, 0.0f));
     model = glm::rotate(model, model_rotation_y, glm::vec3(0.0f, 1.0f, 1.0f));
     ourShader.setMat4("model", model);
-    ourModel->draw(ourShader);
+    ourModel.draw(ourShader);
 }

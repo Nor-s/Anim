@@ -4,7 +4,6 @@
 #include <glad/glad.h>
 
 #include "shader.h"
-#include "camera.h"
 
 #include <iostream>
 #include <vector>

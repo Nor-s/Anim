@@ -33,11 +33,15 @@ opengl project
 
 ### 3/25
 
+- test model loading, pixelate, imgui
+
 ![](https://github.com/Nor-s/n-glcpp/blob/main/screenshot/Mar-25-2022%2012-58-15.gif?raw=true)
 
 ### 4/1
 
-![](https://blog.kakaocdn.net/dn/BWT2Z/btrx4TPGAey/S6fCGoVeRiVfCUEPq98MP1/img.gif)
+- ImGui docking, refactoring, camera, skybox blur
+
+![](https://github.com/Nor-s/n-glcpp/blob/main/screenshot/Animation%20(32).gif?raw=true)
 
 ## references
 

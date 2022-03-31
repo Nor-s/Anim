@@ -18,8 +18,14 @@ namespace glcpp
         uint32_t get_color_texture() const;
         uint32_t get_width() const;
         uint32_t get_height() const;
+        float get_aspect() const;
         void draw(Shader &shader);
-        void print_color_texture(const std::string &file_name);
+        void print_color_texture(const std::string &file_name, GLenum format = GL_RED);
+        void bind_without_clear();
+        void bind();
+        void bind_with_depth();
+        void bind_with_depth_and_stencil();
+        void unbind();
 
     private:
         void create_framebuffer();
@@ -35,7 +41,6 @@ namespace glcpp
         uint32_t quad_VBO_ = 0;
         uint32_t width_;
         uint32_t height_;
-        uint32_t pixelate_factor_;
         GLenum format_;
         float quad_vertices_[24] = {
             // positions   // texCoords

@@ -36,9 +36,9 @@ namespace glcpp
     {
         float velocity = MovementSpeed * deltaTime;
         if (direction == FORWARD)
-            Position += Front * velocity;
+            Position += Up * velocity;
         if (direction == BACKWARD)
-            Position -= Front * velocity;
+            Position -= Up * velocity;
         if (direction == LEFT)
             Position -= Right * velocity;
         if (direction == RIGHT)
@@ -53,15 +53,16 @@ namespace glcpp
 
     void Camera::ProcessMouseScroll(float yoffset)
     {
-
         if (yoffset > 0)
             Position += Front * MovementSpeed;
         if (yoffset < 0)
             Position -= Front * MovementSpeed;
     }
-    void Camera::ProcessMouseScrollPress(float yoffset, float xoffset)
+    void Camera::ProcessMouseScrollPress(float yoffset, float xoffset, float deltaTime)
     {
-        // TODO: MOVE To CAMERA
+        float velocity = MovementSpeed * deltaTime * 0.5f;
+        Position += Up * velocity * yoffset;
+        Position -= Right * velocity * xoffset;
     }
 
     void Camera::updateCameraVectors()

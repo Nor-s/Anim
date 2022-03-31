@@ -14,8 +14,7 @@ set(GLCPP_SRC
     glcpp/cubemap.h
     glcpp/framebuffer.cpp
     glcpp/framebuffer.h
-    glcpp/application.h
-    glcpp/application.cpp
+    glcpp/application.hpp
     glcpp/transform_component.h
 )
 
@@ -35,14 +34,25 @@ if(APPLE)
 endif(APPLE)
 
 
-add_executable(test ./test/main.cpp)
+add_executable(test ./test/test.cpp)
 
 target_compile_options(test PRIVATE -Wall -Werror -std=c++17)
 target_include_directories(test PUBLIC ./)
 target_link_libraries(test glcpp)
 
 
-add_executable(pixel3D ./main.cpp ./pixelate_framebuffer.cpp)
+add_executable(pixel3D 
+./main.cpp 
+./pixelate_framebuffer.cpp 
+./UI/imgui_context.h 
+./UI/imgui_scene_window.h
+./pixel3D.cpp 
+./pixel3D.h 
+./scene/scene.hpp
+./scene/scene1.hpp
+./scene/scene2.hpp
+./scene/scene3.hpp
+)
 
 target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)
 target_include_directories(pixel3D  PUBLIC ./)

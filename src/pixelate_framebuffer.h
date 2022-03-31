@@ -21,8 +21,10 @@ public:
     void set_RGB_shader(std::shared_ptr<glcpp::Shader> &shader);
     void set_pixelate_shader(std::shared_ptr<glcpp::Shader> &shader);
     void set_tmp_shader(std::shared_ptr<glcpp::Shader> &shader);
-
     void set_size(int width, int height);
+    void print_to_png(const std::string &file_name);
+    int get_width();
+    uint32_t get_texture();
 
 private:
     void capture_rgb(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);

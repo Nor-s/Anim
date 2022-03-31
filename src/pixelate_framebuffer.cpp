@@ -30,6 +30,10 @@ void PixelateFramebuffer::draw()
 {
     pixelate_framebuffer_->draw(*pixelate_shader_);
 }
+void PixelateFramebuffer::print_to_png(const std::string &file_name)
+{
+    pixelate_framebuffer_->print_color_texture(file_name);
+}
 void PixelateFramebuffer::capture_rgb(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, RGB_framebuffer_->get_fbo());
@@ -91,4 +95,13 @@ void PixelateFramebuffer::set_size(int width, int height)
     height_ = height;
     pixelate_framebuffer_ = std::make_unique<glcpp::Framebuffer>(width_, height_, GL_RGBA);
     RGB_framebuffer_ = std::make_unique<glcpp::Framebuffer>(width_, height_, GL_RGB);
+}
+
+int PixelateFramebuffer::get_width()
+{
+    return width_;
+}
+uint32_t PixelateFramebuffer::get_texture()
+{
+    return pixelate_framebuffer_->get_color_texture();
 }

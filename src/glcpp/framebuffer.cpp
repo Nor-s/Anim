@@ -29,10 +29,6 @@ namespace glcpp
         glDeleteTextures(1, &color_texture_id_);
         glDeleteRenderbuffers(1, &d24s8_RBO_);
     }
-    void Framebuffer::set_pixelate_factor(int factor)
-    {
-        pixelate_factor_ = factor;
-    }
 
     uint32_t Framebuffer::get_fbo() const
     {
@@ -50,29 +46,36 @@ namespace glcpp
     {
         return height_;
     }
+    float Framebuffer::get_aspect() const
+    {
+        return static_cast<float>(width_) / static_cast<float>(height_);
+    }
 
     void Framebuffer::draw(Shader &shader)
     {
         shader.use();
         glUniform1i(glGetUniformLocation(shader.ID, "texture_diffuse1"), 0);
-        shader.setInt("pixelateFactor", pixelate_factor_);
         shader.setVec2("iResolution", glm::vec2(width_, height_));
         glBindVertexArray(quad_VAO_);
         glBindTexture(GL_TEXTURE_2D, color_texture_id_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
-    void Framebuffer::print_color_texture(std::string const &file_name)
+    void Framebuffer::print_color_texture(std::string const &file_name, GLenum format)
     {
+        if (format == GL_RED)
+        {
+            format = format_;
+        }
         stbi_flip_vertically_on_write(true);
 
         glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
         glViewport(0, 0, width_, height_);
         GLubyte *pixels = (GLubyte *)malloc(width_ * height_ * sizeof(GLubyte) * 4);
-        glReadPixels(0, 0, width_, height_, format_, GL_UNSIGNED_BYTE, pixels);
+        glReadPixels(0, 0, width_, height_, format, GL_UNSIGNED_BYTE, pixels);
 
-        if (format_ == GL_RGBA)
+        if (format == GL_RGBA)
             stbi_write_png(file_name.c_str(), width_, height_, 4, pixels, 0);
-        else if (format_ == GL_RGB)
+        else if (format == GL_RGB)
             stbi_write_png(file_name.c_str(), width_, height_, 3, pixels, 0);
     }
 
@@ -120,5 +123,30 @@ namespace glcpp
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)0);
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
+    }
+    void Framebuffer::bind_without_clear()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
+        glViewport(0, 0, width_, height_);
+    }
+
+    void Framebuffer::bind()
+    {
+        bind_without_clear();
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
+    void Framebuffer::bind_with_depth()
+    {
+        bind_without_clear();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    }
+    void Framebuffer::bind_with_depth_and_stencil()
+    {
+        bind_without_clear();
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+    }
+    void Framebuffer::unbind()
+    {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }

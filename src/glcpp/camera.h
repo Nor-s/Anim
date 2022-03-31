@@ -22,8 +22,8 @@ namespace glcpp
     // Default camera values
     const float YAW = -90.0f;
     const float PITCH = 0.0f;
-    const float SPEED = 6.0f;
-    const float SENSITIVITY = 0.05f;
+    const float SPEED = 3.0f;
+    const float SENSITIVITY = 0.03f;
     const float ZOOM = 45.0f;
 
     // An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
@@ -64,7 +64,7 @@ namespace glcpp
 
         // processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
         void ProcessMouseScroll(float yoffset);
-        void ProcessMouseScrollPress(float yoffset, float xoffset);
+        void ProcessMouseScrollPress(float yoffset, float xoffset, float deltaTime);
 
     private:
         // calculates the front vector from the Camera's (updated) Euler Angles

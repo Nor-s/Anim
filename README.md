@@ -4,13 +4,14 @@ opengl project
 
 ## TODO
 
--   애니메이션 재생/ 스탑
+-   애니메이션 재생/ 스탑 (5)
 
--   GUI 작업
+-   GUI 작업 (4)
 
--   object 셀렉트
+-   object 셀렉트 (1)
 
--   그리드 평면
+-   그리드 평면 (1)
+
 
 ## external
 
@@ -30,11 +31,17 @@ opengl project
 
 ## screenshot
 
+### 3/25
+
 ![](https://github.com/Nor-s/n-glcpp/blob/main/screenshot/Mar-25-2022%2012-58-15.gif?raw=true)
+
+### 4/1
+
+![](https://blog.kakaocdn.net/dn/BWT2Z/btrx4TPGAey/S6fCGoVeRiVfCUEPq98MP1/img.gif)
 
 ## references
 
--   [render object](https://learnopengl.com/)
+-   [render](https://learnopengl.com/)
 -   [texture to file](https://stackoverflow.com/questions/11863416/read-texture-bytes-with-glreadpixels)
 -   [pixelate shader](https://github.com/genekogan/Processing-Shader-Examples/blob/master/TextureShaders/data/pixelate.glsl)
 -   [TODO: skeleton animation](https://ogldev.org/www/tutorial38/tutorial38.html)

@@ -8,6 +8,7 @@
 PixelateFramebuffer::PixelateFramebuffer(int width, int height)
 {
     set_size(width, height);
+    factor_ = 1;
 }
 PixelateFramebuffer::~PixelateFramebuffer()
 {
@@ -104,4 +105,12 @@ int PixelateFramebuffer::get_width()
 uint32_t PixelateFramebuffer::get_texture()
 {
     return pixelate_framebuffer_->get_color_texture();
+}
+int PixelateFramebuffer::get_factor()
+{
+    return factor_;
+}
+void PixelateFramebuffer::set_factor(int factor)
+{
+    factor_ = factor;
 }

@@ -60,25 +60,15 @@ public:
         }
         set_view_and_projection();
 
-        if (flags_[skyblur_flag_idx_].second)
-        {
-            capture_skybox();
-        }
+        capture_skybox();
 
         glEnable(GL_DEPTH_TEST);
         framebuffer_->bind_with_depth();
         {
             glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-            if (flags_[skyblur_flag_idx_].second)
-            {
-                glDepthMask(false);
-                skybox_framebuffer_->draw(*framebuffer_blur_shader_);
-                glDepthMask(true);
-            }
-            else
-            {
-                skybox_->draw(view_, projection_);
-            }
+            glDepthMask(false);
+            skybox_framebuffer_->draw(*framebuffer_blur_shader_);
+            glDepthMask(true);
             model_->draw(*model_shader_, view_, projection_);
         }
         framebuffer_->unbind();
@@ -109,6 +99,7 @@ public:
         projection_ = glm::perspective(glm::radians(camera_->Zoom), framebuffer_->get_aspect(), 0.1f, 10000.0f);
         view_ = camera_->GetViewMatrix();
     }
+    virtual void print_to_png(const std::string &file_name) override {}
 
 private:
     void init_skybox()
@@ -131,10 +122,6 @@ private:
     void init_camera()
     {
         camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 0.0f, 20.0f));
-    }
-    virtual std::vector<std::pair<std::string, bool>> &get_flags() override
-    {
-        return flags_;
     }
 
 private:

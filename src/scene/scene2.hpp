@@ -78,10 +78,7 @@ public:
         width_ = width;
         height_ = height;
     }
-    virtual std::vector<std::pair<std::string, bool>> &get_flags() override
-    {
-        return flags_;
-    }
+    virtual void print_to_png(const std::string &file_name) override {}
 
 private:
     void init_skybox()
@@ -139,7 +136,6 @@ private:
     std::shared_ptr<glcpp::Shader> framebuffer_shader_;
     std::shared_ptr<glcpp::Camera> camera_;
     std::shared_ptr<glcpp::Framebuffer> framebuffer_;
-    glm::mat4 projection_;
     uint32_t width_ = 800;
     uint32_t height_ = 600;
 };

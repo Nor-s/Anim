@@ -3,7 +3,7 @@
 
 #include <memory>
 #include <glm/gtc/matrix_transform.hpp>
-#include "shader.h"
+#include "glcpp/shader.h"
 
 namespace glcpp
 {
@@ -25,6 +25,8 @@ public:
     void print_to_png(const std::string &file_name);
     int get_width();
     uint32_t get_texture();
+    int get_factor();
+    void set_factor(int factor);
 
 private:
     void capture_rgb(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
@@ -38,6 +40,7 @@ private:
     std::unique_ptr<glcpp::Framebuffer> pixelate_framebuffer_;
     int width_;
     int height_;
+    int factor_;
 };
 
 #endif

@@ -12,7 +12,6 @@ opengl project
 
 -   그리드 평면 (1)
 
-
 ## external
 
 -   glad: https://glad.dav1d.de/
@@ -33,15 +32,19 @@ opengl project
 
 ### 3/25
 
-- test model loading, pixelate, imgui
+-   test model loading, pixelate, imgui
 
 ![](https://github.com/Nor-s/n-glcpp/blob/main/screenshot/Mar-25-2022%2012-58-15.gif?raw=true)
 
 ### 4/1
 
-- ImGui docking, refactoring, camera, skybox blur
+-   ImGui docking, refactoring, camera, skybox blur
 
-![](https://github.com/Nor-s/n-glcpp/blob/main/screenshot/Animation%20(32).gif?raw=true)
+![](<https://github.com/Nor-s/n-glcpp/blob/main/screenshot/Animation%20(32).gif?raw=true>)
+
+-   3D model to png, pixelate
+
+![](/screenshot/Apr-01-2022%2014-53-09.gif)
 
 ## references
 

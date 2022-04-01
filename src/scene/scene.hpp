@@ -5,6 +5,7 @@
 #include "glcpp/model.h"
 #include "glcpp/framebuffer.h"
 #include "glcpp/camera.h"
+#include "UI/imgui_option.h"
 #include <memory>
 
 class Scene
@@ -18,9 +19,13 @@ public:
     virtual void draw() = 0;
     virtual void add_model(const char *file_name) = 0;
     virtual void set_size(uint32_t width, uint32_t height) = 0;
-    virtual std::vector<std::pair<std::string, bool>> &get_flags() = 0;
+    virtual void print_to_png(const std::string &file_name) = 0;
+    virtual ui::ImguiOption &get_option()
+    {
+        return imgui_option_;
+    }
 
 protected:
-    std::vector<std::pair<std::string, bool>> flags_;
+    ui::ImguiOption imgui_option_;
 };
 #endif

@@ -38,7 +38,7 @@ namespace glcpp
         WorldTransformComponent transform_;
 
         // bool gamma_correction;
-        int bone_count_;
+        // int bone_count_;
 
         void load_model(const std::string &path);
         void process_node(aiNode *node, const aiScene *scene);

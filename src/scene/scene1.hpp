@@ -13,6 +13,7 @@
 #include "scene.hpp"
 #include "pixelate_framebuffer.h"
 
+#include <tuple>
 #include <map>
 #include <memory>
 #include <filesystem>
@@ -24,21 +25,23 @@ class Scene1 : public Scene
 public:
     Scene1(int width, int height)
     {
+        init_option();
         init_skybox();
         init_shader();
         init_model();
         init_framebuffer(width, height);
         init_camera();
-        skyblur_flag_idx_ = flags_.size();
-        flags_.push_back({"skybox_blur", false});
     }
     virtual ~Scene1() = default;
+
     virtual void init_framebuffer(uint32_t width, uint32_t height) override
     {
         set_size(width, height);
         framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
         skybox_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
+        init_pixelate_framebuffer(width_, height_);
     }
+
     virtual void add_model(const char *file_name) override
     {
         model_.reset(new glcpp::Model{file_name});
@@ -53,22 +56,22 @@ public:
     }
     virtual void pre_draw() override
     {
-        if (framebuffer_->get_width() != width_ || framebuffer_->get_height() != height_)
-        {
-            init_framebuffer(width_, height_);
-        }
+        update_framebuffer();
         set_view_and_projection();
 
-        if (flags_[skyblur_flag_idx_].second)
+        if (imgui_option_.get_flag(skyblur_flag_idx_))
         {
             capture_skybox();
         }
+        pixelate_framebuffer_->pre_draw(model_, *model_shader_, view_, projection_);
 
         glEnable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         framebuffer_->bind_with_depth();
         {
             glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-            if (flags_[skyblur_flag_idx_].second)
+            if (imgui_option_.get_flag(skyblur_flag_idx_))
             {
                 glDepthMask(false);
                 skybox_framebuffer_->draw(*framebuffer_blur_shader_);
@@ -78,7 +81,7 @@ public:
             {
                 skybox_->draw(view_, projection_);
             }
-            model_->draw(*model_shader_, view_, projection_);
+            pixelate_framebuffer_->draw();
         }
         framebuffer_->unbind();
     }
@@ -95,26 +98,43 @@ public:
         width_ = width;
         height_ = height;
     }
-
-    void capture_skybox()
+    void update_framebuffer()
     {
-        glEnable(GL_DEPTH_TEST);
-        skybox_framebuffer_->bind_with_depth();
-        skybox_->draw(view_, projection_);
-        skybox_framebuffer_->unbind();
+        if (framebuffer_->get_width() != width_ || framebuffer_->get_height() != height_)
+        {
+            init_framebuffer(width_, height_);
+            // imgui_option_.set_int_property(pixelate_value_idx_, std::tuple<std::string, int, int, int>{"pixelate value", 1, 1, (int)width_});
+        }
+        if (pixelate_framebuffer_->get_factor() != imgui_option_.get_int_property(pixelate_value_idx_))
+        {
+            pixelate_framebuffer_->get_factor();
+            init_pixelate_framebuffer(width_, height_);
+        }
     }
-    void set_view_and_projection()
+    virtual void print_to_png(const std::string &file_name) override
     {
-        projection_ = glm::perspective(glm::radians(camera_->Zoom), framebuffer_->get_aspect(), 0.1f, 10000.0f);
-        view_ = camera_->GetViewMatrix();
+        pixelate_framebuffer_->print_to_png(file_name);
     }
 
 private:
+    void init_option()
+    {
+        skyblur_flag_idx_ = imgui_option_.push_flag("skybox_blur", true);
+        pixelate_value_idx_ = imgui_option_.push_int_property("pixelate value", 1, 1, 64);
+    }
     void init_skybox()
     {
-        skybox_ = std::make_unique<glcpp::Cubemap>(skybox_faces_[3],
+        skybox_ = std::make_unique<glcpp::Cubemap>(skybox_faces_[0],
                                                    "./../../resources/shaders/skybox.vs",
                                                    "./../../resources/shaders/skybox.fs");
+    }
+    void init_pixelate_framebuffer(uint32_t width, uint32_t height)
+    {
+        int factor = imgui_option_.get_int_property(pixelate_value_idx_);
+        pixelate_framebuffer_.reset(new PixelateFramebuffer(width / factor, height / factor));
+        pixelate_framebuffer_->set_pixelate_shader(framebuffer_shader_);
+        pixelate_framebuffer_->set_RGB_shader(framebuffer_shader_);
+        pixelate_framebuffer_->set_tmp_shader(model_shader_);
     }
     void init_shader()
     {
@@ -131,14 +151,22 @@ private:
     {
         camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 0.0f, 20.0f));
     }
-    virtual std::vector<std::pair<std::string, bool>> &get_flags() override
+    void capture_skybox()
     {
-        return flags_;
+        glEnable(GL_DEPTH_TEST);
+        skybox_framebuffer_->bind_with_depth();
+        skybox_->draw(view_, projection_);
+        skybox_framebuffer_->unbind();
+    }
+    void set_view_and_projection()
+    {
+        projection_ = glm::perspective(glm::radians(camera_->Zoom), framebuffer_->get_aspect(), 0.1f, 10000.0f);
+        view_ = camera_->GetViewMatrix();
     }
 
 private:
     // skybox
-    std::vector<std::string> skybox_faces_[4]{
+    std::vector<std::string> skybox_faces_[6]{
         {"./../../resources/textures/skybox/right.jpg",
          "./../../resources/textures/skybox/left.jpg",
          "./../../resources/textures/skybox/top.jpg",
@@ -162,7 +190,19 @@ private:
          "./../../resources/textures/cube/pisa/py.png",
          "./../../resources/textures/cube/pisa/ny.png",
          "./../../resources/textures/cube/pisa/pz.png",
-         "./../../resources/textures/cube/pisa/nz.png"}};
+         "./../../resources/textures/cube/pisa/nz.png"},
+        {"./../../resources/textures/cube/Park2/px.jpg",
+         "./../../resources/textures/cube/Park2/nx.jpg",
+         "./../../resources/textures/cube/Park2/py.jpg",
+         "./../../resources/textures/cube/Park2/ny.jpg",
+         "./../../resources/textures/cube/Park2/pz.jpg",
+         "./../../resources/textures/cube/Park2/nz.jpg"},
+        {"./../../resources/textures/cube/Tantolunden2/px.jpg",
+         "./../../resources/textures/cube/Tantolunden2/nx.jpg",
+         "./../../resources/textures/cube/Tantolunden2/py.jpg",
+         "./../../resources/textures/cube/Tantolunden2/ny.jpg",
+         "./../../resources/textures/cube/Tantolunden2/pz.jpg",
+         "./../../resources/textures/cube/Tantolunden2/nz.jpg"}};
 
     std::unique_ptr<glcpp::Cubemap> skybox_;
     std::shared_ptr<glcpp::Model> model_;
@@ -172,11 +212,13 @@ private:
     std::shared_ptr<glcpp::Camera> camera_;
     std::shared_ptr<glcpp::Framebuffer> framebuffer_;
     std::shared_ptr<glcpp::Framebuffer> skybox_framebuffer_;
+    std::shared_ptr<PixelateFramebuffer> pixelate_framebuffer_;
     glm::mat4 projection_ = glm::mat4(1.0f);
     glm::mat4 view_ = glm::mat4(1.0f);
     uint32_t width_ = 800;
     uint32_t height_ = 600;
     uint32_t skyblur_flag_idx_;
+    uint32_t pixelate_value_idx_;
 };
 
 #endif

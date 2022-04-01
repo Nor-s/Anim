@@ -56,10 +56,10 @@ public:
     }
     void init_ui()
     {
-        imgui_ = std::make_unique<ImGuiContext>();
+        imgui_ = std::make_unique<ui::ImGuiContext>();
         imgui_->init(window_->get_handle());
     }
-    virtual void loop()
+    virtual void loop() override
     {
         while (!window_->should_close())
         {
@@ -177,7 +177,7 @@ private:
     bool is_pressed = false;
     bool is_pressed_scroll = false;
     glm::vec2 prev_mouse{-1.0f, -1.0f}, cur_mouse{-1.0f, -1.0f};
-    std::unique_ptr<ImGuiContext> imgui_;
+    std::unique_ptr<ui::ImGuiContext> imgui_;
     std::unique_ptr<Scene1> scene_;
     std::unique_ptr<Scene2> scene2_;
 };

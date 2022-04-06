@@ -38,7 +38,6 @@ public:
         init_window(width, height, title);
         init_ui();
         scene_.reset(new Scene1(width, height));
-        scene2_.reset(new Scene2(width, height));
     }
     void init_window(int width, int height, const std::string &title)
     {
@@ -71,15 +70,16 @@ public:
             pre_draw();
             {
                 imgui_->begin();
-                imgui_->dock_draw();
+                imgui_->draw_dock();
 
                 scene_->pre_draw();
-                scene2_->pre_draw();
-                scene_->draw();
-                imgui_->property_draw(scene_.get());
+                imgui_->draw_property(scene_.get());
 
-                imgui_->scene_draw("scene2", scene2_.get());
-                imgui_->scene_draw("scene", scene_.get());
+                imgui_->draw_texture("pixelate", scene_->get_pixelate_framebuffer().get_framebuffer());
+                imgui_->draw_texture("rgb", scene_->get_pixelate_framebuffer().get_rgb_framebuffer());
+                imgui_->draw_texture("outline", scene_->get_pixelate_framebuffer().get_outline_framebuffer());
+                imgui_->draw_scene("scene", scene_.get());
+
                 imgui_->end();
             }
             post_draw();
@@ -122,13 +122,13 @@ public:
     static void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
     {
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-        if (app->is_pressed && app->scene_)
+        if (app->is_pressed)
         {
             app->scene_->get_camera()->ProcessMouseMovement((static_cast<float>(yposIn) - app->prev_mouse.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse.x) / 3.6f);
             app->prev_mouse.x = xposIn;
             app->prev_mouse.y = yposIn;
         }
-        if (app->is_pressed_scroll && app->scene_)
+        if (app->is_pressed_scroll)
         {
             app->scene_->get_camera()->ProcessMouseScrollPress((static_cast<float>(yposIn) - app->prev_mouse.y), (static_cast<float>(xposIn) - app->prev_mouse.x), app->deltaTime);
             app->prev_mouse.x = xposIn;
@@ -140,7 +140,7 @@ public:
     static void mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
     {
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->imgui_ && app->imgui_->is_window_hovered("scene"))
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene"))
         {
             app->prev_mouse.x = app->cur_mouse.x;
             app->prev_mouse.y = app->cur_mouse.y;
@@ -150,7 +150,7 @@ public:
         {
             app->is_pressed = false;
         }
-        if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->imgui_ && app->imgui_->is_window_hovered("scene"))
+        if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene"))
         {
             app->prev_mouse.x = app->cur_mouse.x;
             app->prev_mouse.y = app->cur_mouse.y;
@@ -179,7 +179,6 @@ private:
     glm::vec2 prev_mouse{-1.0f, -1.0f}, cur_mouse{-1.0f, -1.0f};
     std::unique_ptr<ui::ImGuiContext> imgui_;
     std::unique_ptr<Scene1> scene_;
-    std::unique_ptr<Scene2> scene2_;
 };
 
 #endif

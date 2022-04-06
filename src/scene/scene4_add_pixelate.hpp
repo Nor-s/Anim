@@ -18,12 +18,13 @@
 #include <memory>
 #include <filesystem>
 
+// add pixelate
 namespace fs = std::filesystem;
 
-class Scene1 : public Scene
+class Scene4 : public Scene
 {
 public:
-    Scene1(int width, int height)
+    Scene4(int width, int height)
     {
         init_option();
         init_skybox();
@@ -59,8 +60,10 @@ public:
         update_framebuffer();
         set_view_and_projection();
 
-        update_flag_option();
-
+        if (imgui_option_.get_flag(skyblur_flag_idx_))
+        {
+            capture_skybox();
+        }
         pixelate_framebuffer_->pre_draw(model_, *model_shader_, view_, projection_);
 
         glEnable(GL_DEPTH_TEST);
@@ -101,20 +104,12 @@ public:
         if (framebuffer_->get_width() != width_ || framebuffer_->get_height() != height_)
         {
             init_framebuffer(width_, height_);
+            // imgui_option_.set_int_property(pixelate_value_idx_, std::tuple<std::string, int, int, int>{"pixelate value", 1, 1, (int)width_});
         }
         if (pixelate_framebuffer_->get_factor() != imgui_option_.get_int_property(pixelate_value_idx_))
         {
             init_pixelate_framebuffer(width_, height_);
         }
-    }
-    void update_flag_option()
-    {
-        if (imgui_option_.get_flag(skyblur_flag_idx_))
-        {
-            capture_skybox();
-        }
-        pixelate_framebuffer_->set_outline_flag(imgui_option_.get_flag(outline_flag_idx_));
-        pixelate_framebuffer_->set_outline_color(imgui_option_.get_color3_property(outline_color_idx_));
     }
     virtual void print_to_png(const std::string &file_name) override
     {
@@ -128,10 +123,8 @@ public:
 private:
     void init_option()
     {
-        outline_flag_idx_ = imgui_option_.push_flag("outline", true);
-        skyblur_flag_idx_ = imgui_option_.push_flag("skybox blur", true);
-        pixelate_value_idx_ = imgui_option_.push_int_property("pixelate", 1, 1, 64);
-        outline_color_idx_ = imgui_option_.push_color3_property("outline", {0.0f, 0.0f, 0.0f});
+        skyblur_flag_idx_ = imgui_option_.push_flag("skybox_blur", true);
+        pixelate_value_idx_ = imgui_option_.push_int_property("pixelate value", 1, 1, 64);
     }
     void init_skybox()
     {
@@ -147,14 +140,12 @@ private:
         pixelate_framebuffer_->set_pixelate_shader(framebuffer_shader_);
         pixelate_framebuffer_->set_RGB_shader(framebuffer_shader_);
         pixelate_framebuffer_->set_tmp_shader(model_shader_);
-        pixelate_framebuffer_->set_outline_shader(outline_shader_);
     }
     void init_shader()
     {
         model_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs");
         framebuffer_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
         framebuffer_blur_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
-        outline_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/outline_framebuffer.vs", "./../../resources/shaders/outline_framebuffer.fs");
     }
     void init_model()
     {
@@ -163,7 +154,7 @@ private:
     }
     void init_camera()
     {
-        camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 0.0f, 80.0f));
+        camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 0.0f, 20.0f));
     }
     void capture_skybox()
     {
@@ -221,7 +212,6 @@ private:
     std::unique_ptr<glcpp::Cubemap> skybox_;
     std::shared_ptr<glcpp::Model> model_;
     std::shared_ptr<glcpp::Shader> model_shader_;
-    std::shared_ptr<glcpp::Shader> outline_shader_;
     std::shared_ptr<glcpp::Shader> framebuffer_shader_;
     std::shared_ptr<glcpp::Shader> framebuffer_blur_shader_;
     std::shared_ptr<glcpp::Camera> camera_;
@@ -234,8 +224,6 @@ private:
     uint32_t height_ = 600;
     uint32_t skyblur_flag_idx_;
     uint32_t pixelate_value_idx_;
-    uint32_t outline_flag_idx_;
-    uint32_t outline_color_idx_;
 };
 
 #endif

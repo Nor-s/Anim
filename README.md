@@ -52,3 +52,6 @@ opengl project
 -   [texture to file](https://stackoverflow.com/questions/11863416/read-texture-bytes-with-glreadpixels)
 -   [pixelate shader](https://github.com/genekogan/Processing-Shader-Examples/blob/master/TextureShaders/data/pixelate.glsl)
 -   [TODO: skeleton animation](https://ogldev.org/www/tutorial38/tutorial38.html)
+
+-   [shader1](https://lettier.github.io/3d-game-shaders-for-beginners/)
+-   [shader2](https://thebookofshaders.com/)

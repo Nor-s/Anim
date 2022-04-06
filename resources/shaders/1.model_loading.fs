@@ -5,7 +5,13 @@ in vec2 TexCoords;
 
 uniform sampler2D texture_diffuse1;
 
+
 void main()
 {    
-    FragColor = texture(texture_diffuse1, TexCoords);
+    vec4 color = texture(texture_diffuse1, TexCoords);
+    // color *= 1.2;
+    // color.r = (trunc(clamp(color.r*255.0, 0.0, 255.0)/15.0)*15.0) / 255.0;
+    // color.g = (trunc(clamp(color.g*255.0, 0.0, 255.0)/15.0)*15.0) / 255.0;
+    // color.b = (trunc(clamp(color.b*255.0, 0.0, 255.0)/15.0)*15.0) / 255.0;
+    FragColor = color;
 }

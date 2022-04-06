@@ -140,18 +140,50 @@ namespace ui
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
         }
-        void dock_draw()
+        void draw_dock()
         {
             bool s = true;
             ShowExampleAppDockSpace(&s);
         }
-        void property_draw(Scene *scene)
+        void draw_model_hierarchy()
         {
+            ImGui::Begin("Model Hierarchy");
+            if (ImGui::TreeNode("Trees"))
+            {
+                if (ImGui::TreeNode("Basic trees"))
+                {
+                    for (int i = 0; i < 5; i++)
+                    {
+                        // Use SetNextItemOpen() so set the default state of a node to be open. We could
+                        // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
+                        if (i == 0)
+                            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+
+                        if (ImGui::TreeNode((void *)(intptr_t)i, "Child %d", i))
+                        {
+                            ImGui::Text("blah blah");
+                            ImGui::SameLine();
+                            if (ImGui::SmallButton("button"))
+                            {
+                            }
+                            ImGui::TreePop();
+                        }
+                    }
+                    ImGui::TreePop();
+                }
+                ImGui::TreePop();
+            }
+            ImGui::End();
+        }
+        void draw_property(Scene *scene)
+        {
+            draw_model_hierarchy();
+
             // render your GUI
-            ImGui::Begin("model");
+            ImGui::Begin("Model Property");
             {
                 // open Dialog Simple
-                if (ImGui::Button("OPEN"))
+                if (ImGui::Button("load"))
                 {
                     nfdchar_t *outPath;
                     nfdfilteritem_t filterItem[2] = {{"model file", "obj,dae,pmx,fbx"}, {"error format", "gltf, dae"}};
@@ -175,21 +207,15 @@ namespace ui
 
                     NFD_Quit();
                 }
-                if (ImGui::Button("Print"))
+                ImGui::SameLine();
+                if (ImGui::Button("print"))
                 {
                     scene->print_to_png("pixel.png");
                 }
+                ImGui::SameLine();
                 process_option(scene->get_option());
 
                 process_model(scene->get_model()->get_transform());
-
-                // ImGui::SliderFloat("model size", &model_size, 0.0f, 5.0f);
-                // int factor = pixelate_factor_;
-                // ImGui::SliderInt("width_size", &pixelate_factor_, 1, width_);
-                // if (pixelate_factor_ != factor)
-                // {
-                //     pixelate_fb->set_size(pixelate_factor_, pixelate_factor_);
-                // }
             }
             ImGui::End();
         }
@@ -207,26 +233,39 @@ namespace ui
             for (auto &property : int_properties)
             {
                 auto &[name, value, min_value, max_value] = property;
+                ImGui::Text("%s", name.c_str());
+                ImGui::PushItemWidth(-1);
                 ImGui::SliderInt(name.c_str(), &value, min_value, max_value);
+                ImGui::PopItemWidth();
+            }
+
+            auto &color3_properties = imgui_options.get_color3_property();
+            for (auto &property : color3_properties)
+            {
+                std::string title = property.first;
+                ImGui::Text("%s", title.c_str());
+                ImGui::PushItemWidth(-1);
+                ImGui::ColorEdit3(property.first.c_str(), &property.second[0]);
+                ImGui::PopItemWidth();
             }
         }
         void process_model(glcpp::WorldTransformComponent &transform)
         {
             auto &rotation = transform.get_rotation();
             glm::vec3 r = rotation;
-            ImGui::Text("model rotation");
+            ImGui::Text("rotation");
             ImGui::SliderFloat("r.x", &r.x, 0.0f, 6.5f);
             ImGui::SliderFloat("r.y", &r.y, 0.0f, 6.5f);
             ImGui::SliderFloat("r.z", &r.z, 0.0f, 6.5f);
             transform.set_rotation({r.x, r.y, r.z});
             auto &scale = transform.get_scale();
             r = scale;
-            ImGui::Text("model scale");
+            ImGui::Text("scale");
             ImGui::SliderFloat("s.x", &r.x, 0.1f, 10.0f);
             transform.set_scale({r.x, r.x, r.x});
             auto &translation = transform.get_translation();
             r = translation;
-            ImGui::Text("model translation");
+            ImGui::Text("translation");
             ImGui::SliderFloat("t.x", &r.x, -10.0f, 10.0f);
             ImGui::SliderFloat("t.y", &r.y, -10.0f, 10.0f);
             ImGui::SliderFloat("t.z", &r.z, -10.0f, 10.0f);
@@ -378,7 +417,7 @@ namespace ui
 
             ImGui::End();
         }
-        void scene_draw(const std::string &title, Scene *scene)
+        void draw_scene(const std::string &title, Scene *scene)
         {
             if (scene_map_.find(title) == scene_map_.end())
             {
@@ -394,6 +433,14 @@ namespace ui
                 return false;
             }
             return scene_map_[title]->get_is_hovered();
+        }
+        void draw_texture(const char *title, glcpp::Framebuffer &framebuffer)
+        {
+            ImGui::Begin(title);
+            float width = (float)framebuffer.get_width();
+            float height = (float)framebuffer.get_height();
+            ImGui::Image(reinterpret_cast<void *>(framebuffer.get_color_texture()), ImVec2{width, height}, ImVec2{0, 1}, ImVec2{1, 0});
+            ImGui::End();
         }
 
     private:

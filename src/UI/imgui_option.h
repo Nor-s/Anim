@@ -35,6 +35,11 @@ namespace ui
 
             return static_cast<int>(float_properties_.size() - 1);
         }
+        int push_color3_property(const std::string &name, const glm::vec3 &color)
+        {
+            color3_properties_.push_back({name, color});
+            return static_cast<int>(color3_properties_.size() - 1);
+        }
         bool get_flag(int idx)
         {
             return flags_[idx].second;
@@ -47,6 +52,10 @@ namespace ui
         {
             return std::get<1>(float_properties_[idx]);
         }
+        const glm::vec3 &get_color3_property(int idx)
+        {
+            return color3_properties_[idx].second;
+        }
         std::vector<std::pair<std::string, bool>> &get_flags()
         {
             return flags_;
@@ -55,9 +64,13 @@ namespace ui
         {
             return int_properties_;
         }
-        std::vector<std::tuple<std::string, float, float, float>> &float_properties()
+        std::vector<std::tuple<std::string, float, float, float>> &get_float_properties()
         {
             return float_properties_;
+        }
+        std::vector<std::pair<std::string, glm::vec3>> &get_color3_property()
+        {
+            return color3_properties_;
         }
 
         void set_int_property(int idx, const std::tuple<std::string, int, int, int> &item)
@@ -72,6 +85,8 @@ namespace ui
         std::vector<std::tuple<std::string, int, int, int>> int_properties_;
         // SliderFloat
         std::vector<std::tuple<std::string, float, float, float>> float_properties_;
+        // ColorEdit3
+        std::vector<std::pair<std::string, glm::vec3>> color3_properties_;
     };
 
 }

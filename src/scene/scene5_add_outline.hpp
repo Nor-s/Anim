@@ -1,5 +1,5 @@
-#ifndef SRC_SCENE_SCENE1_H
-#define SRC_SCENE_SCENE1_H
+#ifndef SRC_SCENE_SCENE5_H
+#define SRC_SCENE_SCENE5_H
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -21,10 +21,10 @@
 
 namespace fs = std::filesystem;
 
-class Scene1 : public Scene
+class Scene5 : public Scene
 {
 public:
-    Scene1(int width, int height)
+    Scene5(int width, int height)
     {
         init_option();
         init_skybox();
@@ -33,7 +33,7 @@ public:
         init_framebuffer(width, height);
         init_camera();
     }
-    virtual ~Scene1() = default;
+    virtual ~Scene5() = default;
 
     virtual void init_framebuffer(uint32_t width, uint32_t height) override
     {
@@ -46,8 +46,6 @@ public:
     virtual void add_model(const char *file_name) override
     {
         model_.reset(new glcpp::Model{file_name});
-        anim_.reset(new glcpp::Animation{file_name, model_.get()});
-        animator_.reset(new glcpp::Animator{anim_.get()});
     }
     virtual std::shared_ptr<glcpp::Model> &get_model() override
     {
@@ -63,12 +61,6 @@ public:
         set_view_and_projection();
 
         update_flag_option();
-        animator_->UpdateAnimation(delta_time_);
-
-        model_shader_->use();
-        auto transforms = animator_->GetFinalBoneMatrices();
-        for (int i = 0; i < transforms.size(); ++i)
-            model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
 
         pixelate_framebuffer_->pre_draw(model_, *model_shader_, view_, projection_);
 
@@ -133,10 +125,6 @@ public:
     {
         return *pixelate_framebuffer_;
     }
-    void set_delta_time(float dt)
-    {
-        delta_time_ = dt;
-    }
 
 private:
     void init_option()
@@ -164,7 +152,7 @@ private:
     }
     void init_shader()
     {
-        model_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/animation_loading.vs", "./../../resources/shaders/1.model_loading.fs");
+        model_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs");
         framebuffer_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
         framebuffer_blur_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
         outline_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/outline_framebuffer.vs", "./../../resources/shaders/outline_framebuffer.fs");
@@ -176,7 +164,7 @@ private:
     }
     void init_camera()
     {
-        camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 100.0f, 500.0f));
+        camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 0.0f, 80.0f));
     }
     void capture_skybox()
     {
@@ -249,10 +237,6 @@ private:
     uint32_t pixelate_value_idx_;
     uint32_t outline_flag_idx_;
     uint32_t outline_color_idx_;
-
-    std::shared_ptr<glcpp::Animation> anim_;
-    std::shared_ptr<glcpp::Animator> animator_;
-    float delta_time_ = 0.0f;
 };
 
 #endif

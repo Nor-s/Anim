@@ -128,19 +128,19 @@ namespace glcpp
     {
         return handle_;
     }
-    std::pair<uint32_t, uint32_t> Window::get_size()
+    std::pair<uint32_t, uint32_t> Window::get_size() const
     {
         return std::make_pair(width_, height_);
     }
-    uint32_t Window::get_width()
+    uint32_t Window::get_width() const
     {
         return width_ * factor_;
     }
-    uint32_t Window::get_height()
+    uint32_t Window::get_height() const
     {
         return height_ * factor_;
     }
-    std::string Window::get_title()
+    std::string Window::get_title() const
     {
         return title_;
     }
@@ -149,7 +149,7 @@ namespace glcpp
         set_factor();
         return factor_;
     }
-    float Window::get_aspect()
+    float Window::get_aspect() const
     {
         return static_cast<float>(width_) / static_cast<float>(height_);
     }
@@ -159,7 +159,7 @@ namespace glcpp
         auto glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
         return std::make_pair(glfw_extensions, glfw_extension_count);
     }
-    std::pair<int, int> Window::get_framebuffer_size()
+    std::pair<int, int> Window::get_framebuffer_size() const
     {
         std::pair<int, int> size;
         glfwGetFramebufferSize(handle_, &size.first, &size.second);

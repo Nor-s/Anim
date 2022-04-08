@@ -9,7 +9,7 @@ namespace glcpp
     class WorldTransformComponent
     {
     public:
-        glm::mat4 get_mat4()
+        glm::mat4 get_mat4() const
         {
 
             const float c3 = glm::cos(rotation_.z);

@@ -16,6 +16,10 @@ set(GLCPP_SRC
     glcpp/framebuffer.h
     glcpp/application.hpp
     glcpp/transform_component.h
+    glcpp/utility.hpp
+    glcpp/anim/bone.hpp
+    glcpp/anim/animation.hpp
+    glcpp/anim/animator.hpp
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
@@ -57,3 +61,5 @@ add_executable(pixel3D
 target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)
 target_include_directories(pixel3D  PUBLIC ./)
 target_link_libraries(pixel3D  glcpp)
+
+

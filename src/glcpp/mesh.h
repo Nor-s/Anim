@@ -27,6 +27,53 @@ namespace glcpp
         int bone_ids[MAX_BONE_INFLUENCE];
         // weights from each bone
         float weights[MAX_BONE_INFLUENCE];
+
+        Vertex()
+            : tex_coords(glm::vec2(0.0f, 0.0f))
+        {
+            init_bone();
+        }
+
+        void init_bone()
+        {
+            for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+            {
+                bone_ids[i] = -1;
+                weights[i] = 0.0f;
+            }
+        }
+        void set_bone(int boneId, float weight)
+        {
+            for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+            {
+                if (bone_ids[i] < 0)
+                {
+                    bone_ids[i] = boneId;
+                    weights[i] = weight;
+                    break;
+                }
+            }
+        }
+        void set_position(const glm::vec3 &vec)
+        {
+            position = vec;
+        }
+        void set_normal(const glm::vec3 &vec)
+        {
+            normal = vec;
+        }
+        void set_texture_coords(const glm::vec2 &vec)
+        {
+            tex_coords = vec;
+        }
+        void set_tangent(const glm::vec3 &vec)
+        {
+            tangent = vec;
+        }
+        void set_bitangent(const glm::vec3 &vec)
+        {
+            bitangent = vec;
+        }
     };
     struct Texture
     {

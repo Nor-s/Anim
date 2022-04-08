@@ -6,6 +6,8 @@ opengl project
 
 -   애니메이션 재생/ 스탑 (5)
 
+    -   몇몇 모델에서 오류, 데이터 분석, 리팩토링
+
 -   GUI 작업 (4)
 
 -   object 셀렉트 (1)
@@ -46,12 +48,18 @@ opengl project
 
 ![](/screenshot/Apr-01-2022%2014-53-09.gif)
 
+### 4/9
+
+-   outline, outline color, animation
+
+![](/screenshot/Apr-09-2022%2004-14-49.gif)
+
 ## references
 
 -   [render](https://learnopengl.com/)
 -   [texture to file](https://stackoverflow.com/questions/11863416/read-texture-bytes-with-glreadpixels)
 -   [pixelate shader](https://github.com/genekogan/Processing-Shader-Examples/blob/master/TextureShaders/data/pixelate.glsl)
--   [TODO: skeleton animation](https://ogldev.org/www/tutorial38/tutorial38.html)
+-   [skeleton animation](https://ogldev.org/www/tutorial38/tutorial38.html)
 
 -   [shader1](https://lettier.github.io/3d-game-shaders-for-beginners/)
 -   [shader2](https://thebookofshaders.com/)

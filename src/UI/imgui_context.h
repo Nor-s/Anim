@@ -64,7 +64,7 @@ namespace ui
             (void)io;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
             io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
-            ImGui::StyleColorsLight();
+            ImGui::StyleColorsDark();
             ImGuiStyle &style = ImGui::GetStyle();
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
@@ -215,7 +215,7 @@ namespace ui
                 ImGui::SameLine();
                 process_option(scene->get_option());
 
-                process_model(scene->get_model()->get_transform());
+                process_model(scene->get_model()->get_mutable_transform());
             }
             ImGui::End();
         }

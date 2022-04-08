@@ -13,6 +13,7 @@
 #include <stb/stb_image.h>
 
 #include "shader.h"
+#include "utility.hpp"
 
 namespace glcpp
 {
@@ -37,7 +38,7 @@ namespace glcpp
         for (unsigned int i = 0; i < meshes_.size(); i++)
             meshes_[i].draw(shader);
     }
-    WorldTransformComponent &Model::get_transform()
+    WorldTransformComponent &Model::get_mutable_transform()
     {
         return transform_;
     }
@@ -49,11 +50,15 @@ namespace glcpp
                                                          aiProcess_GenUVCoords |
                                                          aiProcess_OptimizeMeshes |
                                                          aiProcess_ValidateDataStructure |
+                                                         //  aiProcess_ConvertToLeftHanded |
                                                          // aiProcess_FlipUVs |
-                                                         // aiProcess_JoinIdenticalVertices |
+                                                         //  aiProcess_JoinIdenticalVertices |
                                                          aiProcess_GenNormals |
-                                                         aiProcess_CalcTangentSpace);
+                                                         aiProcess_CalcTangentSpace |
+                                                         aiProcess_LimitBoneWeights);
 
+        // aiProcess_FlipWindingOrder;
+        // aiProcess_MakeLeftHanded;
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
             std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
@@ -61,12 +66,13 @@ namespace glcpp
         }
         std::filesystem::path tmp(path);
         directory_ = tmp;
-        std::cout << "directory---------------" << directory_.string() << " ===== \n";
 
         process_node(scene->mRootNode, scene);
     }
     void Model::process_node(aiNode *node, const aiScene *scene)
     {
+        // std::cout << node->mName.C_Str() << " process_node====================\n";
+        AiMatToGlmMat(node->mTransformation);
         // process all the node's meshes (if any)
         for (unsigned int i = 0; i < node->mNumMeshes; i++)
         {
@@ -90,31 +96,21 @@ namespace glcpp
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
         {
             Vertex vertex;
-            vertex.position = GetGlmVec(mesh->mVertices[i]);
-            vertex.normal = GetGlmVec(mesh->mNormals[i]);
-            // texcoord
-            if (mesh->mTextureCoords[0]) // does the mesh contain texture coordinates?
+            vertex.set_position(AiVecToGlmVec(mesh->mVertices[i]));
+            vertex.set_normal(AiVecToGlmVec(mesh->mNormals[i]));
+            if (mesh->mTextureCoords[0])
             {
-                glm::vec2 vec;
-                glm::vec3 vector;
-                vec.x = mesh->mTextureCoords[0][i].x;
-                vec.y = mesh->mTextureCoords[0][i].y;
-                vertex.tex_coords = vec;
-                // tangent
-                vector.x = mesh->mTangents[i].x;
-                vector.y = mesh->mTangents[i].y;
-                vector.z = mesh->mTangents[i].z;
-                vertex.tangent = vector;
-                // bitangent
-                vector.x = mesh->mBitangents[i].x;
-                vector.y = mesh->mBitangents[i].y;
-                vector.z = mesh->mBitangents[i].z;
-                vertex.bitangent = vector;
+                vertex.set_texture_coords(glm::vec2{mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y});
             }
-            else
-                vertex.tex_coords = glm::vec2(0.0f, 0.0f);
+            vertex.set_tangent(glm::vec3{
+                mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z});
+            vertex.set_bitangent(glm::vec3{
+                mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z});
+
             vertices.push_back(vertex);
         }
+
+        process_bone(mesh, scene, vertices);
 
         // process indices
         for (unsigned int i = 0; i < mesh->mNumFaces; i++)
@@ -142,6 +138,48 @@ namespace glcpp
 
         return Mesh(vertices, indices, textures);
     }
+
+    void Model::process_bone(aiMesh *mesh, const aiScene *scene, std::vector<Vertex> &vertices)
+    {
+        // ?
+        auto &bone_info_map = bone_info_map_;
+        int &bone_count = bone_count_;
+        int bone_num = mesh->mNumBones;
+        for (int bone_idx = 0; bone_idx < bone_num; ++bone_idx)
+        {
+            int bone_id = -1;
+            std::string bone_name = mesh->mBones[bone_idx]->mName.C_Str();
+            std::cout << bone_name << "\n";
+            if (bone_info_map.find(bone_name) == bone_info_map.end())
+            {
+                BoneInfo new_bone_info;
+                new_bone_info.id = bone_count;
+                // std::cout << bone_name << " process_bone====================\n";
+                new_bone_info.offset = AiMatToGlmMat(mesh->mBones[bone_idx]->mOffsetMatrix);
+                bone_info_map[bone_name] = new_bone_info;
+                bone_id = bone_count;
+                bone_count++;
+            }
+            else
+            {
+                bone_id = bone_info_map[bone_name].id;
+            }
+
+            assert(bone_id != -1);
+            auto weights = mesh->mBones[bone_idx]->mWeights;
+            int weights_num = mesh->mBones[bone_idx]->mNumWeights;
+
+            for (int weight_idx = 0; weight_idx < weights_num; ++weight_idx)
+            {
+                int vertex_id = weights[weight_idx].mVertexId;
+                float weight = weights[weight_idx].mWeight;
+
+                assert(vertex_id <= vertices.size());
+                vertices[vertex_id].set_bone(bone_id, weight);
+            }
+        }
+    }
+
     std::vector<Texture> Model::load_material_textures(aiMaterial *mat, aiTextureType type,
                                                        std::string typeName)
     {
@@ -172,12 +210,19 @@ namespace glcpp
         }
         return textures;
     }
+
     unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory)
     {
         std::string filename = std::string(path);
+        size_t idx = filename.find_first_of("/\\");
+        if (filename[0] == '.' || idx == 0)
+        {
+            filename = filename.substr(idx + 1);
+        }
         std::filesystem::path tmp = directory;
         filename = tmp.replace_filename(filename).string();
-        std::cout << "filename: " << filename << std::endl;
+        std::replace(filename.begin(), filename.end(), '\\', '/');
+
         unsigned int textureID;
         glGenTextures(1, &textureID);
 
@@ -212,8 +257,16 @@ namespace glcpp
 
         return textureID;
     }
-    inline glm::vec3 GetGlmVec(const aiVector3D &vec)
+}
+
+namespace glcpp
+{
+    std::map<std::string, BoneInfo> &Model::get_mutable_bone_info_map()
     {
-        return glm::vec3(vec.x, vec.y, vec.z);
+        return bone_info_map_;
+    }
+    int &Model::get_mutable_bone_count()
+    {
+        return bone_count_;
     }
 }

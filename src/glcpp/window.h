@@ -37,14 +37,14 @@ namespace glcpp
         void set_cursor_pos_callback(void (*fp)(GLFWwindow *window, double xpos, double ypos));
 
         GLFWwindow *get_handle() const;
-        std::pair<uint32_t, uint32_t> get_size();
-        uint32_t get_width();
-        uint32_t get_height();
-        std::string get_title();
+        std::pair<uint32_t, uint32_t> get_size() const;
+        uint32_t get_width() const;
+        uint32_t get_height() const;
+        std::string get_title() const;
         std::pair<const char **, uint32_t> get_required_instance_extensions() const;
-        std::pair<int, int> get_framebuffer_size();
+        std::pair<int, int> get_framebuffer_size() const;
         float get_factor();
-        float get_aspect();
+        float get_aspect() const;
         void update_window();
 
     private:

@@ -67,7 +67,8 @@ public:
 
         model_shader_->use();
         auto transforms = animator_->GetFinalBoneMatrices();
-        for (int i = 0; i < transforms.size(); ++i)
+        int size = static_cast<int>(transforms.size());
+        for (int i = 0; i < size; ++i)
             model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
 
         pixelate_framebuffer_->pre_draw(model_, *model_shader_, view_, projection_);

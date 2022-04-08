@@ -174,7 +174,7 @@ namespace glcpp
                 int vertex_id = weights[weight_idx].mVertexId;
                 float weight = weights[weight_idx].mWeight;
 
-                assert(vertex_id <= vertices.size());
+                assert(static_cast<size_t>(vertex_id) <= vertices.size());
                 vertices[vertex_id].set_bone(bone_id, weight);
             }
         }

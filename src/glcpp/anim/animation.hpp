@@ -9,7 +9,6 @@
 #include <map>
 #include <iostream>
 
-
 #include "bone.hpp"
 #include "../model.h"
 
@@ -29,7 +28,7 @@ namespace glcpp
     public:
         Animation() = default;
 
-        Animation(const char* animationPath, Model *model)
+        Animation(const char *animationPath, Model *model)
         {
             Assimp::Importer importer;
             const aiScene *scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
@@ -87,14 +86,14 @@ namespace glcpp
             auto &boneInfoMap = model.get_mutable_bone_info_map(); // getting m_BoneInfoMap from Model class
             int &boneCount = model.get_mutable_bone_count();       // getting the m_BoneCounter from Model class
 
-            std::cout<<"missing Bons\n";
+            std::cout << "missing Bons\n";
 
             // reading channels(bones engaged in an animation and their keyframes)
             for (int i = 0; i < size; i++)
             {
                 auto channel = animation->mChannels[i];
                 std::string boneName = channel->mNodeName.data;
-                std::cout<<boneName<<"\n";
+                std::cout << boneName << "\n";
 
                 if (boneInfoMap.find(boneName) == boneInfoMap.end())
                 {
@@ -116,7 +115,7 @@ namespace glcpp
             dest.transformation = AiMatToGlmMat(src->mTransformation);
             dest.childrenCount = src->mNumChildren;
 
-            for (int i = 0; i < src->mNumChildren; i++)
+            for (unsigned int i = 0; i < src->mNumChildren; i++)
             {
                 AssimpNodeData newData;
                 ReadHeirarchyData(newData, src->mChildren[i]);

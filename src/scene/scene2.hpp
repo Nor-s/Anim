@@ -95,7 +95,7 @@ private:
     void init_model()
     {
         add_model(fs::canonical(fs::path("./../../resources/models/nanosuit/nanosuit.obj")).string().c_str());
-        model_->get_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
+        model_->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
     }
     void init_camera()
     {

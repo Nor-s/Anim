@@ -65,6 +65,7 @@ public:
             float currentFrame = static_cast<float>(glfwGetTime());
             deltaTime = currentFrame - lastFrame;
             lastFrame = currentFrame;
+            scene_->set_delta_time(deltaTime);
 
             processInput(window_->get_handle());
             pre_draw();

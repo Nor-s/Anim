@@ -12,6 +12,7 @@
 #include "glcpp/transform_component.h"
 #include "scene.hpp"
 #include "pixelate_framebuffer.h"
+#include "glcpp/anim/animator.hpp"
 
 #include <tuple>
 #include <map>
@@ -45,6 +46,8 @@ public:
     virtual void add_model(const char *file_name) override
     {
         model_.reset(new glcpp::Model{file_name});
+        anim_.reset(new glcpp::Animation{file_name, model_.get()});
+        animator_.reset(new glcpp::Animator{anim_.get()});
     }
     virtual std::shared_ptr<glcpp::Model> &get_model() override
     {
@@ -60,6 +63,12 @@ public:
         set_view_and_projection();
 
         update_flag_option();
+        animator_->UpdateAnimation(delta_time_);
+
+        model_shader_->use();
+        auto transforms = animator_->GetFinalBoneMatrices();
+        for (int i = 0; i < transforms.size(); ++i)
+            model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
 
         pixelate_framebuffer_->pre_draw(model_, *model_shader_, view_, projection_);
 
@@ -124,6 +133,10 @@ public:
     {
         return *pixelate_framebuffer_;
     }
+    void set_delta_time(float dt)
+    {
+        delta_time_ = dt;
+    }
 
 private:
     void init_option()
@@ -151,19 +164,19 @@ private:
     }
     void init_shader()
     {
-        model_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs");
+        model_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/animation_loading.vs", "./../../resources/shaders/1.model_loading.fs");
         framebuffer_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
         framebuffer_blur_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
         outline_shader_ = std::make_unique<glcpp::Shader>("./../../resources/shaders/outline_framebuffer.vs", "./../../resources/shaders/outline_framebuffer.fs");
     }
     void init_model()
     {
-        add_model(fs::canonical(fs::path("./../../resources/models/nanosuit/nanosuit.obj")).string().c_str());
-        model_->get_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
+        add_model(fs::canonical(fs::path("./../../resources/models/vampire/zom.fbx")).string().c_str());
+        model_->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
     }
     void init_camera()
     {
-        camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 0.0f, 80.0f));
+        camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 100.0f, 500.0f));
     }
     void capture_skybox()
     {
@@ -236,6 +249,10 @@ private:
     uint32_t pixelate_value_idx_;
     uint32_t outline_flag_idx_;
     uint32_t outline_color_idx_;
+
+    std::shared_ptr<glcpp::Animation> anim_;
+    std::shared_ptr<glcpp::Animator> animator_;
+    float delta_time_ = 0.0f;
 };
 
 #endif

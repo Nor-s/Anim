@@ -33,7 +33,7 @@ namespace glcpp
             Assimp::Importer importer;
             const aiScene *scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
 
-            if (!scene || !scene->mRootNode)
+            if (!scene || !scene->mRootNode || !scene->HasAnimations())
             {
                 std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
             }

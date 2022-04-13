@@ -46,8 +46,18 @@ public:
     virtual void add_model(const char *file_name) override
     {
         model_.reset(new glcpp::Model{file_name});
-        anim_.reset(new glcpp::Animation{file_name, model_.get()});
-        animator_.reset(new glcpp::Animator{anim_.get()});
+        if (std::filesystem::path(file_name).extension() != ".obj")
+        {
+            anim_.reset(new glcpp::Animation{file_name, model_.get()});
+            animator_.reset(new glcpp::Animator{anim_.get()});
+            model_shader_.reset(new glcpp::Shader{"./../../resources/shaders/animation_loading.vs", "./../../resources/shaders/1.model_loading.fs"});
+        }
+        else
+        {
+            model_shader_.reset(new glcpp::Shader{"./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs"});
+            animator_.reset();
+            anim_.reset();
+        }
     }
     virtual std::shared_ptr<glcpp::Model> &get_model() override
     {
@@ -63,27 +73,29 @@ public:
         set_view_and_projection();
 
         update_flag_option();
-        animator_->UpdateAnimation(delta_time_);
+        if (animator_)
+        {
+            animator_->UpdateAnimation(delta_time_);
 
-        model_shader_->use();
-        auto transforms = animator_->GetFinalBoneMatrices();
-        int size = static_cast<int>(transforms.size());
-        for (int i = 0; i < size; ++i)
-            model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+            model_shader_->use();
+            auto transforms = animator_->GetFinalBoneMatrices();
+            int size = static_cast<int>(transforms.size());
+            for (int i = 0; i < size; ++i)
+                model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+        }
 
         pixelate_framebuffer_->pre_draw(model_, *model_shader_, view_, projection_);
 
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        // TODO: glClearColor를 먼저 호출해야 framebuffer_에 적용되는 이유?
+        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
         framebuffer_->bind_with_depth();
         {
-            glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
             if (imgui_option_.get_flag(skyblur_flag_idx_))
             {
-                glDepthMask(false);
                 skybox_framebuffer_->draw(*framebuffer_blur_shader_);
-                glDepthMask(true);
             }
             else
             {
@@ -91,6 +103,7 @@ public:
             }
             pixelate_framebuffer_->draw();
         }
+        assert(glGetError() == GL_NO_ERROR);
         framebuffer_->unbind();
     }
     virtual void draw() override
@@ -160,7 +173,6 @@ private:
         pixelate_framebuffer_->set_factor(factor);
         pixelate_framebuffer_->set_pixelate_shader(framebuffer_shader_);
         pixelate_framebuffer_->set_RGB_shader(framebuffer_shader_);
-        pixelate_framebuffer_->set_tmp_shader(model_shader_);
         pixelate_framebuffer_->set_outline_shader(outline_shader_);
     }
     void init_shader()

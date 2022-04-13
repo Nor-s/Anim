@@ -64,6 +64,7 @@ void PixelateFramebuffer::capture_rgb(std::shared_ptr<glcpp::Model> &model, glcp
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         model->draw(shader, view, projection);
     }
+    RGB_framebuffer_->unbind();
 }
 
 void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
@@ -80,7 +81,7 @@ void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glc
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
         glStencilMask(0xFF);
 
-        model->draw(*tmp_shader_, view, projection);
+        model->draw(shader, view, projection);
 
         glStencilFunc(GL_EQUAL, 1, 0xFF);
         glStencilMask(0x00);
@@ -93,13 +94,14 @@ void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glc
         glEnable(GL_DEPTH_TEST);
         glDisable(GL_STENCIL_TEST);
     }
+    pixelate_framebuffer_->unbind();
 }
 
 void PixelateFramebuffer::capture_outline()
 {
-    outline_framebuffer_->bind_with_depth();
+    outline_framebuffer_->bind();
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     outline_shader_->use();

@@ -91,10 +91,10 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, window_->get_width(), window_->get_height());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
     }
     void post_draw()
     {
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glfwSwapBuffers(window_->get_handle());
         glfwPollEvents();
     }

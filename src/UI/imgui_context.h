@@ -64,7 +64,7 @@ namespace ui
             (void)io;
             io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
             io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
-            ImGui::StyleColorsDark();
+            ImGui::StyleColorsLight();
             ImGuiStyle &style = ImGui::GetStyle();
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {

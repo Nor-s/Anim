@@ -54,12 +54,11 @@ add_executable(pixel3D
 ./pixel3D.h 
 ./scene/scene.hpp
 ./scene/scene1.hpp
-./scene/scene2.hpp
-./scene/scene3.hpp
+./scene/bone_scene.hpp
 )
 
 target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)
 target_include_directories(pixel3D  PUBLIC ./)
-target_link_libraries(pixel3D  glcpp)
+target_link_libraries(pixel3D  glcpp jsoncpp_static)
 
 

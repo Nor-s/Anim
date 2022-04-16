@@ -20,6 +20,7 @@ namespace glcpp
     Model::Model(const char *path)
     {
         load_model(path);
+        std::cout << "bone_count : " << bone_count_ << "\n";
     }
     Model::~Model()
     {
@@ -45,19 +46,20 @@ namespace glcpp
     void Model::load_model(const std::string &path)
     {
         Assimp::Importer import;
-        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate |
-                                                         aiProcess_SortByPType |
-                                                         aiProcess_GenUVCoords |
-                                                         aiProcess_OptimizeMeshes |
-                                                         aiProcess_ValidateDataStructure |
-                                                         //  aiProcess_ConvertToLeftHanded |
-                                                         // aiProcess_FlipUVs |
-                                                         //  aiProcess_JoinIdenticalVertices |
-                                                         aiProcess_GenNormals |
-                                                         aiProcess_CalcTangentSpace |
-                                                         aiProcess_LimitBoneWeights);
+        unsigned int assimp_read_flag = aiProcess_Triangulate |
+                                        // aiProcess_SortByPType |
+                                        aiProcess_GenUVCoords |
+                                        aiProcess_OptimizeMeshes |
+                                        aiProcess_ValidateDataStructure |
+                                        //  aiProcess_ConvertToLeftHanded |
+                                        // aiProcess_FlipUVs |
+                                        aiProcess_GenNormals |
+                                        aiProcess_CalcTangentSpace;
+        assimp_read_flag |= aiProcess_LimitBoneWeights;
+        // aiProcess_JoinIdenticalVertices |
+        // assimp_read_flag |= aiProcess_FlipWindingOrder;
+        const aiScene *scene = import.ReadFile(path, assimp_read_flag);
 
-        // aiProcess_FlipWindingOrder;
         // aiProcess_MakeLeftHanded;
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
@@ -66,11 +68,13 @@ namespace glcpp
         }
         std::filesystem::path tmp(path);
         directory_ = tmp;
-
         process_node(scene->mRootNode, scene);
+        std::cout << "mRoot child: " << node_count_ << "\n";
+        std::cout << "model_chennel: " << scene->mAnimations[0]->mNumChannels << "\n";
     }
     void Model::process_node(aiNode *node, const aiScene *scene)
     {
+        node_count_++;
         // std::cout << node->mName.C_Str() << " process_node====================\n";
         AiMatToGlmMat(node->mTransformation);
         // process all the node's meshes (if any)
@@ -134,14 +138,12 @@ namespace glcpp
 
         std::vector<Texture> heightMaps = load_material_textures(material, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
-        // ExtractBoneWeightForVertices(vertices, mesh, scene);
 
         return Mesh(vertices, indices, textures);
     }
 
     void Model::process_bone(aiMesh *mesh, const aiScene *scene, std::vector<Vertex> &vertices)
     {
-        // ?
         auto &bone_info_map = bone_info_map_;
         int &bone_count = bone_count_;
         int bone_num = mesh->mNumBones;
@@ -149,12 +151,10 @@ namespace glcpp
         {
             int bone_id = -1;
             std::string bone_name = mesh->mBones[bone_idx]->mName.C_Str();
-            std::cout << bone_name << "\n";
             if (bone_info_map.find(bone_name) == bone_info_map.end())
             {
                 BoneInfo new_bone_info;
                 new_bone_info.id = bone_count;
-                // std::cout << bone_name << " process_bone====================\n";
                 new_bone_info.offset = AiMatToGlmMat(mesh->mBones[bone_idx]->mOffsetMatrix);
                 bone_info_map[bone_name] = new_bone_info;
                 bone_id = bone_count;
@@ -166,6 +166,7 @@ namespace glcpp
             }
 
             assert(bone_id != -1);
+
             auto weights = mesh->mBones[bone_idx]->mWeights;
             int weights_num = mesh->mBones[bone_idx]->mNumWeights;
 

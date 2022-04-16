@@ -67,12 +67,15 @@ namespace glcpp
             format = format_;
         }
         stbi_flip_vertically_on_write(true);
-
+        // 출력하고자 하는 프레임 버퍼 바인딩
         glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
         glViewport(0, 0, width_, height_);
+        // 화소를 저장할 공간을 할당받음
         GLubyte *pixels = (GLubyte *)malloc(width_ * height_ * sizeof(GLubyte) * 4);
+        // glReadPixel 로 현재 바인딩된 프레임버퍼의 화소값들을 pixels에 저장
         glReadPixels(0, 0, width_, height_, format, GL_UNSIGNED_BYTE, pixels);
 
+        // 오픈소스 stb 라이브러리를 사용하여 받아온 화소값들을 png 포맷으로 변환한다.
         if (format == GL_RGBA)
             stbi_write_png(file_name.c_str(), width_, height_, 4, pixels, 0);
         else if (format == GL_RGB)

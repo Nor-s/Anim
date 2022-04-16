@@ -55,6 +55,7 @@ namespace glcpp
         // bone data
         std::map<std::string, BoneInfo> bone_info_map_;
         int bone_count_ = 0;
+        int node_count_ = 0;
 
         // bool gamma_correction;
         // int bone_count_;

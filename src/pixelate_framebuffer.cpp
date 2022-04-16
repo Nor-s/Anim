@@ -53,15 +53,19 @@ void PixelateFramebuffer::print_to_png(const std::string &file_name)
         pixelate_framebuffer_->print_color_texture(file_name);
     }
 }
+// https://gamedev.stackexchange.com/questions/31560/how-can-i-render-a-semi-transparent-model-with-opengl-correctly
+//  https://stackoverflow.com/questions/9643415/rendering-3d-models-with-textures-that-have-alpha-in-opengl
+// TODO: semi transparent model => disable GL_BLEND
 void PixelateFramebuffer::capture_rgb(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, RGB_framebuffer_->get_fbo());
     {
-        glDisable(GL_BLEND);
         glEnable(GL_DEPTH_TEST);
+        glDisable(GL_BLEND);
         glViewport(0, 0, RGB_framebuffer_->get_width(), RGB_framebuffer_->get_height());
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
         model->draw(shader, view, projection);
     }
     RGB_framebuffer_->unbind();
@@ -71,28 +75,14 @@ void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glc
 {
     glBindFramebuffer(GL_FRAMEBUFFER, pixelate_framebuffer_->get_fbo());
     {
-        glEnable(GL_STENCIL_TEST);
         glEnable(GL_DEPTH_TEST);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glViewport(0, 0, pixelate_framebuffer_->get_width(), pixelate_framebuffer_->get_height());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0xFF);
-
         model->draw(shader, view, projection);
-
-        glStencilFunc(GL_EQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_BLEND);
-        RGB_framebuffer_->draw(*RGB_shader_);
-
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glEnable(GL_DEPTH_TEST);
-        glDisable(GL_STENCIL_TEST);
     }
     pixelate_framebuffer_->unbind();
 }

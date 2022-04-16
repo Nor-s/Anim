@@ -43,12 +43,13 @@ public:
         init_pixelate_framebuffer(width_, height_);
     }
 
+    // TODO: error with model_shader when model draw. maybe add_model logic to update framebuffer
     virtual void add_model(const char *file_name) override
     {
-        model_.reset(new glcpp::Model{file_name});
+        models_.emplace_back(std::make_shared<glcpp::Model>(file_name));
         if (std::filesystem::path(file_name).extension() != ".obj")
         {
-            anim_.reset(new glcpp::Animation{file_name, model_.get()});
+            anim_.reset(new glcpp::Animation{file_name, models_.back().get()});
             animator_.reset(new glcpp::Animator{anim_.get()});
             model_shader_.reset(new glcpp::Shader{"./../../resources/shaders/animation_loading.vs", "./../../resources/shaders/1.model_loading.fs"});
         }
@@ -61,7 +62,7 @@ public:
     }
     virtual std::shared_ptr<glcpp::Model> &get_model() override
     {
-        return model_;
+        return models_.back();
     }
     virtual std::shared_ptr<glcpp::Framebuffer> &get_framebuffer() override
     {
@@ -71,7 +72,6 @@ public:
     {
         update_framebuffer();
         set_view_and_projection();
-
         update_flag_option();
         if (animator_)
         {
@@ -84,11 +84,11 @@ public:
                 model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
         }
 
-        pixelate_framebuffer_->pre_draw(model_, *model_shader_, view_, projection_);
+        pixelate_framebuffer_->pre_draw(models_.back(), *model_shader_, view_, projection_);
 
         // TODO: glClearColor를 먼저 호출해야 framebuffer_에 적용되는 이유?
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-        framebuffer_->bind_with_depth();
+        framebuffer_->bind();
         {
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
@@ -99,12 +99,16 @@ public:
             }
             else
             {
-                skybox_->draw(view_, projection_);
+                // skybox_->draw(view_, projection_);
             }
             pixelate_framebuffer_->draw();
         }
-        assert(glGetError() == GL_NO_ERROR);
         framebuffer_->unbind();
+        auto error = glGetError();
+        if (error != GL_NO_ERROR)
+        {
+            std::cout << error << "\n";
+        }
     }
     virtual void draw() override
     {
@@ -185,7 +189,7 @@ private:
     void init_model()
     {
         add_model(fs::canonical(fs::path("./../../resources/models/vampire/zom.fbx")).string().c_str());
-        model_->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
+        models_.back()->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
     }
     void init_camera()
     {
@@ -245,7 +249,7 @@ private:
          "./../../resources/textures/cube/Tantolunden2/nz.jpg"}};
 
     std::unique_ptr<glcpp::Cubemap> skybox_;
-    std::shared_ptr<glcpp::Model> model_;
+    std::vector<std::shared_ptr<glcpp::Model>> models_;
     std::shared_ptr<glcpp::Shader> model_shader_;
     std::shared_ptr<glcpp::Shader> outline_shader_;
     std::shared_ptr<glcpp::Shader> framebuffer_shader_;

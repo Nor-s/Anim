@@ -33,7 +33,7 @@ namespace glcpp
             Assimp::Importer importer;
             const aiScene *scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
 
-            if (!scene || !scene->mRootNode || !scene->HasAnimations())
+            if (!scene || !scene->mRootNode)
             {
                 std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
             }
@@ -44,13 +44,14 @@ namespace glcpp
                 m_TicksPerSecond = animation->mTicksPerSecond;
 
                 // TODO: what? globalTransformation
-                // aiMatrix4x4 globalTransformation = scene->mRootNode->mTransformation;
+                // aiMatrix4x4 &globalTransformation = scene->mRootNode->mTransformation;
                 // globalTransformation = globalTransformation.Inverse();
 
                 ReadHeirarchyData(m_RootNode, scene->mRootNode);
                 // FBX file sometime missing bones.
                 ReadMissingBones(animation, *model);
             }
+            std::cout << "animation root node count: " << assimpNodeDataCount << "\n";
         }
 
         ~Animation()
@@ -59,15 +60,11 @@ namespace glcpp
 
         Bone *FindBone(const std::string &name)
         {
-            auto iter = std::find_if(m_Bones.begin(), m_Bones.end(),
-                                     [&](const Bone &Bone)
-                                     {
-                                         return Bone.GetBoneName() == name;
-                                     });
+            auto iter = m_Bones.find(name);
             if (iter == m_Bones.end())
                 return nullptr;
             else
-                return &(*iter);
+                return &(*(iter->second));
         }
 
         inline float GetTicksPerSecond() { return m_TicksPerSecond; }
@@ -82,26 +79,17 @@ namespace glcpp
         void ReadMissingBones(const aiAnimation *animation, Model &model)
         {
             int size = animation->mNumChannels;
+            std::cout << "animation bone size: " << size << "\n";
 
             auto &boneInfoMap = model.get_mutable_bone_info_map(); // getting m_BoneInfoMap from Model class
-            int &boneCount = model.get_mutable_bone_count();       // getting the m_BoneCounter from Model class
-
-            std::cout << "missing Bons\n";
 
             // reading channels(bones engaged in an animation and their keyframes)
             for (int i = 0; i < size; i++)
             {
                 auto channel = animation->mChannels[i];
-                std::string boneName = channel->mNodeName.data;
-                std::cout << boneName << "\n";
 
-                if (boneInfoMap.find(boneName) == boneInfoMap.end())
-                {
-                    boneInfoMap[boneName].id = boneCount;
-                    boneCount++;
-                }
-                m_Bones.push_back(Bone(channel->mNodeName.data,
-                                       boneInfoMap[channel->mNodeName.data].id, channel));
+                m_Bones[channel->mNodeName.data] = std::make_unique<Bone>(channel->mNodeName.data,
+                                                                          boneInfoMap[channel->mNodeName.data].id, channel);
             }
 
             m_BoneInfoMap = boneInfoMap;
@@ -110,22 +98,37 @@ namespace glcpp
         void ReadHeirarchyData(AssimpNodeData &dest, const aiNode *src)
         {
             assert(src);
-
+            assimpNodeDataCount++;
             dest.name = src->mName.data;
             dest.transformation = AiMatToGlmMat(src->mTransformation);
             dest.childrenCount = src->mNumChildren;
 
+            std::vector<std::pair<int, int>> sorted_child;
             for (unsigned int i = 0; i < src->mNumChildren; i++)
             {
+                int idx = i;
+                int num_child = src->mChildren[i]->mNumChildren;
+                sorted_child.push_back({num_child, idx});
+            }
+            std::sort(sorted_child.begin(), sorted_child.end(), [](std::pair<int, int> &a, std::pair<int, int> &b)
+                      {
+                if(a.first == b.first) {
+                    return a.second < b.second;
+                }
+                return a.first > b.first; });
+
+            for (auto idx : sorted_child)
+            {
                 AssimpNodeData newData;
-                ReadHeirarchyData(newData, src->mChildren[i]);
+                ReadHeirarchyData(newData, src->mChildren[idx.second]);
                 dest.children.push_back(newData);
             }
         }
         float m_Duration;
         int m_TicksPerSecond;
-        std::vector<Bone> m_Bones;
+        std::map<std::string, std::unique_ptr<Bone>> m_Bones;
         AssimpNodeData m_RootNode;
+        int assimpNodeDataCount = 0;
         std::map<std::string, BoneInfo> m_BoneInfoMap;
     };
 

@@ -24,11 +24,11 @@ void main()
     {
         if(boneIds[i] == -1) 
             continue;
-        if(boneIds[i] >=MAX_BONES) 
-        {
-            totalPosition = vec4(aPos,1.0f);
-            break;
-        }
+        // if(boneIds[i] >=MAX_BONES) 
+        // {
+        //     totalPosition = vec4(aPos,1.0f);
+        //     break;
+        // }
         vec4 localPosition = finalBonesMatrices[boneIds[i]] * vec4(aPos,1.0f);
         totalPosition += localPosition * weights[i];
    }

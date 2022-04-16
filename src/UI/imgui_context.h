@@ -186,7 +186,7 @@ namespace ui
                 if (ImGui::Button("load"))
                 {
                     nfdchar_t *outPath;
-                    nfdfilteritem_t filterItem[2] = {{"model file", "obj,dae,pmx,fbx"}, {"error format", "gltf, dae"}};
+                    nfdfilteritem_t filterItem[2] = {{"model file", "obj,dae,pmx,fbx,vrm,blend"}, {"error format", "gltf, dae"}};
                     nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 2, NULL);
 
                     if (result == NFD_OKAY)

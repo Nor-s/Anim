@@ -47,7 +47,7 @@ namespace glcpp
     {
         Assimp::Importer import;
         unsigned int assimp_read_flag = aiProcess_Triangulate |
-                                        // aiProcess_SortByPType |
+                                        aiProcess_SortByPType |
                                         aiProcess_GenUVCoords |
                                         aiProcess_OptimizeMeshes |
                                         aiProcess_ValidateDataStructure |
@@ -56,8 +56,10 @@ namespace glcpp
                                         aiProcess_GenNormals |
                                         aiProcess_CalcTangentSpace;
         assimp_read_flag |= aiProcess_LimitBoneWeights;
-        // aiProcess_JoinIdenticalVertices |
-        // assimp_read_flag |= aiProcess_FlipWindingOrder;
+        assimp_read_flag |= aiProcess_JoinIdenticalVertices;
+        assimp_read_flag |= aiProcess_FlipWindingOrder;
+        assimp_read_flag |= aiProcess_FindInvalidData;
+        import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
         const aiScene *scene = import.ReadFile(path, assimp_read_flag);
 
         // aiProcess_MakeLeftHanded;

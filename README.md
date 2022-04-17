@@ -6,10 +6,6 @@ opengl project
 
 -   애니메이션 재생/ 스탑 (5)
 
-    -   몇몇 mixamo 모델에서 오류
-        -   이유?
-        -   바인딩포즈는 로딩되나, 애니메이션 쪽 문제
-
 -   GUI 작업 (4)
 
     -   애니메이션 관련(본, 애니메이션 재생 등)
@@ -17,6 +13,17 @@ opengl project
 -   object 셀렉트 (1)
 
 -   그리드 평면 (1)
+
+## bug fix
+
+-   몇몇 mixamo 모델에서 애니메이션 오류
+    -   이유?
+        -   바인딩포즈는 로딩되므로, 애니메이션 변환 행렬 문제일 가능성이 있음.
+    -   해결
+        -   $AssimpFbx$\_PreRotation, $AssimpFbx$\_PreTranslation
+        -   https://github.com/assimp/assimp/issues/1974
+        -   assimp에서 모델을 임포트할 때 생기는 문제였다. 아래의 코드를 삽입하면 해결된다.
+        -   `import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);`
 
 ## external
 

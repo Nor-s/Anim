@@ -31,7 +31,21 @@ namespace glcpp
         Animation(const char *animationPath, Model *model)
         {
             Assimp::Importer importer;
-            const aiScene *scene = importer.ReadFile(animationPath, aiProcess_Triangulate);
+            unsigned int assimp_read_flag = aiProcess_Triangulate |
+                                            aiProcess_SortByPType |
+                                            aiProcess_GenUVCoords |
+                                            aiProcess_OptimizeMeshes |
+                                            aiProcess_ValidateDataStructure |
+                                            //  aiProcess_ConvertToLeftHanded |
+                                            // aiProcess_FlipUVs |
+                                            aiProcess_GenNormals |
+                                            aiProcess_CalcTangentSpace;
+            assimp_read_flag |= aiProcess_JoinIdenticalVertices;
+            assimp_read_flag |= aiProcess_FlipWindingOrder;
+            assimp_read_flag |= aiProcess_LimitBoneWeights;
+            assimp_read_flag |= aiProcess_FindInvalidData;
+            importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+            const aiScene *scene = importer.ReadFile(animationPath, assimp_read_flag);
 
             if (!scene || !scene->mRootNode)
             {

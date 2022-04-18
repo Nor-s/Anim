@@ -104,6 +104,32 @@ opengl project
             nodeTransform = tt * rr * ss;
 ```
 
+## build
+
+### windows
+
+- MSYS2를 설치하고 아래 패키지 다운
+
+```
+pacman -S mingw-w64-x86_64-gcc
+
+pacman -S cmake
+
+pacman -S mingw-w64-x86_64-cmake
+
+pacman -S mingw-w64-x86_64-ninja
+
+pacman -S mingw-w64-x86_64-glfw
+
+pacman -S mingw-w64-x86_64-glm
+
+pacman -S mingw-w64-x86_64-assimp
+```
+- MSYS2 환경변수 설정
+- VSCODE에서 C++ 확장자 팩을 다운받고, CMAKE TOOL 세팅에서 GENERATOR 를 NINJA 선택.
+- VSCODE 하단에 BUILD 버튼 누르면 빌드된다.
+
+
 ## references
 
 -   [render: learnopengl](https://learnopengl.com/)

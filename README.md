@@ -106,8 +106,8 @@ opengl project
 
 ## build
 
-### windows
-
+### windows10, 11
+ 
 - MSYS2를 설치하고 아래 패키지 다운
 
 ```
@@ -127,7 +127,9 @@ pacman -S mingw-w64-x86_64-assimp
 ```
 - MSYS2 환경변수 설정
 - VSCODE에서 C++ 확장자 팩을 다운받고, CMAKE TOOL 세팅에서 GENERATOR 를 NINJA 선택.
-- VSCODE 하단에 BUILD 버튼 누르면 빌드된다.
+- `glt clone https://github.com/Nor-s/n-glcpp.git` 명령어로 레포를 받고
+- vscode 에서 n-glcpp 폴더를 열고, cmake 설정을하고 (gcc) 
+- vscode 하단에 build 버튼 누르면 빌드된다.
 
 
 ## references

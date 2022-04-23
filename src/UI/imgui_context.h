@@ -14,6 +14,7 @@
 #include <glcpp/window.h>
 #include <glcpp/cubemap.h>
 #include <glcpp/framebuffer.h>
+#include <glcpp/anim/animation.hpp>
 #include "pixelate_framebuffer.h"
 #include <memory>
 #include <map>
@@ -145,39 +146,30 @@ namespace ui
             bool s = true;
             ShowExampleAppDockSpace(&s);
         }
-        void draw_model_hierarchy()
+        void dfs(glcpp::AssimpNodeData &anim_node)
         {
-            ImGui::Begin("Model Hierarchy");
-            if (ImGui::TreeNode("Trees"))
+            if (ImGui::TreeNode(anim_node.name.c_str()))
             {
-                if (ImGui::TreeNode("Basic trees"))
+                ImGui::InputFloat3("translation", &anim_node.translation[0]);
+                ImGui::InputFloat3("scale", &anim_node.scale[0]);
+                ImGui::InputFloat4("rotation", &anim_node.rotation[0]);
+                for (size_t i = 0; i < anim_node.children.size(); i++)
                 {
-                    for (int i = 0; i < 5; i++)
-                    {
-                        // Use SetNextItemOpen() so set the default state of a node to be open. We could
-                        // also use TreeNodeEx() with the ImGuiTreeNodeFlags_DefaultOpen flag to achieve the same thing!
-                        if (i == 0)
-                            ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-
-                        if (ImGui::TreeNode((void *)(intptr_t)i, "Child %d", i))
-                        {
-                            ImGui::Text("blah blah");
-                            ImGui::SameLine();
-                            if (ImGui::SmallButton("button"))
-                            {
-                            }
-                            ImGui::TreePop();
-                        }
-                    }
-                    ImGui::TreePop();
+                    dfs(anim_node.children[i]);
                 }
                 ImGui::TreePop();
             }
+        }
+        void draw_model_hierarchy(glcpp::Animation *anim)
+        {
+            ImGui::Begin("Model Hierarchy");
+            dfs(anim->GetMutableRootNode());
             ImGui::End();
         }
         void draw_property(Scene *scene)
         {
-            draw_model_hierarchy();
+            static int count = 0;
+            draw_model_hierarchy(scene->get_mutable_animation());
 
             // render your GUI
             ImGui::Begin("Model Property");
@@ -210,7 +202,7 @@ namespace ui
                 ImGui::SameLine();
                 if (ImGui::Button("print"))
                 {
-                    scene->print_to_png("pixel.png");
+                    scene->print_to_png("pixel" + std::to_string(count++) + ".png");
                 }
                 ImGui::SameLine();
                 process_option(scene->get_option());

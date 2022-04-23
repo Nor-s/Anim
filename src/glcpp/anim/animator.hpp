@@ -51,35 +51,8 @@ namespace glcpp
             std::string nodeName = node->name;
             glm::mat4 nodeTransform = node->transformation;
 
-            // glm::vec3 scale;
-            // glm::quat rotation;
-            // glm::vec3 translation;
-            // glm::vec3 skew;
-            // glm::vec4 perspective;
-
-            // glm::decompose(nodeTransform, scale, rotation, translation, skew, perspective);
-            // std::cout << nodeName << "\n";
-            // std::cout << "scale: " << scale.x << ", " << scale.y << ", " << scale.z << "\n";
-            // std::cout << "translation: " << translation.x << ", " << translation.y << ", " << translation.z << "\n";
-            // std::cout << "rotation: " << rotation.x << ", " << rotation.y << ", " << rotation.z << ", " << rotation.w << "\n";
-            // if (nodeName.find("RightUpLeg") != std::string::npos)
-            //     rotation.x += 0.5;
-            // if (nodeName.find("LeftUpLeg") != std::string::npos)
-            //     rotation.x -= 0.5;
-            // if (nodeName.find("RightArm") != std::string::npos)
-            //     rotation.y += 0.5;
-            // if (nodeName.find("LeftArm") != std::string::npos)
-            //     rotation.y += 0.5;
-
-            // auto tt = glm::translate(glm::mat4(1.0f), translation);
-            // auto ss = glm::scale(glm::mat4(1.0f), scale);
-            // auto rr = glm::toMat4(rotation);
-
-            // nodeTransform = tt * rr * ss;
-
             Bone *Bone = m_CurrentAnimation->FindBone(nodeName);
-
-            if (Bone != nullptr)
+            if (Bone != nullptr && !is_stop_)
             {
                 Bone->Update(m_CurrentTime);
                 nodeTransform = Bone->GetLocalTransform();
@@ -87,7 +60,31 @@ namespace glcpp
             else
             {
             }
+            if (is_stop_)
+            {
+                glm::vec3 scale;
+                glm::quat rotation;
+                glm::vec3 translation;
+                glm::vec3 skew;
+                glm::vec4 perspective;
 
+                glm::decompose(nodeTransform, scale, rotation, translation, skew, perspective);
+                // std::cout << nodeName << "\n";
+                // std::cout << "scale: " << scale.x << ", " << scale.y << ", " << scale.z << "\n";
+                // std::cout << "translation: " << translation.x << ", " << translation.y << ", " << translation.z << "\n";
+                // std::cout << "rotation: " << rotation.x << ", " << rotation.y << ", " << rotation.z << ", " << rotation.w << "\n";
+                rotation.x = node->rotation.x;
+                rotation.y = node->rotation.y;
+                rotation.z = node->rotation.z;
+                rotation.w = node->rotation.w;
+                translation += node->translation;
+                scale = node->scale;
+                auto tt = glm::translate(glm::mat4(1.0f), translation);
+                auto ss = glm::scale(glm::mat4(1.0f), scale);
+                auto rr = glm::mat4_cast(rotation);
+
+                nodeTransform = tt * rr * ss;
+            }
             glm::mat4 globalTransformation = parentTransform * nodeTransform;
 
             auto boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
@@ -109,12 +106,17 @@ namespace glcpp
         {
             return m_FinalBoneMatrices;
         }
+        void set_is_stop(bool is_stop)
+        {
+            is_stop_ = is_stop;
+        }
 
     private:
         std::vector<glm::mat4> m_FinalBoneMatrices;
         Animation *m_CurrentAnimation;
         float m_CurrentTime;
         float m_DeltaTime;
+        bool is_stop_ = false;
     };
 }
 

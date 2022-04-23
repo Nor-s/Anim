@@ -59,6 +59,6 @@ add_executable(pixel3D
 
 target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)
 target_include_directories(pixel3D  PUBLIC ./)
-target_link_libraries(pixel3D  glcpp jsoncpp_static)
+target_link_libraries(pixel3D  glcpp )
 
 

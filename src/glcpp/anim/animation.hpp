@@ -18,6 +18,9 @@ namespace glcpp
     struct AssimpNodeData
     {
         glm::mat4 transformation;
+        glm::vec4 rotation;
+        glm::vec3 scale;
+        glm::vec3 translation;
         std::string name;
         int childrenCount;
         std::vector<AssimpNodeData> children;
@@ -40,10 +43,10 @@ namespace glcpp
                                             // aiProcess_FlipUVs |
                                             aiProcess_GenNormals |
                                             aiProcess_CalcTangentSpace;
-            assimp_read_flag |= aiProcess_JoinIdenticalVertices;
-            assimp_read_flag |= aiProcess_FlipWindingOrder;
+            // assimp_read_flag |= aiProcess_JoinIdenticalVertices;
+            // assimp_read_flag |= aiProcess_FlipWindingOrder;
             assimp_read_flag |= aiProcess_LimitBoneWeights;
-            assimp_read_flag |= aiProcess_FindInvalidData;
+            // assimp_read_flag |= aiProcess_FindInvalidData;
             importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
             const aiScene *scene = importer.ReadFile(animationPath, assimp_read_flag);
 
@@ -84,6 +87,7 @@ namespace glcpp
         inline float GetTicksPerSecond() { return m_TicksPerSecond; }
         inline float GetDuration() { return m_Duration; }
         inline const AssimpNodeData &GetRootNode() { return m_RootNode; }
+        inline AssimpNodeData &GetMutableRootNode() { return m_RootNode; }
         inline const std::map<std::string, BoneInfo> &GetBoneIDMap()
         {
             return m_BoneInfoMap;
@@ -116,7 +120,9 @@ namespace glcpp
             dest.name = src->mName.data;
             dest.transformation = AiMatToGlmMat(src->mTransformation);
             dest.childrenCount = src->mNumChildren;
-
+            dest.rotation = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+            dest.scale = glm::vec3(1.0f, 1.0f, 1.0f);
+            dest.translation = glm::vec3(0.0f, 0.0f, 0.0f);
             std::vector<std::pair<int, int>> sorted_child;
             for (unsigned int i = 0; i < src->mNumChildren; i++)
             {
@@ -126,14 +132,17 @@ namespace glcpp
             }
             std::sort(sorted_child.begin(), sorted_child.end(), [](std::pair<int, int> &a, std::pair<int, int> &b)
                       {
-                if(a.first == b.first) {
-                    return a.second < b.second;
-                }
-                return a.first > b.first; });
+                          if (a.first == b.first)
+                          {
+                              return a.second < b.second;
+                          }
+                          return a.first > b.first;
+                      });
 
             for (auto idx : sorted_child)
             {
                 AssimpNodeData newData;
+
                 ReadHeirarchyData(newData, src->mChildren[idx.second]);
                 dest.children.push_back(newData);
             }

@@ -5,6 +5,7 @@
 #include "glcpp/model.h"
 #include "glcpp/framebuffer.h"
 #include "glcpp/camera.h"
+#include "glcpp/anim/animation.hpp"
 #include "UI/imgui_option.h"
 #include <memory>
 
@@ -23,6 +24,10 @@ public:
     virtual ui::ImguiOption &get_option()
     {
         return imgui_option_;
+    }
+    virtual glcpp::Animation *get_mutable_animation()
+    {
+        return nullptr;
     }
 
 protected:

@@ -56,9 +56,9 @@ namespace glcpp
                                         aiProcess_GenNormals |
                                         aiProcess_CalcTangentSpace;
         assimp_read_flag |= aiProcess_LimitBoneWeights;
-        assimp_read_flag |= aiProcess_JoinIdenticalVertices;
-        assimp_read_flag |= aiProcess_FlipWindingOrder;
-        assimp_read_flag |= aiProcess_FindInvalidData;
+        // assimp_read_flag |= aiProcess_JoinIdenticalVertices;
+        // assimp_read_flag |= aiProcess_FlipWindingOrder;
+        // assimp_read_flag |= aiProcess_FindInvalidData;
         import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
         const aiScene *scene = import.ReadFile(path, assimp_read_flag);
 

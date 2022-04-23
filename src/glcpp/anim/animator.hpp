@@ -77,11 +77,16 @@ namespace glcpp
                 rotation.y = node->rotation.y;
                 rotation.z = node->rotation.z;
                 rotation.w = node->rotation.w;
+
+
                 translation += node->translation;
                 scale = node->scale;
                 auto tt = glm::translate(glm::mat4(1.0f), translation);
                 auto ss = glm::scale(glm::mat4(1.0f), scale);
-                auto rr = glm::mat4_cast(rotation);
+                //auto rr = glm::mat4_cast(rotation);
+                auto rx = glm::rotate(glm::mat4(1.0f), node->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+                auto ry = glm::rotate(rx,node->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+                auto rr = glm::rotate(ry, node->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
                 nodeTransform = tt * rr * ss;
             }

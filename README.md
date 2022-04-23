@@ -107,7 +107,7 @@ opengl project
 ### 4/23
 
 -   gui for hierarchy, gui for transformation
-    ![](/screenshot/Animation39.gif)
+    ![](/screenshot/anim.gif)
 
 ## build
 

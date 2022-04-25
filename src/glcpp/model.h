@@ -81,7 +81,6 @@ namespace glcpp
         std::vector<Mesh> meshes_;
         std::filesystem::path directory_;
         std::vector<Texture> textures_loaded_;
-        TransformComponent transform_;
         // bone data
         std::map<std::string, BoneInfo> bone_info_map_;
         int bone_count_ = 0;

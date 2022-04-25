@@ -31,7 +31,7 @@ namespace glcpp
         shader.use();
         shader.setMat4("projection", projection);
         shader.setMat4("view", view);
-        shader.setMat4("model", transform_.get_mat4());
+        shader.setMat4("model", root_node_->relative_transformation.get_mat4());
         for (unsigned int i = 0; i < meshes_.size(); i++)
             meshes_[i].draw(shader);
     }
@@ -42,7 +42,7 @@ namespace glcpp
     }
     TransformComponent &Model::get_mutable_transform()
     {
-        return transform_;
+        return root_node_->relative_transformation;
     }
     void Model::load_model(const std::string &path)
     {

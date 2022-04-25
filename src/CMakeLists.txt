@@ -23,7 +23,7 @@ set(GLCPP_SRC
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
-target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -fuse-ld=lld)
+target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
 set(LIBs STB_IMAGE assimp imgui glad nfd)
 
@@ -44,7 +44,6 @@ add_executable(pixel3D
 ./pixelate_framebuffer.cpp 
 ./UI/imgui_context.h 
 ./UI/imgui_scene_window.h
-./pixel3D.cpp 
 ./pixel3D.h 
 ./scene/scene.hpp
 ./scene/scene1.hpp

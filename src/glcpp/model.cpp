@@ -39,7 +39,7 @@ namespace glcpp
         for (unsigned int i = 0; i < meshes_.size(); i++)
             meshes_[i].draw(shader);
     }
-    WorldTransformComponent &Model::get_mutable_transform()
+    TransformComponent &Model::get_mutable_transform()
     {
         return transform_;
     }
@@ -77,7 +77,6 @@ namespace glcpp
     void Model::process_node(aiNode *node, const aiScene *scene)
     {
         node_count_++;
-        // std::cout << node->mName.C_Str() << " process_node====================\n";
         AiMatToGlmMat(node->mTransformation);
         // process all the node's meshes (if any)
         for (unsigned int i = 0; i < node->mNumMeshes; i++)

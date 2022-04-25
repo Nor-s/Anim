@@ -86,8 +86,8 @@ public:
 
         pixelate_framebuffer_->pre_draw(models_.back(), *model_shader_, view_, projection_);
 
-        // TODO: glClearColor를 먼저 호출해야 framebuffer_에 적용되는 이유?
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+        // TODO: glClearColor를 먼저 호출해야 framebuffer_에 적용되는 이유?
         framebuffer_->bind();
         {
             glDisable(GL_DEPTH_TEST);
@@ -96,9 +96,6 @@ public:
             if (imgui_option_.get_flag(skyblur_flag_idx_))
             {
                 skybox_framebuffer_->draw(*framebuffer_blur_shader_);
-            }
-            else
-            {
                 // skybox_->draw(view_, projection_);
             }
             pixelate_framebuffer_->draw();
@@ -210,7 +207,7 @@ private:
         view_ = camera_->GetViewMatrix();
     }
     // TODO: !safe
-    virtual glcpp::Animation *get_mutable_animation()
+    virtual glcpp::Animation *get_mutable_animation() override
     {
         return anim_.get();
     }

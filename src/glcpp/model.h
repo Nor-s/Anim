@@ -28,6 +28,21 @@ namespace glcpp
         /*offset matrix transforms vertex from model space to bone space*/
         glm::mat4 offset;
     };
+    struct ModelNode
+    {
+        glm::mat4 initial_transformation;
+        TransformComponent relative_transformation;
+        std::string name;
+        std::vector<std::unique_ptr<ModelNode>> childrens;
+        ~ModelNode()
+        {
+            childrens.clear();
+        }
+        glm::mat4 get_mix_transformation()
+        {
+            return relative_transformation.get_mat4() * initial_transformation;
+        }
+    };
 
     /**
      * load_model => process_node => process_mesh(mesh... vertices, indices, textures...)
@@ -41,7 +56,7 @@ namespace glcpp
         void draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection);
         void draw(Shader &shader);
 
-        WorldTransformComponent &get_mutable_transform();
+        TransformComponent &get_mutable_transform();
 
         std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
@@ -51,7 +66,7 @@ namespace glcpp
         std::vector<Mesh> meshes_;
         std::filesystem::path directory_;
         std::vector<Texture> textures_loaded_;
-        WorldTransformComponent transform_;
+        TransformComponent transform_;
         // bone data
         std::map<std::string, BoneInfo> bone_info_map_;
         int bone_count_ = 0;

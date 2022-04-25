@@ -241,7 +241,22 @@ namespace ui
                 ImGui::PopItemWidth();
             }
         }
-        void process_model(glcpp::WorldTransformComponent &transform)
+        // Demonstrate creating a window covering the entire screen/viewport
+        void ShowStatus(float fps)
+        {
+            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+
+            // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
+            // Based on your use case you may want one of the other.
+            bool tmp = true;
+
+            if (ImGui::Begin("fps", &tmp, flags))
+            {
+                ImGui::Text("fps: %f", fps);
+            }
+            ImGui::End();
+        }
+        void process_model(glcpp::TransformComponent &transform)
         {
             auto &rotation = transform.get_rotation();
             glm::vec3 r = rotation;

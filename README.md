@@ -77,32 +77,6 @@ opengl project
 
 ![](/screenshot/Apr_2022-04-17_12-45-38.png)
 
-```cpp
-            glm::mat4 nodeTransform = node->transformation;
-
-            glm::vec3 scale;
-            glm::quat rotation;
-            glm::vec3 translation;
-            glm::vec3 skew;
-            glm::vec4 perspective;
-
-            glm::decompose(nodeTransform, scale, rotation, translation, skew, perspective);
-
-            if (nodeName == "RightUpLeg")
-                rotation.x += 0.5;
-            if (nodeName == "LeftUpLeg")
-                rotation.x -= 0.5;
-            if (nodeName == "RightArm")
-                rotation.y += 0.5;
-            if (nodeName == "LeftArm")
-                rotation.y += 0.5;
-
-            auto tt = glm::translate(glm::mat4(1.0f), translation);
-            auto ss = glm::scale(glm::mat4(1.0f), scale);
-            auto rr = glm::toMat4(rotation);
-
-            nodeTransform = tt * rr * ss;
-```
 
 ### 4/23
 

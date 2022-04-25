@@ -33,14 +33,19 @@ namespace glcpp
         glm::mat4 initial_transformation;
         TransformComponent relative_transformation;
         std::string name;
-        std::vector<std::unique_ptr<ModelNode>> childrens;
+        std::vector<std::shared_ptr<ModelNode>> childrens;
+        ModelNode(const glm::mat4 &initial_transform, const TransformComponent &relative_transform, const std::string &node_name, unsigned int num_children)
+            : initial_transformation(initial_transform), relative_transformation(relative_transform), name(node_name)
+        {
+            childrens.resize(num_children);
+        }
         ~ModelNode()
         {
             childrens.clear();
         }
-        glm::mat4 get_mix_transformation()
+        glm::mat4 get_mix_transformation() const
         {
-            return relative_transformation.get_mat4() * initial_transformation;
+            return initial_transformation * relative_transformation.get_mat4();
         }
     };
 
@@ -60,8 +65,18 @@ namespace glcpp
 
         std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
+        const ModelNode *get_root_node() const
+        {
+            return root_node_.get();
+        }
+        std::shared_ptr<ModelNode> &get_mutable_root_node()
+        {
+            return root_node_;
+        }
 
     private:
+        // heirarchy
+        std::shared_ptr<ModelNode> root_node_;
         // model data
         std::vector<Mesh> meshes_;
         std::filesystem::path directory_;
@@ -82,7 +97,7 @@ namespace glcpp
          * @param node
          * @param scene
          */
-        void process_node(aiNode *node, const aiScene *scene);
+        void process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene);
         /**
          * @brief 모든 vertex 데이터를 얻고, mesh의 indices를 얻고, 연관된 material(texture) 데이터를 얻는다.
          *

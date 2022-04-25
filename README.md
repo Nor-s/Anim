@@ -75,6 +75,10 @@ opengl project
     2. decompose this matrix
     3. update translation, rotation, scale
 
+or
+    1. get `aiNode::mTransformation`
+    2. mTransformation = mTransformation *T*R*S
+
 ![](/screenshot/Apr_2022-04-17_12-45-38.png)
 
 

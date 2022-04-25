@@ -60,12 +60,22 @@ public:
     }
     virtual void loop() override
     {
+        glfwSwapInterval(0);
+        float last_time = static_cast<float>(glfwGetTime());
+
         while (!window_->should_close())
         {
-            float currentFrame = static_cast<float>(glfwGetTime());
-            deltaTime = currentFrame - lastFrame;
-            lastFrame = currentFrame;
-            scene_->set_delta_time(deltaTime);
+            float current_time = static_cast<float>(glfwGetTime());
+            frames_++;
+            if (current_time - last_time >= 1.0)
+            {
+                fps_ = frames_ / (current_time - last_time);
+                frames_ = 0;
+                last_time = current_time;
+            }
+            delta_frame_ = current_time - last_frame_;
+            last_frame_ = current_time;
+            scene_->set_delta_time(delta_frame_);
 
             processInput(window_->get_handle());
             pre_draw();
@@ -77,9 +87,9 @@ public:
                 imgui_->draw_property(scene_.get());
 
                 imgui_->draw_texture("pixelate", scene_->get_pixelate_framebuffer().get_framebuffer());
-                imgui_->draw_texture("rgb", scene_->get_pixelate_framebuffer().get_rgb_framebuffer());
                 imgui_->draw_texture("outline", scene_->get_pixelate_framebuffer().get_outline_framebuffer());
                 imgui_->draw_scene("scene", scene_.get());
+                imgui_->ShowStatus(fps_);
 
                 imgui_->end();
             }
@@ -91,10 +101,11 @@ public:
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, window_->get_width(), window_->get_height());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     }
     void post_draw()
     {
-        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        // glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
         glfwSwapBuffers(window_->get_handle());
         glfwPollEvents();
     }
@@ -104,13 +115,13 @@ public:
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::FORWARD, deltaTime);
+            scene_->get_camera()->ProcessKeyboard(glcpp::FORWARD, delta_frame_);
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::BACKWARD, deltaTime);
+            scene_->get_camera()->ProcessKeyboard(glcpp::BACKWARD, delta_frame_);
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::LEFT, deltaTime);
+            scene_->get_camera()->ProcessKeyboard(glcpp::LEFT, delta_frame_);
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::RIGHT, deltaTime);
+            scene_->get_camera()->ProcessKeyboard(glcpp::RIGHT, delta_frame_);
     }
 
     static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -131,7 +142,7 @@ public:
         }
         if (app->is_pressed_scroll)
         {
-            app->scene_->get_camera()->ProcessMouseScrollPress((static_cast<float>(yposIn) - app->prev_mouse.y), (static_cast<float>(xposIn) - app->prev_mouse.x), app->deltaTime);
+            app->scene_->get_camera()->ProcessMouseScrollPress((static_cast<float>(yposIn) - app->prev_mouse.y), (static_cast<float>(xposIn) - app->prev_mouse.x), app->delta_frame_);
             app->prev_mouse.x = xposIn;
             app->prev_mouse.y = yposIn;
         }
@@ -172,8 +183,10 @@ public:
 
 private:
     // timing
-    float deltaTime = 0.0f;
-    float lastFrame = 0.0f;
+    float delta_frame_ = 0.0f;
+    float last_frame_ = 0.0f;
+    float fps_ = 0.0f;
+    int frames_ = 0;
     // mouse event
     bool is_pressed = false;
     bool is_pressed_scroll = false;

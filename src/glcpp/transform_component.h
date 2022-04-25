@@ -6,7 +6,7 @@
 
 namespace glcpp
 {
-    class WorldTransformComponent
+    class TransformComponent
     {
     public:
         glm::mat4 get_mat4() const
@@ -54,18 +54,18 @@ namespace glcpp
         {
             return scale_;
         }
-        WorldTransformComponent &set_translation(const glm::vec3 &vec)
+        TransformComponent &set_translation(const glm::vec3 &vec)
         {
             translation_ = vec;
             return *this;
         }
-        WorldTransformComponent &set_scale(const glm::vec3 &vec)
+        TransformComponent &set_scale(const glm::vec3 &vec)
         {
             scale_ = vec;
 
             return *this;
         }
-        WorldTransformComponent &set_rotation(const glm::vec3 &vec)
+        TransformComponent &set_rotation(const glm::vec3 &vec)
         {
             rotation_ = vec;
 

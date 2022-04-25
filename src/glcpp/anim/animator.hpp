@@ -59,27 +59,11 @@ namespace glcpp
             }
             if (is_stop_)
             {
-                glm::vec3 scale;
-                glm::quat rotation;
-                glm::vec3 translation;
-                glm::vec3 skew;
-                glm::vec4 perspective;
-
-                glm::decompose(nodeTransform, scale, rotation, translation, skew, perspective);
-
-                // std::cout << nodeName << "\n";
-                // std::cout << "scale: " << scale.x << ", " << scale.y << ", " << scale.z << "\n";
-                // std::cout << "translation: " << translation.x << ", " << translation.y << ", " << translation.z << "\n";
-                // std::cout << "rotation: " << rotation.x << ", " << rotation.y << ", " << rotation.z << ", " << rotation.w << "\n";
-                translation += node->translation;
-                scale = node->scale;
-                auto tt = glm::translate(glm::mat4(1.0f), translation);
-                auto ss = glm::scale(glm::mat4(1.0f), scale);
-                auto rx = glm::rotate(glm::mat4_cast(rotation), node->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-                auto ry = glm::rotate(rx, node->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-                auto rr = glm::rotate(ry, node->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-
-                nodeTransform = tt * rr * ss;
+                nodeTransform = glm::scale(nodeTransform, node->scale);
+                nodeTransform = glm::rotate(nodeTransform, node->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+                nodeTransform = glm::rotate(nodeTransform, node->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+                nodeTransform = glm::rotate(nodeTransform, node->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+                nodeTransform = glm::translate(nodeTransform, node->translation);
             }
             glm::mat4 globalTransformation = parentTransform * nodeTransform;
 

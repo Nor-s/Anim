@@ -23,7 +23,7 @@ set(GLCPP_SRC
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
-target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
+target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -fuse-ld=lld)
 
 set(LIBs STB_IMAGE assimp imgui glad nfd)
 
@@ -37,12 +37,6 @@ if(APPLE)
     target_link_libraries(glcpp PUBLIC ${LIBs} glm::glm -ldl -lpthread)
 endif(APPLE)
 
-
-add_executable(test ./test/test.cpp)
-
-target_compile_options(test PRIVATE -Wall -Werror -std=c++17)
-target_include_directories(test PUBLIC ./)
-target_link_libraries(test glcpp)
 
 
 add_executable(pixel3D 

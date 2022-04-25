@@ -19,6 +19,7 @@ message(STATUS " - ID       \t: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS " - Version  \t: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS " - Path     \t: ${CMAKE_CXX_COMPILER}")
 
+option(BUILD_SHARED_LIBS ON)
 option(GLFW_BUILD_DOCS OFF)
 add_subdirectory(external/glfw/)
 if(APPLE)

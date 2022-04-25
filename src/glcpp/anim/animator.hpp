@@ -57,9 +57,6 @@ namespace glcpp
                 Bone->Update(m_CurrentTime);
                 nodeTransform = Bone->GetLocalTransform();
             }
-            else
-            {
-            }
             if (is_stop_)
             {
                 glm::vec3 scale;
@@ -69,23 +66,17 @@ namespace glcpp
                 glm::vec4 perspective;
 
                 glm::decompose(nodeTransform, scale, rotation, translation, skew, perspective);
+
                 // std::cout << nodeName << "\n";
                 // std::cout << "scale: " << scale.x << ", " << scale.y << ", " << scale.z << "\n";
                 // std::cout << "translation: " << translation.x << ", " << translation.y << ", " << translation.z << "\n";
                 // std::cout << "rotation: " << rotation.x << ", " << rotation.y << ", " << rotation.z << ", " << rotation.w << "\n";
-                rotation.x = node->rotation.x;
-                rotation.y = node->rotation.y;
-                rotation.z = node->rotation.z;
-                rotation.w = node->rotation.w;
-
-
                 translation += node->translation;
                 scale = node->scale;
                 auto tt = glm::translate(glm::mat4(1.0f), translation);
                 auto ss = glm::scale(glm::mat4(1.0f), scale);
-                //auto rr = glm::mat4_cast(rotation);
-                auto rx = glm::rotate(glm::mat4(1.0f), node->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-                auto ry = glm::rotate(rx,node->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
+                auto rx = glm::rotate(glm::mat4_cast(rotation), node->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
+                auto ry = glm::rotate(rx, node->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
                 auto rr = glm::rotate(ry, node->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
 
                 nodeTransform = tt * rr * ss;
@@ -98,9 +89,6 @@ namespace glcpp
                 int index = boneInfoMap[nodeName].id;
                 glm::mat4 offset = boneInfoMap[nodeName].offset;
                 m_FinalBoneMatrices[index] = globalTransformation * offset;
-            }
-            else
-            {
             }
 
             for (int i = 0; i < node->childrenCount; i++)

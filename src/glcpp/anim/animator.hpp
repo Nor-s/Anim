@@ -9,6 +9,7 @@
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
 
+#include "../model.h"
 #include "animation.hpp"
 #include "bone.hpp"
 
@@ -29,14 +30,14 @@ namespace glcpp
                 m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
         }
 
-        void UpdateAnimation(float dt)
+        void UpdateAnimation(float dt, const ModelNode *node)
         {
             m_DeltaTime = dt;
             if (m_CurrentAnimation)
             {
                 m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
                 m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
-                CalculateBoneTransform(&m_CurrentAnimation->GetRootNode(), glm::mat4(1.0f), 0);
+                CalculateBoneTransform(node, glm::mat4(1.0f), 0);
             }
         }
 
@@ -46,37 +47,33 @@ namespace glcpp
             m_CurrentTime = 0.0f;
         }
 
-        void CalculateBoneTransform(const AssimpNodeData *node, glm::mat4 parentTransform, int depth)
+        void CalculateBoneTransform(const ModelNode *node, glm::mat4 parentTransform, int depth)
         {
-            std::string nodeName = node->name;
-            glm::mat4 nodeTransform = node->transformation;
+            std::string node_name = node->name;
+            glm::mat4 node_transform = node->initial_transformation;
 
-            Bone *Bone = m_CurrentAnimation->FindBone(nodeName);
+            Bone *Bone = m_CurrentAnimation->FindBone(node_name);
             if (Bone != nullptr && !is_stop_)
             {
                 Bone->Update(m_CurrentTime);
-                nodeTransform = Bone->GetLocalTransform();
+                node_transform = Bone->GetLocalTransform();
             }
             if (is_stop_)
             {
-                nodeTransform = glm::scale(nodeTransform, node->scale);
-                nodeTransform = glm::rotate(nodeTransform, node->rotation.x, glm::vec3(1.0f, 0.0f, 0.0f));
-                nodeTransform = glm::rotate(nodeTransform, node->rotation.y, glm::vec3(0.0f, 1.0f, 0.0f));
-                nodeTransform = glm::rotate(nodeTransform, node->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-                nodeTransform = glm::translate(nodeTransform, node->translation);
+                node_transform = node->get_mix_transformation();
             }
-            glm::mat4 globalTransformation = parentTransform * nodeTransform;
+            glm::mat4 globalTransformation = parentTransform * node_transform;
 
             auto boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
-            if (boneInfoMap.find(nodeName) != boneInfoMap.end())
+            if (boneInfoMap.find(node_name) != boneInfoMap.end())
             {
-                int index = boneInfoMap[nodeName].id;
-                glm::mat4 offset = boneInfoMap[nodeName].offset;
+                int index = boneInfoMap[node_name].id;
+                glm::mat4 offset = boneInfoMap[node_name].offset;
                 m_FinalBoneMatrices[index] = globalTransformation * offset;
             }
 
-            for (int i = 0; i < node->childrenCount; i++)
-                CalculateBoneTransform(&node->children[i], globalTransformation, depth + 1);
+            for (int i = 0; i < node->childrens.size(); i++)
+                CalculateBoneTransform(node->childrens[i].get(), globalTransformation, depth + 1);
         }
 
         std::vector<glm::mat4> GetFinalBoneMatrices()

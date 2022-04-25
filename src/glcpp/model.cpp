@@ -24,6 +24,7 @@ namespace glcpp
     }
     Model::~Model()
     {
+        root_node_.reset();
     }
     void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection)
     {
@@ -70,24 +71,27 @@ namespace glcpp
         }
         std::filesystem::path tmp(path);
         directory_ = tmp;
-        process_node(scene->mRootNode, scene);
+        process_node(root_node_, scene->mRootNode, scene);
         std::cout << "mRoot child: " << node_count_ << "\n";
         std::cout << "model_chennel: " << scene->mAnimations[0]->mNumChannels << "\n";
     }
-    void Model::process_node(aiNode *node, const aiScene *scene)
+    void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
     {
         node_count_++;
-        AiMatToGlmMat(node->mTransformation);
+        model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
+                                       TransformComponent(),
+                                       std::string(ai_node->mName.C_Str()),
+                                       ai_node->mNumChildren));
         // process all the node's meshes (if any)
-        for (unsigned int i = 0; i < node->mNumMeshes; i++)
+        for (unsigned int i = 0; i < ai_node->mNumMeshes; i++)
         {
-            aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
+            aiMesh *mesh = scene->mMeshes[ai_node->mMeshes[i]];
             meshes_.emplace_back(process_mesh(mesh, scene));
         }
         // then do the same for each of its children
-        for (unsigned int i = 0; i < node->mNumChildren; i++)
+        for (unsigned int i = 0; i < ai_node->mNumChildren; i++)
         {
-            process_node(node->mChildren[i], scene);
+            process_node(model_node->childrens[i], ai_node->mChildren[i], scene);
         }
     }
 

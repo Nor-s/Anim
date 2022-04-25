@@ -146,30 +146,30 @@ namespace ui
             bool s = true;
             ShowExampleAppDockSpace(&s);
         }
-        void dfs(glcpp::AssimpNodeData &anim_node)
+        void dfs(std::shared_ptr<glcpp::ModelNode> &anim_node)
         {
-            if (ImGui::TreeNode(anim_node.name.c_str()))
+            if (ImGui::TreeNode(anim_node->name.c_str()))
             {
-                ImGui::InputFloat3("translation", &anim_node.translation[0]);
-                ImGui::InputFloat3("scale", &anim_node.scale[0]);
-                ImGui::InputFloat4("rotation", &anim_node.rotation[0]);
-                for (size_t i = 0; i < anim_node.children.size(); i++)
+                ImGui::InputFloat3("translation", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_translation())[0]);
+                ImGui::InputFloat3("scale", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_scale())[0]);
+                ImGui::InputFloat3("rotation", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_rotation())[0]);
+                for (size_t i = 0; i < anim_node->childrens.size(); i++)
                 {
-                    dfs(anim_node.children[i]);
+                    dfs(anim_node->childrens[i]);
                 }
                 ImGui::TreePop();
             }
         }
-        void draw_model_hierarchy(glcpp::Animation *anim)
+        void draw_model_hierarchy(std::shared_ptr<glcpp::ModelNode> &root_node)
         {
             ImGui::Begin("Model Hierarchy");
-            dfs(anim->GetMutableRootNode());
+            dfs(root_node);
             ImGui::End();
         }
         void draw_property(Scene *scene)
         {
             static int count = 0;
-            draw_model_hierarchy(scene->get_mutable_animation());
+            draw_model_hierarchy(scene->get_model()->get_mutable_root_node());
 
             // render your GUI
             ImGui::Begin("Model Property");

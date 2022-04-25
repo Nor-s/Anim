@@ -60,10 +60,6 @@ namespace glcpp
                 m_Duration = animation->mDuration;
                 m_TicksPerSecond = animation->mTicksPerSecond;
 
-                // TODO: what? globalTransformation
-                // aiMatrix4x4 &globalTransformation = scene->mRootNode->mTransformation;
-                // globalTransformation = globalTransformation.Inverse();
-
                 ReadHeirarchyData(m_RootNode, scene->mRootNode);
                 // FBX file sometime missing bones.
                 ReadMissingBones(animation, *model);
@@ -136,8 +132,7 @@ namespace glcpp
                           {
                               return a.second < b.second;
                           }
-                          return a.first > b.first;
-                      });
+                          return a.first > b.first; });
 
             for (auto idx : sorted_child)
             {

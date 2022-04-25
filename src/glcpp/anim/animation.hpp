@@ -14,18 +14,6 @@
 
 namespace glcpp
 {
-
-    struct AssimpNodeData
-    {
-        glm::mat4 transformation;
-        glm::vec4 rotation;
-        glm::vec3 scale;
-        glm::vec3 translation;
-        std::string name;
-        int childrenCount;
-        std::vector<AssimpNodeData> children;
-    };
-
     class Animation
     {
     public:
@@ -60,7 +48,7 @@ namespace glcpp
                 m_Duration = animation->mDuration;
                 m_TicksPerSecond = animation->mTicksPerSecond;
 
-                ReadHeirarchyData(m_RootNode, scene->mRootNode);
+                ReadHeirarchyData(scene->mRootNode);
                 // FBX file sometime missing bones.
                 ReadMissingBones(animation, *model);
             }
@@ -82,8 +70,6 @@ namespace glcpp
 
         inline float GetTicksPerSecond() { return m_TicksPerSecond; }
         inline float GetDuration() { return m_Duration; }
-        inline const AssimpNodeData &GetRootNode() { return m_RootNode; }
-        inline AssimpNodeData &GetMutableRootNode() { return m_RootNode; }
         inline const std::map<std::string, BoneInfo> &GetBoneIDMap()
         {
             return m_BoneInfoMap;
@@ -109,16 +95,10 @@ namespace glcpp
             m_BoneInfoMap = boneInfoMap;
         }
 
-        void ReadHeirarchyData(AssimpNodeData &dest, const aiNode *src)
+        void ReadHeirarchyData(const aiNode *src)
         {
             assert(src);
             assimpNodeDataCount++;
-            dest.name = src->mName.data;
-            dest.transformation = AiMatToGlmMat(src->mTransformation);
-            dest.childrenCount = src->mNumChildren;
-            dest.rotation = glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-            dest.scale = glm::vec3(1.0f, 1.0f, 1.0f);
-            dest.translation = glm::vec3(0.0f, 0.0f, 0.0f);
             std::vector<std::pair<int, int>> sorted_child;
             for (unsigned int i = 0; i < src->mNumChildren; i++)
             {
@@ -136,16 +116,12 @@ namespace glcpp
 
             for (auto idx : sorted_child)
             {
-                AssimpNodeData newData;
-
-                ReadHeirarchyData(newData, src->mChildren[idx.second]);
-                dest.children.push_back(newData);
+                ReadHeirarchyData(src->mChildren[idx.second]);
             }
         }
         float m_Duration;
         int m_TicksPerSecond;
         std::map<std::string, std::unique_ptr<Bone>> m_Bones;
-        AssimpNodeData m_RootNode;
         int assimpNodeDataCount = 0;
         std::map<std::string, BoneInfo> m_BoneInfoMap;
     };

@@ -73,11 +73,13 @@ public:
                 frames_ = 0;
                 last_time = current_time;
             }
+            //  std::cout<<"\n"; // or //std::endl or // std::cout<<" "; fflush(stdout)
             delta_frame_ = current_time - last_frame_;
             last_frame_ = current_time;
             scene_->set_delta_time(delta_frame_);
 
             processInput(window_->get_handle());
+            
             pre_draw();
             {
                 imgui_->begin();

@@ -173,7 +173,16 @@ namespace ui
 
             // render your GUI
             ImGui::Begin("Model Property");
-            {
+            {               
+                 ImGui::SameLine();
+                if (ImGui::Button("print"))
+                {
+                    scene->print_to_png("pixel" + std::to_string(count++) + ".png");
+                }
+                ImGui::SameLine();
+                process_option(scene->get_option());
+
+                process_model(scene->get_model()->get_mutable_transform());
                 // open Dialog Simple
                 if (ImGui::Button("load"))
                 {
@@ -199,15 +208,7 @@ namespace ui
 
                     NFD_Quit();
                 }
-                ImGui::SameLine();
-                if (ImGui::Button("print"))
-                {
-                    scene->print_to_png("pixel" + std::to_string(count++) + ".png");
-                }
-                ImGui::SameLine();
-                process_option(scene->get_option());
 
-                process_model(scene->get_model()->get_mutable_transform());
             }
             ImGui::End();
         }

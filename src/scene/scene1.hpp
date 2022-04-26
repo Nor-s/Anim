@@ -137,7 +137,8 @@ public:
         {
             capture_skybox();
         }
-        animator_->set_is_stop(imgui_option_.get_flag(animation_stop_flag_idx_));
+        if(animator_)
+            animator_->set_is_stop(imgui_option_.get_flag(animation_stop_flag_idx_));
         pixelate_framebuffer_->set_outline_flag(imgui_option_.get_flag(outline_flag_idx_));
         pixelate_framebuffer_->set_outline_color(imgui_option_.get_color3_property(outline_color_idx_));
     }

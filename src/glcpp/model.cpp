@@ -49,7 +49,7 @@ namespace glcpp
         // aiProcess_MakeLeftHanded;
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
-            std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << std::endl;
+            std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
             return;
         }
         std::filesystem::path tmp(path);
@@ -57,12 +57,11 @@ namespace glcpp
         process_node(root_node_, scene->mRootNode, scene);
         transform_ = &(root_node_->relative_transformation);
         std::cout << "mRoot child: " << node_count_ << "\n";
-        std::cout << "model_chennel: " << scene->mAnimations[0]->mNumChannels << "\n";
     }
     void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
     {
         node_count_++;
-        std::string model_name = ai_node->mName.C_Str();
+        std::string model_name = std::string(ai_node->mName.C_Str());
         model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
                                        TransformComponent(),
                                        model_name.substr(model_name.find_last_of(':') + 1),
@@ -244,7 +243,7 @@ namespace glcpp
         }
         else
         {
-            std::cout << "Texture failed to load at path: " << path << std::endl;
+            std::cout << "Texture failed to load at path: " << path << "\n";
             stbi_image_free(data);
         }
 

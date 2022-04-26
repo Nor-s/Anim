@@ -33,9 +33,8 @@ namespace glcpp
     class Bone
     {
     public:
-        Bone(const std::string &name, int ID, const aiNodeAnim *channel)
+        Bone(const std::string &name, const aiNodeAnim *channel)
             : m_Name(name),
-              m_ID(ID),
               m_LocalTransform(1.0f)
         {
             m_NumPositions = channel->mNumPositionKeys;
@@ -84,7 +83,6 @@ namespace glcpp
         glm::mat4 &GetLocalTransform() { return m_LocalTransform; }
 
         std::string GetBoneName() const { return m_Name; }
-        int GetBoneID() { return m_ID; }
 
         int GetPositionIndex(float animationTime)
         {
@@ -180,7 +178,6 @@ namespace glcpp
         int m_NumScalings;
 
         std::string m_Name;
-        int m_ID;
         glm::mat4 m_LocalTransform;
     };
 

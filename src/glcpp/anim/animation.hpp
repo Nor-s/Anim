@@ -8,6 +8,7 @@
 #include <vector>
 #include <map>
 #include <iostream>
+#include <string>
 
 #include "bone.hpp"
 #include "../model.h"
@@ -22,15 +23,9 @@ namespace glcpp
         Animation(const char *animationPath, Model *model)
         {
             Assimp::Importer importer;
-            unsigned int assimp_read_flag = aiProcess_Triangulate |
+            unsigned int assimp_read_flag = 
                                             aiProcess_SortByPType |
-                                            aiProcess_GenUVCoords |
-                                            aiProcess_OptimizeMeshes |
-                                            aiProcess_ValidateDataStructure |
-                                            //  aiProcess_ConvertToLeftHanded |
-                                            // aiProcess_FlipUVs |
-                                            aiProcess_GenNormals |
-                                            aiProcess_CalcTangentSpace;
+                                            aiProcess_ValidateDataStructure ;
             // assimp_read_flag |= aiProcess_JoinIdenticalVertices;
             // assimp_read_flag |= aiProcess_FlipWindingOrder;
             assimp_read_flag |= aiProcess_LimitBoneWeights;
@@ -40,7 +35,7 @@ namespace glcpp
 
             if (!scene || !scene->mRootNode)
             {
-                std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+                std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << "\n";
             }
             else
             {
@@ -48,7 +43,6 @@ namespace glcpp
                 m_Duration = animation->mDuration;
                 m_TicksPerSecond = animation->mTicksPerSecond;
 
-                // FBX file sometime missing bones.
                 process_bones(animation, *model);
             }
         }
@@ -74,15 +68,14 @@ namespace glcpp
         {
             int size = animation->mNumChannels;
 
-            auto &boneInfoMap = model.get_mutable_bone_info_map(); // getting m_BoneInfoMap from Model class
-
             // reading channels(bones engaged in an animation and their keyframes)
             for (int i = 0; i < size; i++)
             {
                 auto channel = animation->mChannels[i];
+                std::string bone_name = channel->mNodeName.C_Str();
+                bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
 
-                m_Bones[channel->mNodeName.data] = std::make_unique<Bone>(channel->mNodeName.data,
-                                                                          boneInfoMap[channel->mNodeName.data].id, channel);
+                m_Bones[bone_name] = std::make_unique<Bone>(bone_name, channel);
             }
         }
 

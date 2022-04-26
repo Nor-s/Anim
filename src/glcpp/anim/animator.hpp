@@ -37,7 +37,7 @@ namespace glcpp
             {
                 m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
                 m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
-                CalculateBoneTransform(model, model->get_root_node(), glm::mat4(1.0f), 0);
+                CalculateBoneTransform(model, model->get_root_node(), glm::mat4(1.0f));
             }
         }
 
@@ -47,7 +47,7 @@ namespace glcpp
             m_CurrentTime = 0.0f;
         }
 
-        void CalculateBoneTransform(const Model *model, const ModelNode *node, glm::mat4 parentTransform, int depth)
+        void CalculateBoneTransform(const Model *model, const ModelNode *node, glm::mat4 parentTransform)
         {
             std::string node_name = node->name;
             glm::mat4 node_transform = node->initial_transformation;
@@ -74,7 +74,7 @@ namespace glcpp
             }
 
             for (int i = 0; i < node->childrens.size(); i++)
-                CalculateBoneTransform(model, node->childrens[i].get(), globalTransformation, depth + 1);
+                CalculateBoneTransform(model, node->childrens[i].get(), globalTransformation);
         }
 
         std::vector<glm::mat4> GetFinalBoneMatrices()

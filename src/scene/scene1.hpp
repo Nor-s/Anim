@@ -75,7 +75,7 @@ public:
         update_flag_option();
         if (animator_)
         {
-            animator_->UpdateAnimation(delta_time_, models_.back()->get_root_node());
+            animator_->UpdateAnimation(delta_time_, models_.back().get());
 
             model_shader_->use();
             auto transforms = animator_->GetFinalBoneMatrices();

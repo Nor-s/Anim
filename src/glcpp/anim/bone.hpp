@@ -81,7 +81,7 @@ namespace glcpp
             m_LocalTransform = translation * rotation * scale;
         }
 
-        glm::mat4 GetLocalTransform() { return m_LocalTransform; }
+        glm::mat4 &GetLocalTransform() { return m_LocalTransform; }
 
         std::string GetBoneName() const { return m_Name; }
         int GetBoneID() { return m_ID; }

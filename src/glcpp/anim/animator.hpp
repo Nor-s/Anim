@@ -30,14 +30,14 @@ namespace glcpp
                 m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
         }
 
-        void UpdateAnimation(float dt, const ModelNode *node)
+        void UpdateAnimation(float dt, const Model *model)
         {
             m_DeltaTime = dt;
             if (m_CurrentAnimation)
             {
                 m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
                 m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
-                CalculateBoneTransform(node, glm::mat4(1.0f), 0);
+                CalculateBoneTransform(model, model->get_root_node(), glm::mat4(1.0f), 0);
             }
         }
 
@@ -47,11 +47,12 @@ namespace glcpp
             m_CurrentTime = 0.0f;
         }
 
-        void CalculateBoneTransform(const ModelNode *node, glm::mat4 parentTransform, int depth)
+        void CalculateBoneTransform(const Model *model, const ModelNode *node, glm::mat4 parentTransform, int depth)
         {
             std::string node_name = node->name;
             glm::mat4 node_transform = node->initial_transformation;
 
+            // Bone을 찾음
             Bone *Bone = m_CurrentAnimation->FindBone(node_name);
             if (Bone != nullptr && !is_stop_)
             {
@@ -62,18 +63,18 @@ namespace glcpp
             {
                 node_transform = node->get_mix_transformation();
             }
+
             glm::mat4 globalTransformation = parentTransform * node_transform;
 
-            auto boneInfoMap = m_CurrentAnimation->GetBoneIDMap();
-            if (boneInfoMap.find(node_name) != boneInfoMap.end())
+            auto &bone_info_map = model->get_bone_info_map();
+            auto it = bone_info_map.find(node_name);
+            if (it != bone_info_map.end())
             {
-                int index = boneInfoMap[node_name].id;
-                glm::mat4 offset = boneInfoMap[node_name].offset;
-                m_FinalBoneMatrices[index] = globalTransformation * offset;
+                m_FinalBoneMatrices[it->second.get_id()] = globalTransformation * it->second.get_offset();
             }
 
             for (int i = 0; i < node->childrens.size(); i++)
-                CalculateBoneTransform(node->childrens[i].get(), globalTransformation, depth + 1);
+                CalculateBoneTransform(model, node->childrens[i].get(), globalTransformation, depth + 1);
         }
 
         std::vector<glm::mat4> GetFinalBoneMatrices()

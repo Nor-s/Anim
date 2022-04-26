@@ -26,24 +26,7 @@ namespace glcpp
     {
         root_node_.reset();
     }
-    void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection)
-    {
-        shader.use();
-        shader.setMat4("projection", projection);
-        shader.setMat4("view", view);
-        shader.setMat4("model", root_node_->relative_transformation.get_mat4());
-        for (unsigned int i = 0; i < meshes_.size(); i++)
-            meshes_[i].draw(shader);
-    }
-    void Model::draw(Shader &shader)
-    {
-        for (unsigned int i = 0; i < meshes_.size(); i++)
-            meshes_[i].draw(shader);
-    }
-    TransformComponent &Model::get_mutable_transform()
-    {
-        return root_node_->relative_transformation;
-    }
+
     void Model::load_model(const std::string &path)
     {
         Assimp::Importer import;
@@ -57,8 +40,8 @@ namespace glcpp
                                         aiProcess_GenNormals |
                                         aiProcess_CalcTangentSpace;
         assimp_read_flag |= aiProcess_LimitBoneWeights;
-        // assimp_read_flag |= aiProcess_JoinIdenticalVertices;
-        // assimp_read_flag |= aiProcess_FlipWindingOrder;
+        assimp_read_flag |= aiProcess_JoinIdenticalVertices;
+        assimp_read_flag |= aiProcess_FlipWindingOrder;
         // assimp_read_flag |= aiProcess_FindInvalidData;
         import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
         const aiScene *scene = import.ReadFile(path, assimp_read_flag);
@@ -72,16 +55,19 @@ namespace glcpp
         std::filesystem::path tmp(path);
         directory_ = tmp;
         process_node(root_node_, scene->mRootNode, scene);
+        transform_ = &(root_node_->relative_transformation);
         std::cout << "mRoot child: " << node_count_ << "\n";
         std::cout << "model_chennel: " << scene->mAnimations[0]->mNumChannels << "\n";
     }
     void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
     {
         node_count_++;
+        std::string model_name = ai_node->mName.C_Str();
         model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
                                        TransformComponent(),
-                                       std::string(ai_node->mName.C_Str()),
+                                       model_name.substr(model_name.find_last_of(':') + 1),
                                        ai_node->mNumChildren));
+
         // process all the node's meshes (if any)
         for (unsigned int i = 0; i < ai_node->mNumMeshes; i++)
         {
@@ -156,6 +142,7 @@ namespace glcpp
         {
             int bone_id = -1;
             std::string bone_name = mesh->mBones[bone_idx]->mName.C_Str();
+            bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
             if (bone_info_map.find(bone_name) == bone_info_map.end())
             {
                 BoneInfo new_bone_info;
@@ -264,15 +251,50 @@ namespace glcpp
         return textureID;
     }
 }
-
 namespace glcpp
 {
+    void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection)
+    {
+        shader.use();
+        shader.setMat4("projection", projection);
+        shader.setMat4("view", view);
+        shader.setMat4("model", transform_->get_mat4());
+        for (unsigned int i = 0; i < meshes_.size(); i++)
+            meshes_[i].draw(shader);
+    }
+
+    void Model::draw(Shader &shader)
+    {
+        for (unsigned int i = 0; i < meshes_.size(); i++)
+            meshes_[i].draw(shader);
+    }
+
+    TransformComponent &Model::get_mutable_transform()
+    {
+        return *transform_;
+    }
+
     std::map<std::string, BoneInfo> &Model::get_mutable_bone_info_map()
     {
         return bone_info_map_;
     }
+
+    const std::map<std::string, BoneInfo> &Model::get_bone_info_map() const
+    {
+        return bone_info_map_;
+    }
+
     int &Model::get_mutable_bone_count()
     {
         return bone_count_;
+    }
+
+    const ModelNode *Model::get_root_node() const
+    {
+        return root_node_.get();
+    }
+    std::shared_ptr<ModelNode> &Model::get_mutable_root_node()
+    {
+        return root_node_;
     }
 }

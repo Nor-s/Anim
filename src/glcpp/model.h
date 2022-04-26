@@ -27,6 +27,15 @@ namespace glcpp
 
         /*offset matrix transforms vertex from model space to bone space*/
         glm::mat4 offset;
+
+        const glm::mat4 &get_offset() const
+        {
+            return offset;
+        }
+        const int &get_id() const
+        {
+            return id;
+        }
     };
     struct ModelNode
     {
@@ -63,16 +72,11 @@ namespace glcpp
 
         TransformComponent &get_mutable_transform();
 
+        const std::map<std::string, BoneInfo> &get_bone_info_map() const;
         std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
-        const ModelNode *get_root_node() const
-        {
-            return root_node_.get();
-        }
-        std::shared_ptr<ModelNode> &get_mutable_root_node()
-        {
-            return root_node_;
-        }
+        const ModelNode *get_root_node() const;
+        std::shared_ptr<ModelNode> &get_mutable_root_node();
 
     private:
         // heirarchy
@@ -81,6 +85,7 @@ namespace glcpp
         std::vector<Mesh> meshes_;
         std::filesystem::path directory_;
         std::vector<Texture> textures_loaded_;
+        TransformComponent *transform_;
         // bone data
         std::map<std::string, BoneInfo> bone_info_map_;
         int bone_count_ = 0;

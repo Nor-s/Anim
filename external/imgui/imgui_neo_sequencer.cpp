@@ -109,6 +109,32 @@ namespace ImGui
 		const ImVec2 timelineXRange = {
 			timelineXmin, // min
 			timelineXmin + context.Size.x - context.ValuesWidth};
+		ImRect tmpRect;
+		tmpRect.Min = {timelineXmin, pointerRect.Min.y};
+		tmpRect.Max = {timelineXRange.y, pointerRect.Max.y};
+		auto tmp = ItemAdd(tmpRect, 0);
+		if (tmp && !context.HoldingCurrentFrame)
+		{
+			if (IsItemHovered() && IsMouseClicked(ImGuiMouseButton_Left))
+			{
+				const auto mousePosX = GetMousePos().x;
+				const auto v = mousePosX - timelineXRange.x; // Subtract min
+
+				const auto normalized = v / getWorkTimelineWidth(context); // Divide by width to remap to 0 - 1 range
+
+				const auto clamped = ImClamp(normalized, 0.0f, 1.0f);
+
+				const auto viewSize = (float)(context.EndFrame - context.StartFrame) / context.Zoom;
+
+				const auto frameViewVal = (float)context.StartFrame + (clamped * (float)viewSize);
+
+				const auto finalFrame = (uint32_t)round(frameViewVal) + context.OffsetFrame;
+
+				context.CurrentFrameColor = GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_FramePointerPressed);
+
+				*frame = finalFrame;
+			}
+		}
 
 		if (!ItemAdd(pointerRect, 0))
 			return;
@@ -122,7 +148,7 @@ namespace ImGui
 
 		if (context.HoldingCurrentFrame)
 		{
-			if (IsMouseDragging(ImGuiMouseButton_Left, 0.0f))
+			if (IsMouseDragging(ImGuiMouseButton_Left, 0.0f) || IsMouseClicked(ImGuiMouseButton_Left))
 			{
 				const auto mousePosX = GetMousePos().x;
 				const auto v = mousePosX - timelineXRange.x; // Subtract min
@@ -568,7 +594,9 @@ namespace ImGui
 		if (addArrowRes)
 		{
 			if (IsItemClicked() && closable)
+			{
 				(*open) = !(*open);
+			}
 		}
 
 		const auto addGroupRes = ItemAdd(groupBB, id);
@@ -576,6 +604,7 @@ namespace ImGui
 		{
 			if (IsItemClicked())
 			{
+				// transform, child 있는곳 (맨 왼쪽)
 				context.SelectedTimeline = context.SelectedTimeline == id ? 0 : id;
 			}
 		}

@@ -6,6 +6,7 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
+#include "imgui/imgui_neo_sequencer.h"
 #include <nfd.h>
 #include <iostream>
 #include <glcpp/shader.h>
@@ -143,6 +144,7 @@ namespace ui
         }
         void draw_dock()
         {
+
             bool s = true;
             ShowExampleAppDockSpace(&s);
         }
@@ -165,7 +167,33 @@ namespace ui
         void draw_model_hierarchy(std::shared_ptr<glcpp::ModelNode> &root_node)
         {
             ImGui::Begin("Model Hierarchy");
+
             dfs(root_node);
+            ImGui::End();
+            draw_animation_bar();
+        }
+        void draw_animation_bar()
+        {
+            static uint32_t currentFrame = 0;
+            static uint32_t startFrame = 0;
+            static uint32_t endFrame = 65;
+            static bool m_pTransformOpen = true;
+            static std::vector<uint32_t> keys = {0, 10, 24};
+
+            ImGui::Begin("Animation bar");
+            if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
+            {
+                // Timeline code here
+                if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
+                {
+                    if (ImGui::BeginNeoTimeline("Position", keys))
+                    {
+                        ImGui::EndNeoTimeLine();
+                    }
+                    ImGui::EndNeoTimeLine();
+                }
+                ImGui::EndNeoSequencer();
+            }
             ImGui::End();
         }
         void draw_property(Scene *scene)

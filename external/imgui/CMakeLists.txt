@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(Imgui)
 
-find_package(glfw3 REQUIRED FATAL_ERROR)
+# find_package(glfw3 REQUIRED FATAL_ERROR)
 # Set where the ImGui files are stored
 set(IMGUI_PATH ${CMAKE_CURRENT_SOURCE_DIR})
     

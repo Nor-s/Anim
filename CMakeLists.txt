@@ -34,10 +34,9 @@ endif()
 add_subdirectory(external/nfd)
 # add_subdirectory(external/jsoncpp)
 add_library(STB_IMAGE "external/stb/stb_image.cpp")
+add_subdirectory(external/glm/)
 option(GLFW_BUILD_DOCS OFF)
 add_subdirectory(external/glfw/)
-add_subdirectory(external/glm/)
-# find_package(glfw3 REQUIRED FATAL_ERROR) find_package(glm REQUIRED
-# FATAL_ERROR)
 
 add_subdirectory(src)
+add_dependencies (imgui glfw)

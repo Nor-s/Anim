@@ -150,13 +150,15 @@ namespace ui
         {
             if (ImGui::TreeNode(anim_node->name.c_str()))
             {
+
                 ImGui::InputFloat3("translation", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_translation())[0]);
-                ImGui::InputFloat3("scale", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_scale())[0]);
-                ImGui::InputFloat3("rotation", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_rotation())[0]);
+                ImGui::SliderFloat3("scale", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_scale())[0], 0.01f, 10.0f);
+                ImGui::SliderFloat3("rotation", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_rotation())[0], -6.5f, 6.5f);
                 for (size_t i = 0; i < anim_node->childrens.size(); i++)
                 {
                     dfs(anim_node->childrens[i]);
                 }
+
                 ImGui::TreePop();
             }
         }
@@ -173,8 +175,8 @@ namespace ui
 
             // render your GUI
             ImGui::Begin("Model Property");
-            {               
-                 ImGui::SameLine();
+            {
+                ImGui::SameLine();
                 if (ImGui::Button("print"))
                 {
                     scene->print_to_png("pixel" + std::to_string(count++) + ".png");
@@ -208,7 +210,6 @@ namespace ui
 
                     NFD_Quit();
                 }
-
             }
             ImGui::End();
         }
@@ -261,22 +262,15 @@ namespace ui
         {
             auto &rotation = transform.get_rotation();
             glm::vec3 r = rotation;
-            ImGui::Text("rotation");
-            ImGui::SliderFloat("r.x", &r.x, 0.0f, 6.5f);
-            ImGui::SliderFloat("r.y", &r.y, 0.0f, 6.5f);
-            ImGui::SliderFloat("r.z", &r.z, 0.0f, 6.5f);
+            ImGui::SliderFloat3("rotation", &r[0], 0.0f, 6.5f);
             transform.set_rotation({r.x, r.y, r.z});
             auto &scale = transform.get_scale();
             r = scale;
-            ImGui::Text("scale");
-            ImGui::SliderFloat("s.x", &r.x, 0.1f, 10.0f);
+            ImGui::SliderFloat("scale", &r.x, 0.1f, 10.0f);
             transform.set_scale({r.x, r.x, r.x});
             auto &translation = transform.get_translation();
             r = translation;
-            ImGui::Text("translation");
-            ImGui::SliderFloat("t.x", &r.x, -10.0f, 10.0f);
-            ImGui::SliderFloat("t.y", &r.y, -10.0f, 10.0f);
-            ImGui::SliderFloat("t.z", &r.z, -10.0f, 10.0f);
+            ImGui::SliderFloat3("translation", &r[0], -100.0f, 100.0f);
             transform.set_translation({r.x, r.y, r.z});
         }
         void end()

@@ -7,6 +7,7 @@
 #include "imgui_neo_internal.h"
 #include "imgui_internal.h"
 #include <cstdint>
+#include <iostream>
 
 namespace ImGui
 {

@@ -7,7 +7,6 @@
 #include "imgui_neo_internal.h"
 #include "imgui_internal.h"
 #include <cstdint>
-#include <iostream>
 
 namespace ImGui
 {
@@ -32,6 +31,7 @@ namespace ImGui
         drawList->AddRectFilled(barArea.Min, barArea.Max, ColorConvertFloat4ToU32(color), sequencerRounding);
     }
 
+    // render keyframe
     void
     RenderNeoSequencerTopBarOverlay(float zoom, float valuesWidth, uint32_t startFrame, uint32_t endFrame, uint32_t offsetFrame, const ImVec2 &cursor, const ImVec2 &size,
                                     ImDrawList *drawList, bool drawFrameLines,
@@ -51,7 +51,7 @@ namespace ImGui
         {
             const auto count = (int32_t)((float)((viewEnd + 1) - viewStart) / zoom);
 
-            const auto perFrameWidth = barArea.GetSize().x / (float)count;
+            const auto perFrameWidth = GetPerFrameWidth(size.x, valuesWidth, endFrame, startFrame, zoom);
 
             for (int32_t i = 0; i < count; i++)
             {
@@ -156,11 +156,11 @@ namespace ImGui
         { // Top pointer has custom shape, we have to create it
             const auto size = pointerBB.GetSize();
             ImVec2 pts[5];
-            pts[0] = pointerBB.Min;
-            pts[1] = pointerBB.Min + ImVec2{size.x, 0};
-            pts[2] = pointerBB.Min + ImVec2{size.x, size.y * 0.85f};
-            pts[3] = pointerBB.Min + ImVec2{size.x / 2, size.y};
-            pts[4] = pointerBB.Min + ImVec2{0, size.y * 0.85f};
+            pts[0] = pointerBB.Min;                                  // up left
+            pts[1] = pointerBB.Min + ImVec2{size.x, 0};              // up right
+            pts[2] = pointerBB.Min + ImVec2{size.x, size.y * 0.85f}; //  down right
+            pts[3] = pointerBB.Min + ImVec2{size.x / 2, size.y};     // mid
+            pts[4] = pointerBB.Min + ImVec2{0, size.y * 0.85f};      // down left
 
             drawList->AddConvexPolyFilled(pts, sizeof(pts) / sizeof(*pts), ColorConvertFloat4ToU32(topColor));
         }

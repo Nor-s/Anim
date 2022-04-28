@@ -11,8 +11,6 @@
 #include <string>
 
 #include "bone.hpp"
-#include "../model.h"
-
 namespace glcpp
 {
     class Animation
@@ -20,20 +18,18 @@ namespace glcpp
     public:
         Animation() = default;
 
-        Animation(const char *animationPath, Model *model)
+        Animation(const char *animationPath)
         {
             Assimp::Importer importer;
-            unsigned int assimp_read_flag = 
-                                            aiProcess_SortByPType |
-                                            aiProcess_ValidateDataStructure ;
-            // assimp_read_flag |= aiProcess_JoinIdenticalVertices;
-            // assimp_read_flag |= aiProcess_FlipWindingOrder;
-            assimp_read_flag |= aiProcess_LimitBoneWeights;
-            // assimp_read_flag |= aiProcess_FindInvalidData;
+            unsigned int assimp_read_flag =
+                aiProcess_SortByPType |
+                aiProcess_ValidateDataStructure |
+                aiProcess_LimitBoneWeights;
+
             importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
             const aiScene *scene = importer.ReadFile(animationPath, assimp_read_flag);
 
-            if (!scene || !scene->mRootNode)
+            if (!scene || !scene->mRootNode || !scene->HasAnimations())
             {
                 std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << "\n";
             }
@@ -42,8 +38,9 @@ namespace glcpp
                 auto animation = scene->mAnimations[0];
                 m_Duration = animation->mDuration;
                 m_TicksPerSecond = animation->mTicksPerSecond;
+                std::cout << m_Duration << " " << m_TicksPerSecond << "\n";
 
-                process_bones(animation, *model);
+                process_bones(animation);
             }
         }
 
@@ -64,7 +61,7 @@ namespace glcpp
         inline float GetDuration() { return m_Duration; }
 
     private:
-        void process_bones(const aiAnimation *animation, Model &model)
+        void process_bones(const aiAnimation *animation)
         {
             int size = animation->mNumChannels;
 

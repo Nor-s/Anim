@@ -15,71 +15,78 @@
 
 namespace glcpp
 {
-
     class Animator
     {
     public:
-        Animator(Animation *animation)
+        Animator()
         {
-            m_CurrentTime = 0.0;
-            m_CurrentAnimation = animation;
-
-            m_FinalBoneMatrices.reserve(128);
-
+            current_time_ = 0.0;
+            final_bone_matrices_.reserve(128);
             for (int i = 0; i < 128; i++)
-                m_FinalBoneMatrices.push_back(glm::mat4(1.0f));
+                final_bone_matrices_.push_back(glm::mat4(1.0f));
         }
 
-        void UpdateAnimation(float dt, const Model *model)
+        void update_animation(float dt, const Model *model)
         {
-            m_DeltaTime = dt;
-            if (m_CurrentAnimation)
+            delta_time_ = dt;
+            if (animations_.size() > current_animation_idx_ && animations_[current_animation_idx_])
             {
-                m_CurrentTime += m_CurrentAnimation->GetTicksPerSecond() * dt;
-                m_CurrentTime = fmod(m_CurrentTime, m_CurrentAnimation->GetDuration());
-                CalculateBoneTransform(model, model->get_root_node(), glm::mat4(1.0f));
+                current_time_ += animations_[current_animation_idx_]->GetTicksPerSecond() * dt;
+                current_time_ = fmod(current_time_, animations_[current_animation_idx_]->GetDuration());
+                calculate_bone_transform(model, model->get_root_node(), glm::mat4(1.0f));
             }
         }
 
-        void PlayAnimation(Animation *pAnimation)
+        void add_animation(const char *animation_path)
         {
-            m_CurrentAnimation = pAnimation;
-            m_CurrentTime = 0.0f;
+            animations_.push_back(std::make_shared<Animation>(animation_path));
+            play_animation(animations_.size() - 1);
         }
 
-        void CalculateBoneTransform(const Model *model, const ModelNode *node, glm::mat4 parentTransform)
+        // TODO: How to implement retargeting (anim_binding * trs => anim_binding-1 * anim_binding * trs => trs, model_binding*trs)
+        void play_animation(uint32_t animation_id)
+        {
+            if (animation_id < animations_.size())
+                current_animation_idx_ = animation_id;
+            current_time_ = 0.0f;
+        }
+
+        void calculate_bone_transform(const Model *model, const ModelNode *node, glm::mat4 parentTransform)
         {
             std::string node_name = node->name;
+            // 모델의 바인딩포즈 렌더링
             glm::mat4 node_transform = node->initial_transformation;
 
-            // Bone을 찾음
-            Bone *Bone = m_CurrentAnimation->FindBone(node_name);
+            // 애니메이션 렌더링
+            Bone *Bone = animations_[current_animation_idx_]->FindBone(node_name);
             if (Bone != nullptr && !is_stop_)
             {
-                Bone->Update(m_CurrentTime);
+                Bone->Update(current_time_);
                 node_transform = Bone->GetLocalTransform();
             }
+            // 모델 자체를 렌더링.
             if (is_stop_)
             {
                 node_transform = node->get_mix_transformation();
             }
-
+            // FK
             glm::mat4 globalTransformation = parentTransform * node_transform;
 
             auto &bone_info_map = model->get_bone_info_map();
             auto it = bone_info_map.find(node_name);
             if (it != bone_info_map.end())
             {
-                m_FinalBoneMatrices[it->second.get_id()] = globalTransformation * it->second.get_offset();
+                // 역바인딩변환 행렬과 변환행렬을 곱해줌 (본공간 => 로컬공간)
+                final_bone_matrices_[it->second.get_id()] = globalTransformation * it->second.get_offset();
             }
 
             for (int i = 0; i < node->childrens.size(); i++)
-                CalculateBoneTransform(model, node->childrens[i].get(), globalTransformation);
+                calculate_bone_transform(model, node->childrens[i].get(), globalTransformation);
         }
 
-        std::vector<glm::mat4> GetFinalBoneMatrices()
+        std::vector<glm::mat4> &get_final_bone_matrices()
         {
-            return m_FinalBoneMatrices;
+            return final_bone_matrices_;
         }
         void set_is_stop(bool is_stop)
         {
@@ -87,10 +94,11 @@ namespace glcpp
         }
 
     private:
-        std::vector<glm::mat4> m_FinalBoneMatrices;
-        Animation *m_CurrentAnimation;
-        float m_CurrentTime;
-        float m_DeltaTime;
+        std::vector<glm::mat4> final_bone_matrices_;
+        std::vector<std::shared_ptr<Animation>> animations_;
+        uint32_t current_animation_idx_ = -1;
+        float current_time_;
+        float delta_time_;
         bool is_stop_ = false;
     };
 }

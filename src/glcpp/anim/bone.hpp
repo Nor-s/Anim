@@ -47,6 +47,7 @@ namespace glcpp
                 data.position = AiVecToGlmVec(aiPosition);
                 data.timeStamp = timeStamp;
                 m_Positions.push_back(data);
+                std::cout << timeStamp << "\n";
             }
 
             m_NumRotations = channel->mNumRotationKeys;

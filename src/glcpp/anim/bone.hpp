@@ -104,7 +104,6 @@ namespace glcpp
                     return index;
             }
             return 0;
-            // assert(0);
         }
 
         int GetScaleIndex(float animationTime)
@@ -115,7 +114,6 @@ namespace glcpp
                     return index;
             }
             return 0;
-            // assert(0);
         }
 
     private:
@@ -174,6 +172,7 @@ namespace glcpp
         std::vector<KeyPosition> m_Positions;
         std::vector<KeyRotation> m_Rotations;
         std::vector<KeyScale> m_Scales;
+
         int m_NumPositions;
         int m_NumRotations;
         int m_NumScalings;

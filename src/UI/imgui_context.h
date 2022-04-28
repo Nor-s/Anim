@@ -186,7 +186,15 @@ namespace ui
                 // Timeline code here
                 if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
                 {
+                    if (ImGui::BeginNeoTimeline("Rotation", keys))
+                    {
+                        ImGui::EndNeoTimeLine();
+                    }
                     if (ImGui::BeginNeoTimeline("Position", keys))
+                    {
+                        ImGui::EndNeoTimeLine();
+                    }
+                    if (ImGui::BeginNeoTimeline("Scale", keys))
                     {
                         ImGui::EndNeoTimeLine();
                     }

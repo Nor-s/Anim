@@ -37,6 +37,7 @@ namespace glcpp
             else
             {
                 auto animation = scene->mAnimations[0];
+                name_ = animationPath;
                 m_Duration = animation->mDuration;
                 m_TicksPerSecond = animation->mTicksPerSecond;
                 std::cout << m_Duration << " " << m_TicksPerSecond << "\n";
@@ -56,9 +57,9 @@ namespace glcpp
             else
                 return &(*(iter->second));
         }
-        std::map<std::string, glm::mat4> &get_mutable_bone_transform()
+        std::map<std::string, glm::mat4> &get_mutable_inverse_transform()
         {
-            return animation_init_transform_map_;
+            return animation_inverse_transform_map_;
         }
 
         inline float GetTicksPerSecond() { return m_TicksPerSecond; }
@@ -80,20 +81,16 @@ namespace glcpp
                 const aiNode *node = root_node->FindNode(channel->mNodeName);
                 if (node)
                 {
-                    animation_init_transform_map_[bone_name] = AiMatToGlmMat(node->mTransformation);
+                    animation_inverse_transform_map_[bone_name] = glm::inverse(AiMatToGlmMat(node->mTransformation));
                 }
             }
         }
 
         float m_Duration;
         int m_TicksPerSecond;
-        std::map<std::string, glm::mat4> animation_init_transform_map_;
+        std::string name_;
+        std::map<std::string, glm::mat4> animation_inverse_transform_map_;
         std::map<std::string, std::unique_ptr<Bone>> m_Bones;
-
-        // timestamp를 좌표압축 => 리넘버링해야함. 이는 모든 뼈의 정보를 취합한것
-        std::vector<uint32_t> scale_keys_;
-        std::vector<uint32_t> position_keys_;
-        std::vector<uint32_t> rotation_keys_;
 
         // 특정한 키의 뼈들, 그리고 그 뼈의 키 변환을 강조해야함
         // id -> bones ..... bones key t [id], s[id], r[id]

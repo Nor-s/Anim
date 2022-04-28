@@ -564,7 +564,7 @@ namespace ImGui
 
 	IMGUI_API bool BeginNeoGroup(const char *label, bool *open)
 	{
-		return BeginNeoTimeline(label, nullptr, 0, open, ImGuiNeoTimelineFlags_Group);
+		return BeginNeoTimeline(label, open, ImGuiNeoTimelineFlags_Group);
 	}
 
 	IMGUI_API void EndNeoGroup()
@@ -635,8 +635,9 @@ namespace ImGui
 
 		return addGroupRes;
 	}
+	static std::vector<bool> is_group;
 
-	bool BeginNeoTimeline(const char *label, uint32_t **keyframes, uint32_t keyframeCount, bool *open,
+	bool BeginNeoTimeline(const char *label, bool *open,
 						  ImGuiNeoTimelineFlags flags)
 	{
 		IM_ASSERT(inSequencer && "Not in active sequencer!");
@@ -654,6 +655,7 @@ namespace ImGui
 					   (float)currentTimelineDepth * style.DepthItemSpacing;
 
 		bool isGroup = flags & ImGuiNeoTimelineFlags_Group && closable;
+		is_group.push_back(isGroup);
 		bool addRes = false;
 		if (isGroup)
 		{
@@ -693,14 +695,15 @@ namespace ImGui
 								   isGroup && (*open));
 		}
 
-		for (uint32_t i = 0; i < keyframeCount; i++)
+		// for (uint32_t i = 0; i < keyframeCount; i++)
+		// {
+		// 	/*bool keyframeRes = */ createKeyframe(keyframes[i]);
+		// }
+		if (is_group.back())
 		{
-			/*bool keyframeRes = */ createKeyframe(keyframes[i]);
+			context.ValuesCursor.x += imStyle.FramePadding.x + (float)currentTimelineDepth * style.DepthItemSpacing;
+			context.ValuesCursor.y += currentTimelineHeight;
 		}
-
-		context.ValuesCursor.x += imStyle.FramePadding.x + (float)currentTimelineDepth * style.DepthItemSpacing;
-		context.ValuesCursor.y += currentTimelineHeight;
-
 		const auto result = !closable || (*open);
 
 		if (result)
@@ -717,27 +720,29 @@ namespace ImGui
 	void EndNeoTimeLine()
 	{
 		auto &context = sequencerData[currentSequencer];
+		const auto &imStyle = GetStyle();
+
+		if (!is_group.back())
+		{
+			context.ValuesCursor.x += imStyle.FramePadding.x + (float)currentTimelineDepth * style.DepthItemSpacing;
+			context.ValuesCursor.y += currentTimelineHeight;
+		}
+		is_group.pop_back();
 		finishPreviousTimeline(context);
 		currentTimelineDepth--;
 	}
 
-	bool NeoBeginCreateKeyframe(uint32_t *frame)
+	bool BeginCreateKeyframe(uint32_t *frame)
 	{
-		return false;
+		return createKeyframe(frame);
 	}
-
-#ifdef __cplusplus
-
-	bool BeginNeoTimeline(const char *label, std::vector<uint32_t> &keyframes, bool *open)
+	bool Keyframe(uint32_t *frame)
 	{
-		std::vector<uint32_t *> c_keyframes{keyframes.size()};
-		for (uint32_t i = 0; i < keyframes.size(); i++)
-			c_keyframes[i] = &keyframes[i];
-
-		return BeginNeoTimeline(label, c_keyframes.data(), c_keyframes.size(), open);
+		return createKeyframe(frame);
 	}
-
-#endif
+	void EndCreateKeyframe()
+	{
+	}
 
 	void PushNeoSequencerStyleColor(ImGuiNeoSequencerCol idx, ImU32 col)
 	{

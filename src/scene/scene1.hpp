@@ -29,6 +29,7 @@ public:
         init_option();
         init_skybox();
         init_shader();
+        init_anim();
         init_model();
         init_framebuffer(width, height);
         init_camera();
@@ -49,15 +50,12 @@ public:
         models_.emplace_back(std::make_shared<glcpp::Model>(file_name));
         if (std::filesystem::path(file_name).extension() != ".obj")
         {
-            anim_.reset(new glcpp::Animation{file_name, models_.back().get()});
-            animator_.reset(new glcpp::Animator{anim_.get()});
+            animator_->add_animation(file_name);
             model_shader_.reset(new glcpp::Shader{"./../../resources/shaders/animation_loading.vs", "./../../resources/shaders/1.model_loading.fs"});
         }
         else
         {
             model_shader_.reset(new glcpp::Shader{"./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs"});
-            animator_.reset();
-            anim_.reset();
         }
     }
     virtual std::shared_ptr<glcpp::Model> &get_model() override
@@ -75,10 +73,10 @@ public:
         update_flag_option();
         if (animator_)
         {
-            animator_->UpdateAnimation(delta_time_, models_.back().get());
+            animator_->update_animation(delta_time_, models_.back().get());
 
             model_shader_->use();
-            auto transforms = animator_->GetFinalBoneMatrices();
+            auto transforms = animator_->get_final_bone_matrices();
             int size = static_cast<int>(transforms.size());
             for (int i = 0; i < size; ++i)
                 model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
@@ -137,7 +135,7 @@ public:
         {
             capture_skybox();
         }
-        if(animator_)
+        if (animator_)
             animator_->set_is_stop(imgui_option_.get_flag(animation_stop_flag_idx_));
         pixelate_framebuffer_->set_outline_flag(imgui_option_.get_flag(outline_flag_idx_));
         pixelate_framebuffer_->set_outline_color(imgui_option_.get_color3_property(outline_color_idx_));
@@ -190,6 +188,10 @@ private:
     {
         add_model(fs::canonical(fs::path("./../../resources/models/vampire/zom.fbx")).string().c_str());
         models_.back()->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
+    }
+    void init_anim()
+    {
+        animator_.reset(new glcpp::Animator{});
     }
     void init_camera()
     {

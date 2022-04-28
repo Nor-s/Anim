@@ -41,6 +41,11 @@ namespace glcpp
         {
             animations_.push_back(std::make_shared<Animation>(animation_path));
             play_animation(animations_.size() - 1);
+            play_animation(0);
+        }
+        std::shared_ptr<Animation> &get_mutable_current_animation()
+        {
+            return animations_[current_animation_idx_];
         }
 
         // TODO: How to implement retargeting (anim_binding * trs => anim_binding-1 * anim_binding * trs => trs, model_binding*trs)
@@ -59,10 +64,11 @@ namespace glcpp
 
             // 애니메이션 렌더링
             Bone *Bone = animations_[current_animation_idx_]->FindBone(node_name);
+            auto &transform_map = animations_[current_animation_idx_]->get_mutable_bone_transform();
             if (Bone != nullptr && !is_stop_)
             {
                 Bone->Update(current_time_);
-                node_transform = Bone->GetLocalTransform();
+                node_transform *= glm::inverse(transform_map[node_name]) * Bone->GetLocalTransform();
             }
             // 모델 자체를 렌더링.
             if (is_stop_)
@@ -84,7 +90,7 @@ namespace glcpp
                 calculate_bone_transform(model, node->childrens[i].get(), globalTransformation);
         }
 
-        std::vector<glm::mat4> &get_final_bone_matrices()
+        const std::vector<glm::mat4> &get_final_bone_matrices() const
         {
             return final_bone_matrices_;
         }

@@ -76,7 +76,7 @@ public:
             animator_->update_animation(delta_time_, models_.back().get());
 
             model_shader_->use();
-            auto transforms = animator_->get_final_bone_matrices();
+            auto &transforms = animator_->get_final_bone_matrices();
             int size = static_cast<int>(transforms.size());
             for (int i = 0; i < size; ++i)
                 model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);

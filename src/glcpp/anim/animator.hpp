@@ -41,7 +41,7 @@ namespace glcpp
         {
             animations_.push_back(std::make_shared<Animation>(animation_path));
             play_animation(animations_.size() - 1);
-            play_animation(0);
+            // play_animation(0);
         }
         std::shared_ptr<Animation> &get_mutable_current_animation()
         {
@@ -64,11 +64,12 @@ namespace glcpp
 
             // 애니메이션 렌더링
             Bone *Bone = animations_[current_animation_idx_]->FindBone(node_name);
-            auto &transform_map = animations_[current_animation_idx_]->get_mutable_bone_transform();
+            // retargeting mixamo
+            auto &inverse_map = animations_[current_animation_idx_]->get_mutable_inverse_transform();
             if (Bone != nullptr && !is_stop_)
             {
                 Bone->Update(current_time_);
-                node_transform *= glm::inverse(transform_map[node_name]) * Bone->GetLocalTransform();
+                node_transform *= inverse_map[node_name] * Bone->GetLocalTransform();
             }
             // 모델 자체를 렌더링.
             if (is_stop_)
@@ -102,6 +103,7 @@ namespace glcpp
     private:
         std::vector<glm::mat4> final_bone_matrices_;
         std::vector<std::shared_ptr<Animation>> animations_;
+        std::map<std::string, std::shared_ptr<Animation>> animation_map;
         uint32_t current_animation_idx_ = -1;
         float current_time_;
         float delta_time_;

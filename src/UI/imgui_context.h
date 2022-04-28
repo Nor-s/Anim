@@ -176,29 +176,74 @@ namespace ui
         {
             static uint32_t currentFrame = 0;
             static uint32_t startFrame = 0;
-            static uint32_t endFrame = 65;
+            static uint32_t endFrame = 4000;
             static bool m_pTransformOpen = true;
-            static std::vector<uint32_t> keys = {0, 10, 24};
+            static std::vector<uint32_t> keys = {0, 0, 10, 24};
+            static bool play = true;
+            static std::string play_stop_button = "stop";
+            static int fps = 24;
+            if (play)
+            {
+                currentFrame++;
+            }
+            if (currentFrame == endFrame + 1)
+            {
+                currentFrame = 0;
+            }
 
-            ImGui::Begin("Animation bar");
+            ImGui::Begin("Animation bar", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+            static int idx__ = 0;
+            static const char *items_[] = {"ssss", "ffff", "sfdf"};
+            // ImGui::ListBox("list", &idx__, items_, 3, 1);
+            if (ImGui::Button(play_stop_button.c_str()))
+            {
+                play = !play;
+                if (play_stop_button == "play")
+                {
+                    play_stop_button = "stop";
+                }
+                else
+                {
+                    play_stop_button = "play";
+                }
+            }
+            ImGui::SameLine();
+            ImGui::Button("load animation");
+            ImGui::SameLine();
+            ImGui::Combo("list2", &idx__, items_, 3);
+            ImGui::SameLine();
+            ImGui::InputInt("fps", &fps);
+
             if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
             {
                 // Timeline code here
                 if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
                 {
-                    if (ImGui::BeginNeoTimeline("Rotation", keys))
+                    if (ImGui::BeginNeoTimeline("Rotation"))
                     {
+                        for (size_t i = 0; i < keys.size(); i++)
+                        {
+                            if (ImGui::Keyframe(&keys[i]) && ImGui::IsItemHovered())
+                            {
+                                std::cout << i << " " << keys[i] << "\n";
+                            }
+                        }
+
                         ImGui::EndNeoTimeLine();
                     }
-                    if (ImGui::BeginNeoTimeline("Position", keys))
+
+                    if (ImGui::BeginNeoTimeline("ddd"))
                     {
+                        for (size_t i = 0; i < keys.size(); i++)
+                        {
+                            if (ImGui::Keyframe(&keys[i]) && ImGui::IsItemHovered())
+                            {
+                                std::cout << i << " " << keys[i] << "\n";
+                            }
+                        }
                         ImGui::EndNeoTimeLine();
                     }
-                    if (ImGui::BeginNeoTimeline("Scale", keys))
-                    {
-                        ImGui::EndNeoTimeLine();
-                    }
-                    ImGui::EndNeoTimeLine();
+                    ImGui::EndNeoGroup();
                 }
                 ImGui::EndNeoSequencer();
             }
@@ -282,7 +327,7 @@ namespace ui
         // Demonstrate creating a window covering the entire screen/viewport
         void ShowStatus(float fps)
         {
-            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoBackground;
+            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
 
             // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
             // Based on your use case you may want one of the other.

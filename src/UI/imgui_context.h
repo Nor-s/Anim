@@ -285,10 +285,10 @@ namespace ui
                             glm::vec3 *p_pos = clicked_bone->get_mutable_pointer_positions(clicked_time);
                             glm::quat *p_quat = clicked_bone->get_mutable_pointer_rotations(clicked_time);
                             glm::vec3 *p_scale = clicked_bone->get_mutable_pointer_scales(clicked_time);
-                            ImGui::InputFloat3("position", &((*p_pos)[0]));
-                            ImGui::InputFloat4("quat", &((*p_quat)[0]));
+                            ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
+                            ImGui::SliderFloat4("quat", &((*p_quat)[0]), -1.0f, 1.0f);
                             *p_quat = glm::normalize(*p_quat);
-                            ImGui::InputFloat3("scale", &((*p_scale)[0]));
+                            ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
 
                             ImGui::EndPopup();
                         }

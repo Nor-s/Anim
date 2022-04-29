@@ -170,6 +170,33 @@ namespace glcpp
         {
             return factor_;
         }
+        glm::vec3 *get_mutable_pointer_positions(float time)
+        {
+            auto it = time_positions_map_.find(time);
+            if (it == time_positions_map_.end())
+            {
+                return nullptr;
+            }
+            return &(positions_[it->second].position);
+        }
+        glm::quat *get_mutable_pointer_rotations(float time)
+        {
+           auto it = time_rotations_map_.find(time);
+            if (it == time_rotations_map_.end())
+            {
+                return nullptr;
+            }
+            return &(rotations_[it->second].orientation); 
+        }
+        glm::vec3 *get_mutable_pointer_scales(float time)
+        {
+            auto it = time_scales_map_.find(time);
+            if (it == time_scales_map_.end())
+            {
+                return nullptr;
+            }
+            return &(scales_[it->second].scale);
+        }
 
     private:
         float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime)

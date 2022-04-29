@@ -174,6 +174,7 @@ namespace ui
         }
         void draw_animation_bar(glcpp::Animator *animator)
         {
+            static bool is_hovered_animation_zoom_slider = false;
             static bool m_pTransformOpen = true;
             bool &play = animator->get_mutable_is_stop();
             static std::string play_stop_button = "stop";
@@ -186,8 +187,13 @@ namespace ui
             uint32_t endFrame = animator->get_custom_duration();
             float &fps = animator->get_mutable_custom_tick_per_second();
             std::vector<uint32_t> keys = {0, 0, 10, 24};
+            ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+            if (is_hovered_animation_zoom_slider)
+            {
+                window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
+            }
 
-            ImGui::Begin("Animation bar", NULL, ImGuiWindowFlags_AlwaysAutoResize);
+            ImGui::Begin("Animation bar", NULL, window_flags);
             // ImGui::ListBox("list", &idx__, items_, 3, 1);
             if (ImGui::Button(play_stop_button.c_str()))
             {
@@ -228,32 +234,46 @@ namespace ui
                 // Timeline code here
                 if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
                 {
-                    if (ImGui::BeginNeoTimeline("Rotation"))
+                    auto &current_animation = animator->get_mutable_current_animation();
+                    auto &name_bone_map = current_animation->get_name_bone_map();
+                    bool is_hovered = false;
+                    for (auto &bone : name_bone_map)
                     {
-                        size_t hovered_key = keys.size();
-                        for (size_t i = 0; i < keys.size(); i++)
-                        {
-                            if (ImGui::Keyframe(&keys[i]) && ImGui::IsItemHovered() && hovered_key == keys.size())
-                            {
-                                hovered_key = keys[i];
-                            }
-                        }
+                        float factor = bone.second->get_factor();
+                        std::vector<float> &keys = bone.second->get_mutable_time_list();
 
-                        ImGui::EndNeoTimeLine();
+                        if (ImGui::BeginNeoTimeline(bone.second->get_bone_name().c_str()))
+                        {
+                            float hovered_time = -1.0f;
+                            for (size_t i = 0; i < keys.size(); i++)
+                            {
+                                uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
+                                if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && hovered_time == -1.0f)
+                                {
+                                    hovered_time = keys[i];
+                                    ImVec2 toolbar_size(300, 200);
+                                    ImGui::BeginChild("toolbar", toolbar_size, false);
+                                    {
+                                        ImGui::Text("test");
+                                    }
+
+                                    ImGui::EndChild();
+                                }
+                            }
+
+                            ImGui::EndNeoTimeLine();
+                        }
                     }
 
-                    if (ImGui::BeginNeoTimeline("ddd"))
-                    {
-                        for (size_t i = 0; i < keys.size(); i++)
-                        {
-                            if (ImGui::Keyframe(&keys[i]) && ImGui::IsItemHovered())
-                            {
-                                std::cout << i << " " << keys[i] << "\n";
-                            }
-                        }
-                        ImGui::EndNeoTimeLine();
-                    }
                     ImGui::EndNeoGroup();
+                    if (ImGui::IsZoomSliderHovered())
+                    {
+                        is_hovered_animation_zoom_slider = true;
+                    }
+                    else
+                    {
+                        is_hovered_animation_zoom_slider = false;
+                    }
                 }
                 ImGui::EndNeoSequencer();
             }
@@ -262,6 +282,7 @@ namespace ui
             {
                 animator->set_current_frame_num_to_time(currentFrame);
             }
+            ImGui::ShowDemoWindow();
         }
         void draw_property(Scene *scene)
         {

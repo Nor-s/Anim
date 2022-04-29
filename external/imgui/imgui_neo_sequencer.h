@@ -44,6 +44,8 @@ enum ImGuiNeoSequencerCol_
     ImGuiNeoSequencerCol_Keyframe,
     ImGuiNeoSequencerCol_KeyframeHovered,
     ImGuiNeoSequencerCol_KeyframePressed,
+
+    ImGuiNeoSequencerCol_KeyframeWithCurrentFrame,
     ImGuiNeoSequencerCol_FramePointerLine,
 
     ImGuiNeoSequencerCol_ZoomBarBg,
@@ -92,8 +94,10 @@ namespace ImGui
     IMGUI_API void EndNeoTimeLine(); // Call only when BeginNeoTimeline() returns true!!
 
     IMGUI_API bool BeginCreateKeyframe();
-    IMGUI_API bool Keyframe(uint32_t *frame);
+    IMGUI_API bool Keyframe(uint32_t *frame, bool *is_hovered = nullptr);
     IMGUI_API void EndCreateKeyframe();
+
+    IMGUI_API bool IsZoomSliderHovered();
 }
 
 #endif // IMGUI_NEO_SEQUENCER_H

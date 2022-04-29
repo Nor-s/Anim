@@ -26,6 +26,8 @@ namespace ImGui
 		uint32_t StartFrame = 0;
 		uint32_t EndFrame = 0;
 		uint32_t OffsetFrame = 0; // Offset from start
+		uint32_t zoomSiliderWidth = 0;
+		uint32_t FinalCurrentFrame = 0;
 
 		float ValuesWidth = 32.0f; // Width of biggest label in timeline, used for offset of timeline
 
@@ -40,6 +42,7 @@ namespace ImGui
 		ImVec4 CurrentFrameColor;		  // Color of current frame, we have to save it because we render on EndNeoSequencer, but process at BeginneoSequencer
 
 		bool HoldingZoomSlider = false;
+		bool HoverZoomSlider = false;
 	};
 
 	static ImGuiNeoSequencerStyle style; // NOLINT(cert-err58-cpp)
@@ -62,6 +65,10 @@ namespace ImGui
 	static std::unordered_map<ImGuiID, ImGuiNeoSequencerInternalData> sequencerData;
 
 	///////////// STATIC HELPERS ///////////////////////
+	static bool isFrameInTimeline(ImGuiNeoSequencerInternalData &context, uint32_t frame)
+	{
+		return (context.OffsetFrame <= frame && frame <= context.OffsetFrame + context.zoomSiliderWidth);
+	}
 
 	static float getPerFrameWidth(ImGuiNeoSequencerInternalData &context)
 	{
@@ -135,6 +142,7 @@ namespace ImGui
 				*frame = finalFrame;
 			}
 		}
+		context.FinalCurrentFrame = *frame;
 
 		if (!ItemAdd(pointerRect, 0))
 			return;
@@ -190,10 +198,14 @@ namespace ImGui
 		currentTimelineHeight = 0.0f;
 	}
 
-	static bool createKeyframe(uint32_t *frame)
+	static bool createKeyframe(uint32_t *frame, bool *is_hovered = nullptr)
 	{
 		const auto &imStyle = GetStyle();
 		auto &context = sequencerData[currentSequencer];
+		if (!isFrameInTimeline(context, *frame))
+		{
+			return false;
+		}
 
 		const auto timelineOffset = getKeyframePositionX(*frame, context);
 
@@ -208,11 +220,28 @@ namespace ImGui
 			return false;
 
 		const auto drawList = ImGui::GetWindowDrawList();
+		auto color = ColorConvertFloat4ToU32(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_Keyframe));
 
-		drawList->AddCircleFilled(pos + ImVec2{0, currentTimelineHeight / 2.f}, currentTimelineHeight / 3.0f,
-								  IsItemHovered() ? ColorConvertFloat4ToU32(
-														GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_KeyframeHovered))
-												  : ColorConvertFloat4ToU32(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_Keyframe)),
+		if (*frame == context.FinalCurrentFrame)
+		{
+			color = ColorConvertFloat4ToU32(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_KeyframeWithCurrentFrame));
+		}
+
+		if (IsItemHovered())
+		{
+			if (!is_hovered || !*is_hovered)
+			{
+				color = ColorConvertFloat4ToU32(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_KeyframeHovered));
+				if (is_hovered)
+				{
+					*is_hovered = true;
+				}
+			}
+		}
+
+		drawList->AddCircleFilled(pos + ImVec2{0, currentTimelineHeight / 2.f},
+								  currentTimelineHeight / 3.0f,
+								  color,
 								  4);
 
 		return true;
@@ -242,13 +271,16 @@ namespace ImGui
 
 		const auto drawList = ImGui::GetWindowDrawList();
 
-		RenderNeoSequencerCurrentFrame(
-			GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_FramePointerLine),
-			context.CurrentFrameColor,
-			bb,
-			context.Size.y - context.TopBarSize.y,
-			style.CurrentFrameLineWidth,
-			drawList);
+		if (isFrameInTimeline(context, context.FinalCurrentFrame))
+		{
+			RenderNeoSequencerCurrentFrame(
+				GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_FramePointerLine),
+				context.CurrentFrameColor,
+				bb,
+				context.Size.y - context.TopBarSize.y,
+				style.CurrentFrameLineWidth,
+				drawList);
+		}
 	}
 
 	static void processAndRenderZoom(ImGuiNeoSequencerInternalData &context, bool allowEditingLength, uint32_t *start,
@@ -358,19 +390,22 @@ namespace ImGui
 		const auto resBG = ItemAdd(bb, 0);
 
 		const auto viewWidth = (uint32_t)((float)totalFrames / context.Zoom);
+		context.zoomSiliderWidth = (uint32_t)((float)totalFrames / context.Zoom);
 
 		if (resBG)
 		{
+			context.HoverZoomSlider = false;
 			if (IsItemHovered())
 			{
 				SetItemUsingMouseWheel();
 				const float currentScroll = GetIO().MouseWheel;
 
 				context.Zoom = ImClamp(context.Zoom + currentScroll, 1.0f, (float)viewWidth);
-				const auto newZoomWidth = (uint32_t)((float)totalFrames / context.Zoom);
+				context.zoomSiliderWidth = (uint32_t)((float)totalFrames / context.Zoom);
 
-				if (*start + context.OffsetFrame + newZoomWidth > *end)
+				if (*start + context.OffsetFrame + context.zoomSiliderWidth > *end)
 					context.OffsetFrame = ImMax(0U, totalFrames - viewWidth);
+				context.HoverZoomSlider = true;
 			}
 
 			if (context.HoldingZoomSlider)
@@ -526,7 +561,9 @@ namespace ImGui
 										style.TopBarShowFrameLines, style.TopBarShowFrameTexts);
 
 		if (showZoom)
+		{
 			processAndRenderZoom(context, flags & ImGuiNeoSequencerFlags_AllowLengthChanging, startFrame, endFrame);
+		}
 
 		context.TopBarSize = ImVec2(context.Size.x, style.TopBarHeight);
 
@@ -701,10 +738,6 @@ namespace ImGui
 								   isGroup && (*open));
 		}
 
-		// for (uint32_t i = 0; i < keyframeCount; i++)
-		// {
-		// 	/*bool keyframeRes = */ createKeyframe(keyframes[i]);
-		// }
 		if (is_group.back())
 		{
 			context.ValuesCursor.x += imStyle.FramePadding.x + (float)currentTimelineDepth * style.DepthItemSpacing;
@@ -742,9 +775,9 @@ namespace ImGui
 	{
 		return createKeyframe(frame);
 	}
-	bool Keyframe(uint32_t *frame)
+	bool Keyframe(uint32_t *frame, bool *is_hovered)
 	{
-		return createKeyframe(frame);
+		return createKeyframe(frame, is_hovered);
 	}
 	void EndCreateKeyframe()
 	{
@@ -779,6 +812,12 @@ namespace ImGui
 		}
 	}
 
+	bool IsZoomSliderHovered()
+	{
+		auto &context = sequencerData[currentSequencer];
+		return context.HoverZoomSlider;
+	}
+
 }
 
 ImGuiNeoSequencerStyle::ImGuiNeoSequencerStyle()
@@ -804,4 +843,6 @@ ImGuiNeoSequencerStyle::ImGuiNeoSequencerStyle()
 	Colors[ImGuiNeoSequencerCol_ZoomBarSliderHovered] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
 	Colors[ImGuiNeoSequencerCol_ZoomBarSliderEnds] = ImVec4{0.98f, 0.98f, 0.98f, 1.00f};
 	Colors[ImGuiNeoSequencerCol_ZoomBarSliderEndsHovered] = ImVec4{0.93f, 0.93f, 0.93f, 0.93f};
+
+	Colors[ImGuiNeoSequencerCol_KeyframeWithCurrentFrame] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
 }

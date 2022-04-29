@@ -52,8 +52,13 @@ namespace ImGui
             const auto count = (int32_t)((float)((viewEnd + 1) - viewStart) / zoom);
 
             const auto perFrameWidth = GetPerFrameWidth(size.x, valuesWidth, endFrame, startFrame, zoom);
+            bool is_fifth_render = false;
+            if (count <= 100)
+            {
+                is_fifth_render = true;
+            }
 
-            for (int32_t i = 0; i < count; i++)
+            for (int32_t i = 0; i <= count; i++)
             {
                 const ImVec2 p1 = {barArea.Min.x + (float)i * perFrameWidth, barArea.Max.y};
 
@@ -67,7 +72,7 @@ namespace ImGui
 
                 drawList->AddLine(p1, p2, IM_COL32_WHITE, 1.0f);
 
-                if (drawFrameText && tenthFrame)
+                if (drawFrameText && (tenthFrame || (is_fifth_render && fifthFrame)))
                 {
                     char text[10];
                     const auto printRes = snprintf(text, sizeof(text), "%u", viewStart + i);

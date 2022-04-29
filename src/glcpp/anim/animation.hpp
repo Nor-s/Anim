@@ -51,8 +51,8 @@ namespace glcpp
 
         Bone *FindBone(const std::string &name)
         {
-            auto iter = m_Bones.find(name);
-            if (iter == m_Bones.end())
+            auto iter = name_bone_map_.find(name);
+            if (iter == name_bone_map_.end())
                 return nullptr;
             else
                 return &(*(iter->second));
@@ -68,6 +68,10 @@ namespace glcpp
         const char *get_name() const
         {
             return name_.c_str();
+        }
+        const std::map<std::string, std::unique_ptr<Bone>> &get_name_bone_map() const
+        {
+            return name_bone_map_;
         }
 
     private:
@@ -86,7 +90,7 @@ namespace glcpp
                 if (node)
                 {
                     animation_inverse_transform_map_[bone_name] = glm::inverse(AiMatToGlmMat(node->mTransformation));
-                    m_Bones[bone_name] = std::make_unique<Bone>(bone_name, channel, animation_inverse_transform_map_[bone_name]);
+                    name_bone_map_[bone_name] = std::make_unique<Bone>(bone_name, channel, animation_inverse_transform_map_[bone_name]);
                 }
             }
         }
@@ -95,7 +99,7 @@ namespace glcpp
         int ticks_per_second_;
         std::string name_;
         std::map<std::string, glm::mat4> animation_inverse_transform_map_;
-        std::map<std::string, std::unique_ptr<Bone>> m_Bones;
+        std::map<std::string, std::unique_ptr<Bone>> name_bone_map_;
     };
 
 }

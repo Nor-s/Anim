@@ -19,7 +19,7 @@ namespace glcpp
         float time;
         float get_time(float factor = 1.0f)
         {
-            return (float)roundf(time * factor);
+            return (float)static_cast<uint32_t>(roundf(time * factor));
         }
     };
 
@@ -29,7 +29,7 @@ namespace glcpp
         float time;
         float get_time(float factor = 1.0f)
         {
-            return (float)roundf(time * factor);
+            return (float)static_cast<uint32_t>(roundf(time * factor));
         }
     };
 
@@ -39,7 +39,7 @@ namespace glcpp
         float time;
         float get_time(float factor = 1.0f)
         {
-            return (float)roundf(time * factor);
+            return (float)static_cast<uint32_t>(roundf(time * factor));
         }
     };
 
@@ -90,7 +90,7 @@ namespace glcpp
                 time_scales_map_[time] = scale_idx;
                 time_set.insert(time);
             }
-            times_.reserve(time_set.size());
+            time_list_.reserve(time_set.size());
             for (auto time : time_set)
             {
                 auto it_pose = time_positions_map_.find(time);
@@ -111,7 +111,7 @@ namespace glcpp
                 scales_[it_scale->second].scale = scale;
                 positions_[it_pose->second].position = translation;
                 rotations_[it_rotate->second].orientation = rotation;
-                times_.push_back(time);
+                time_list_.push_back(time);
             }
         }
 
@@ -127,7 +127,7 @@ namespace glcpp
 
         glm::mat4 &GetLocalTransform() { return local_transform_; }
 
-        std::string GetBoneName() const { return name_; }
+        const std::string &get_bone_name() const { return name_; }
 
         int GetPositionIndex(float animationTime)
         {
@@ -161,9 +161,14 @@ namespace glcpp
             return 0;
         }
 
-        std::vector<float> &get_mutable_times()
+        std::vector<float> &get_mutable_time_list()
         {
-            return times_;
+            return time_list_;
+        }
+
+        float get_factor()
+        {
+            return factor_;
         }
 
     private:
@@ -235,7 +240,7 @@ namespace glcpp
         std::map<float, int> time_positions_map_;
         std::map<float, int> time_rotations_map_;
         std::map<float, int> time_scales_map_;
-        std::vector<float> times_;
+        std::vector<float> time_list_;
     };
 }
 #endif

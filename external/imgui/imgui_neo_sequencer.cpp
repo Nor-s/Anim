@@ -459,7 +459,13 @@ namespace ImGui
 					  ImGuiNeoSequencerFlags flags)
 	{
 		IM_ASSERT(!inSequencer && "Called when while in other NeoSequencer, that won't work, call End!");
-		IM_ASSERT(*startFrame < *endFrame && "Start frame must be smaller than end frame");
+		if (*startFrame >= *endFrame)
+		{
+#ifndef NDEBUG
+			std::cout << "Start frame must be smaller than end frame\n";
+#endif
+			return false;
+		}
 
 		// ImGuiContext &g = *GImGui;
 		ImGuiWindow *window = GetCurrentWindow();

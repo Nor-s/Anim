@@ -135,8 +135,6 @@ public:
         {
             capture_skybox();
         }
-        if (animator_)
-            animator_->set_is_stop(imgui_option_.get_flag(animation_stop_flag_idx_));
         pixelate_framebuffer_->set_outline_flag(imgui_option_.get_flag(outline_flag_idx_));
         pixelate_framebuffer_->set_outline_color(imgui_option_.get_color3_property(outline_color_idx_));
     }
@@ -160,7 +158,6 @@ private:
         skyblur_flag_idx_ = imgui_option_.push_flag("skybox blur", true);
         pixelate_value_idx_ = imgui_option_.push_int_property("pixelate", 1, 1, 64);
         outline_color_idx_ = imgui_option_.push_color3_property("outline", {0.0f, 0.0f, 0.0f});
-        animation_stop_flag_idx_ = imgui_option_.push_flag("animation flag", false);
     }
     void init_skybox()
     {
@@ -210,9 +207,9 @@ private:
         view_ = camera_->GetViewMatrix();
     }
     // TODO: !safe
-    virtual glcpp::Animation *get_mutable_animation() override
+    virtual glcpp::Animator *get_mutable_animator() override
     {
-        return anim_.get();
+        return animator_.get();
     }
 
 private:
@@ -273,9 +270,7 @@ private:
     uint32_t pixelate_value_idx_;
     uint32_t outline_flag_idx_;
     uint32_t outline_color_idx_;
-    uint32_t animation_stop_flag_idx_;
 
-    std::shared_ptr<glcpp::Animation> anim_;
     std::shared_ptr<glcpp::Animator> animator_;
     float delta_time_ = 0.0f;
 };

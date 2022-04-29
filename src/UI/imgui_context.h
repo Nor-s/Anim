@@ -180,6 +180,9 @@ namespace ui
             static std::string play_stop_button = "stop";
             std::vector<const char *> animation_items = animator->get_animation_name_list();
             static const char *current_item = NULL;
+            static float clicked_time = -1.0f;
+            static uint32_t clicked_frame = 0;
+            static glcpp::Bone *clicked_bone = nullptr;
 
             uint32_t currentFrame = animator->get_current_frame_num();
             uint32_t beforeFrame = currentFrame;
@@ -235,7 +238,7 @@ namespace ui
                 if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
                 {
                     auto &current_animation = animator->get_mutable_current_animation();
-                    auto &name_bone_map = current_animation->get_name_bone_map();
+                    auto &name_bone_map = current_animation->get_mutable_name_bone_map();
                     bool is_hovered = false;
                     for (auto &bone : name_bone_map)
                     {
@@ -244,24 +247,59 @@ namespace ui
 
                         if (ImGui::BeginNeoTimeline(bone.second->get_bone_name().c_str()))
                         {
-                            float hovered_time = -1.0f;
                             for (size_t i = 0; i < keys.size(); i++)
                             {
                                 uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
-                                if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && hovered_time == -1.0f)
+                                if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && clicked_time == -1.0f)
                                 {
-                                    hovered_time = keys[i];
-                                    ImVec2 toolbar_size(300, 200);
-                                    ImGui::BeginChild("toolbar", toolbar_size, false);
+                                    if (ImGui::IsItemClicked())
                                     {
-                                        ImGui::Text("test");
+                                        clicked_frame = key;
+                                        clicked_time = keys[i];
+                                        clicked_bone = bone.second.get();
                                     }
-
-                                    ImGui::EndChild();
                                 }
                             }
 
                             ImGui::EndNeoTimeLine();
+                        }
+                    }
+                    if (clicked_time != -1.0f && clicked_bone)
+                    {
+                        ImVec2 vMin{0, 0};
+                        ImVec2 vMax{0, 0};
+                        currentFrame = clicked_frame;
+                        play = true;
+                        play_stop_button = "play";
+                        ImGui::OpenPopup("my_select_popup");
+                        ImGui::SameLine();
+                        if (ImGui::BeginPopup("my_select_popup"))
+                        {
+                            vMin = ImGui::GetWindowContentRegionMin();
+                            vMax = ImGui::GetWindowContentRegionMax();
+                            vMin.x += ImGui::GetWindowPos().x - 10;
+                            vMin.y += ImGui::GetWindowPos().y - 10;
+                            vMax.x += ImGui::GetWindowPos().x + 10;
+                            vMax.y += ImGui::GetWindowPos().y + 10;
+                            ImGui::Text("%s: %u", clicked_bone->get_bone_name().c_str(), clicked_frame);
+                            glm::vec3 *p_pos = clicked_bone->get_mutable_pointer_positions(clicked_time);
+                            glm::quat *p_quat = clicked_bone->get_mutable_pointer_rotations(clicked_time);
+                            glm::vec3 *p_scale = clicked_bone->get_mutable_pointer_scales(clicked_time);
+                            ImGui::InputFloat3("position", &((*p_pos)[0]));
+                            ImGui::InputFloat4("quat", &((*p_quat)[0]));
+                            *p_quat = glm::normalize(*p_quat);
+                            ImGui::InputFloat3("scale", &((*p_scale)[0]));
+
+                            ImGui::EndPopup();
+                        }
+                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+                        {
+                            auto x = ImGui::GetMousePos().x;
+                            auto y = ImGui::GetMousePos().y;
+                            if (!(vMax.y > y && vMax.x > x && vMin.x < x && vMin.y < y))
+                            {
+                                clicked_time = -1.0f;
+                            }
                         }
                     }
 

@@ -73,6 +73,10 @@ namespace glcpp
         {
             return name_bone_map_;
         }
+        std::map<std::string, std::unique_ptr<Bone>> &get_mutable_name_bone_map()
+        {
+            return name_bone_map_;
+        }
 
     private:
         void process_bones(const aiAnimation *animation, const aiNode *root_node)

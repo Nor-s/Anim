@@ -16,6 +16,7 @@
 #include <glcpp/cubemap.h>
 #include <glcpp/framebuffer.h>
 #include <glcpp/anim/animation.hpp>
+#include <glcpp/anim/animator.hpp>
 #include "pixelate_framebuffer.h"
 #include <memory>
 #include <map>
@@ -170,30 +171,23 @@ namespace ui
 
             dfs(root_node);
             ImGui::End();
-            draw_animation_bar();
         }
-        void draw_animation_bar()
+        void draw_animation_bar(glcpp::Animator *animator)
         {
-            static uint32_t currentFrame = 0;
-            static uint32_t startFrame = 0;
-            static uint32_t endFrame = 4000;
             static bool m_pTransformOpen = true;
-            static std::vector<uint32_t> keys = {0, 0, 10, 24};
-            static bool play = true;
+            bool &play = animator->get_mutable_is_stop();
             static std::string play_stop_button = "stop";
-            static int fps = 24;
-            if (play)
-            {
-                currentFrame++;
-            }
-            if (currentFrame == endFrame + 1)
-            {
-                currentFrame = 0;
-            }
+            std::vector<const char *> animation_items = animator->get_animation_name_list();
+            static const char *current_item = NULL;
+
+            uint32_t currentFrame = animator->get_current_frame_num();
+            uint32_t beforeFrame = currentFrame;
+            uint32_t startFrame = 0;
+            uint32_t endFrame = animator->get_custom_duration();
+            float &fps = animator->get_mutable_custom_tick_per_second();
+            std::vector<uint32_t> keys = {0, 0, 10, 24};
 
             ImGui::Begin("Animation bar", NULL, ImGuiWindowFlags_AlwaysAutoResize);
-            static int idx__ = 0;
-            static const char *items_[] = {"ssss", "ffff", "sfdf"};
             // ImGui::ListBox("list", &idx__, items_, 3, 1);
             if (ImGui::Button(play_stop_button.c_str()))
             {
@@ -210,10 +204,25 @@ namespace ui
             ImGui::SameLine();
             ImGui::Button("load animation");
             ImGui::SameLine();
-            ImGui::Combo("list2", &idx__, items_, 3);
+            if (ImGui::BeginCombo("animations", current_item))
+            {
+                for (int i = 0; i < animation_items.size(); i++)
+                {
+                    bool is_selected = (current_item == animation_items[i]);
+                    if (ImGui::Selectable(animation_items[i], is_selected))
+                    {
+                        current_item = animation_items[i];
+                        animator->play_animation(i);
+                    }
+                    if (is_selected)
+                    {
+                        ImGui::SetItemDefaultFocus();
+                    }
+                }
+                ImGui::EndCombo();
+            }
             ImGui::SameLine();
-            ImGui::InputInt("fps", &fps);
-
+            ImGui::InputFloat("fps", &fps);
             if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
             {
                 // Timeline code here
@@ -221,11 +230,12 @@ namespace ui
                 {
                     if (ImGui::BeginNeoTimeline("Rotation"))
                     {
+                        size_t hovered_key = keys.size();
                         for (size_t i = 0; i < keys.size(); i++)
                         {
-                            if (ImGui::Keyframe(&keys[i]) && ImGui::IsItemHovered())
+                            if (ImGui::Keyframe(&keys[i]) && ImGui::IsItemHovered() && hovered_key == keys.size())
                             {
-                                std::cout << i << " " << keys[i] << "\n";
+                                hovered_key = keys[i];
                             }
                         }
 
@@ -248,6 +258,10 @@ namespace ui
                 ImGui::EndNeoSequencer();
             }
             ImGui::End();
+            if (beforeFrame != currentFrame)
+            {
+                animator->set_current_frame_num_to_time(currentFrame);
+            }
         }
         void draw_property(Scene *scene)
         {
@@ -257,7 +271,6 @@ namespace ui
             // render your GUI
             ImGui::Begin("Model Property");
             {
-                ImGui::SameLine();
                 if (ImGui::Button("print"))
                 {
                     scene->print_to_png("pixel" + std::to_string(count++) + ".png");
@@ -293,6 +306,8 @@ namespace ui
                 }
             }
             ImGui::End();
+
+            draw_animation_bar(scene->get_mutable_animator());
         }
         void process_option(ImguiOption &imgui_options)
         {
@@ -347,7 +362,7 @@ namespace ui
             transform.set_rotation({r.x, r.y, r.z});
             auto &scale = transform.get_scale();
             r = scale;
-            ImGui::SliderFloat("scale", &r.x, 0.1f, 10.0f);
+            ImGui::SliderFloat("scale", &r.x, 0.1f, 100.0f);
             transform.set_scale({r.x, r.x, r.x});
             auto &translation = transform.get_translation();
             r = translation;

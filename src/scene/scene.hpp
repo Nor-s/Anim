@@ -25,7 +25,7 @@ public:
     {
         return imgui_option_;
     }
-    virtual glcpp::Animation *get_mutable_animation()
+    virtual glcpp::Animator *get_mutable_animator()
     {
         return nullptr;
     }

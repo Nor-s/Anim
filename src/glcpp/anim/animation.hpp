@@ -9,6 +9,7 @@
 #include <map>
 #include <iostream>
 #include <string>
+#include <set>
 
 #include "bone.hpp"
 #include "../utility.hpp"
@@ -38,9 +39,8 @@ namespace glcpp
             {
                 auto animation = scene->mAnimations[0];
                 name_ = animationPath;
-                m_Duration = animation->mDuration;
-                m_TicksPerSecond = animation->mTicksPerSecond;
-                std::cout << m_Duration << " " << m_TicksPerSecond << "\n";
+                duration_ = animation->mDuration;
+                ticks_per_second_ = animation->mTicksPerSecond;
                 process_bones(animation, scene->mRootNode);
             }
         }
@@ -62,8 +62,13 @@ namespace glcpp
             return animation_inverse_transform_map_;
         }
 
-        inline float GetTicksPerSecond() { return m_TicksPerSecond; }
-        inline float GetDuration() { return m_Duration; }
+        inline float get_ticks_per_second() { return ticks_per_second_; }
+        inline float get_duration() { return duration_; }
+
+        const char *get_name() const
+        {
+            return name_.c_str();
+        }
 
     private:
         void process_bones(const aiAnimation *animation, const aiNode *root_node)
@@ -77,25 +82,20 @@ namespace glcpp
                 std::string bone_name = channel->mNodeName.C_Str();
                 bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
 
-                m_Bones[bone_name] = std::make_unique<Bone>(bone_name, channel);
                 const aiNode *node = root_node->FindNode(channel->mNodeName);
                 if (node)
                 {
                     animation_inverse_transform_map_[bone_name] = glm::inverse(AiMatToGlmMat(node->mTransformation));
+                    m_Bones[bone_name] = std::make_unique<Bone>(bone_name, channel, animation_inverse_transform_map_[bone_name]);
                 }
             }
         }
 
-        float m_Duration;
-        int m_TicksPerSecond;
+        float duration_;
+        int ticks_per_second_;
         std::string name_;
         std::map<std::string, glm::mat4> animation_inverse_transform_map_;
         std::map<std::string, std::unique_ptr<Bone>> m_Bones;
-
-        // 특정한 키의 뼈들, 그리고 그 뼈의 키 변환을 강조해야함
-        // id -> bones ..... bones key t [id], s[id], r[id]
-        std::map<uint32_t, std::vector<Bone *>> bones_key_map;
-        // 키 => 뼈
     };
 
 }

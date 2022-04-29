@@ -67,7 +67,7 @@ namespace ImGui
 
                 drawList->AddLine(p1, p2, IM_COL32_WHITE, 1.0f);
 
-                if (drawFrameText && fifthFrame)
+                if (drawFrameText && tenthFrame)
                 {
                     char text[10];
                     const auto printRes = snprintf(text, sizeof(text), "%u", viewStart + i);

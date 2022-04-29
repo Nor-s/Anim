@@ -42,7 +42,6 @@ namespace glcpp
         assimp_read_flag |= aiProcess_LimitBoneWeights;
         assimp_read_flag |= aiProcess_JoinIdenticalVertices;
         assimp_read_flag |= aiProcess_FlipWindingOrder;
-        assimp_read_flag |= aiProcess_FindInvalidData;
         import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
         const aiScene *scene = import.ReadFile(path, assimp_read_flag);
 
@@ -96,8 +95,10 @@ namespace glcpp
             {
                 vertex.set_texture_coords(glm::vec2{mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y});
             }
+            if(mesh->mTangents)
             vertex.set_tangent(glm::vec3{
                 mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z});
+            if(mesh->mBitangents)
             vertex.set_bitangent(glm::vec3{
                 mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z});
 

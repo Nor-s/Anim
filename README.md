@@ -1,14 +1,13 @@
-# **n-glcpp**
+# **Pixel3D**
 
-opengl project
+3D Model to Pixel Art
+
 
 ## TODO
 
--   애니메이션 재생/ 스탑 (5)
+- 커스텀 json 애니메이션 파일 읽기/쓰기(5)
 
 -   GUI 작업 (4)
-
-    -   애니메이션 관련(본, 애니메이션 재생 등)
 
 -   object 셀렉트 (1)
 
@@ -76,16 +75,23 @@ opengl project
     3. update translation, rotation, scale
 
 or
+
     1. get `aiNode::mTransformation`
     2. mTransformation = mTransformation *T*R*S
 
-![](/screenshot/Apr_2022-04-17_12-45-38.png)
+    ![](/screenshot/Apr_2022-04-17_12-45-38.png)
 
 
 ### 4/23
 
 -   gui for hierarchy, gui for transformation
     ![](/screenshot/anim.gif)
+
+### 4/29
+
+- animation gui: simple timeline, retargeting(same bone hierarchy)
+    ![](/screenshot/Apr-30-2022-00-11-45.gif)
+    ![](/screenshot/Apr-30-2022-00-32-28.gif)
 
 ## build
 

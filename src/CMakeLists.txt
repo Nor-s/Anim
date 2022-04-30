@@ -19,13 +19,15 @@ set(GLCPP_SRC
     glcpp/utility.hpp
     glcpp/anim/bone.hpp
     glcpp/anim/animation.hpp
+    glcpp/anim/assimp_animation.hpp
+    glcpp/anim/json_animation.hpp
     glcpp/anim/animator.hpp
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
 target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
-set(LIBs STB_IMAGE assimp imgui glad nfd)
+set(LIBs STB_IMAGE assimp imgui glad nfd jsoncpp_static)
 
 if(WIN32)
     target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
@@ -44,6 +46,7 @@ add_executable(pixel3D
 ./pixelate_framebuffer.cpp 
 ./UI/imgui_context.h 
 ./UI/imgui_scene_window.h
+./UI/imgui_text_edit.h
 ./pixel3D.h 
 ./scene/scene.hpp
 ./scene/scene1.hpp

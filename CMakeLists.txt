@@ -32,7 +32,7 @@ if(WIN32)
   # find_package(assimp REQUIRED FATAL_ERROR) # win assimp build slow
 endif()
 add_subdirectory(external/nfd)
-# add_subdirectory(external/jsoncpp)
+add_subdirectory(external/jsoncpp)
 add_library(STB_IMAGE "external/stb/stb_image.cpp")
 add_subdirectory(external/glm/)
 option(GLFW_BUILD_DOCS OFF)

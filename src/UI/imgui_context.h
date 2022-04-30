@@ -22,6 +22,7 @@
 #include <map>
 
 #include "imgui_scene_window.h"
+#include "imgui_text_edit.h"
 #include "scene/scene.hpp"
 
 struct GLFWwindow;
@@ -78,6 +79,8 @@ namespace ui
             // Setup Platform/Renderer backends
             ImGui_ImplGlfw_InitForOpenGL(window, true);
             ImGui_ImplOpenGL3_Init(glsl_version);
+
+            text_editor_.init();
         }
         void set_color()
         {
@@ -243,6 +246,7 @@ namespace ui
             static float clicked_time = -1.0f;
             static uint32_t clicked_frame = 0;
             static glcpp::Bone *clicked_bone = nullptr;
+            bool is_json = (animator->get_mutable_current_animation()->get_type() == glcpp::AnimationType::Json);
 
             uint32_t currentFrame = animator->get_current_frame_num();
             uint32_t beforeFrame = currentFrame;
@@ -271,7 +275,30 @@ namespace ui
                 }
             }
             ImGui::SameLine();
-            ImGui::Button("load animation");
+            if (ImGui::Button("load animation"))
+            {
+                nfdchar_t *outPath;
+                nfdfilteritem_t filterItem[1] = {{"model file", "dae,fbx,json,md5anim"}};
+                nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+
+                if (result == NFD_OKAY)
+                {
+                    puts("Success!");
+                    puts(outPath);
+                    animator->add_animation(outPath);
+                    NFD_FreePath(outPath);
+                }
+                else if (result == NFD_CANCEL)
+                {
+                    puts("User pressed cancel.");
+                }
+                else
+                {
+                    printf("Error: %s\n", NFD_GetError());
+                }
+
+                NFD_Quit();
+            }
             ImGui::SameLine();
             if (ImGui::BeginCombo("animations", current_item))
             {
@@ -290,8 +317,23 @@ namespace ui
                 }
                 ImGui::EndCombo();
             }
+            if (is_json)
+            {
+                ImGui::SameLine();
+                if (ImGui::Button("edit"))
+                {
+                    ImGui::OpenPopup(text_editor_.get_modal_name());
+                }
+                text_editor_.draw_to_modal(animator->get_mutable_current_animation()->get_name());
+
+                ImGui::SameLine();
+                if (ImGui::Button("reload"))
+                {
+                }
+            }
             ImGui::SameLine();
             ImGui::InputFloat("fps", &fps);
+
             if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
             {
                 // Timeline code here
@@ -414,8 +456,8 @@ namespace ui
                 if (ImGui::Button("load"))
                 {
                     nfdchar_t *outPath;
-                    nfdfilteritem_t filterItem[2] = {{"model file", "obj,dae,pmx,fbx,vrm,blend"}, {"error format", "gltf, dae"}};
-                    nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 2, NULL);
+                    nfdfilteritem_t filterItem[1] = {{"model file", "obj,dae,pmx,fbx,md5mesh"}};
+                    nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
 
                     if (result == NFD_OKAY)
                     {
@@ -675,6 +717,7 @@ namespace ui
 
     private:
         std::map<std::string, std::unique_ptr<ImguiSceneWindow>> scene_map_;
+        ImGuiTextEditor text_editor_;
     };
 }
 

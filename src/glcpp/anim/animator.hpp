@@ -4,6 +4,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 #include <glm/glm.hpp>
 #include <map>
+#include <filesystem>
 #include <vector>
 
 #include <assimp/scene.h>
@@ -11,6 +12,8 @@
 
 #include "../model.h"
 #include "animation.hpp"
+#include "assimp_animation.hpp"
+#include "json_animation.hpp"
 #include "bone.hpp"
 
 namespace glcpp
@@ -41,7 +44,25 @@ namespace glcpp
 
         void add_animation(const char *animation_path)
         {
-            animations_.push_back(std::make_shared<Animation>(animation_path));
+
+            std::filesystem::path anim_path(animation_path);
+            for (int i = 0; i < animations_.size(); i++)
+            {
+                if (std::strcmp(animations_[i]->get_name(), animation_path) == 0)
+                {
+                    return;
+                }
+            }
+            if (anim_path.extension() == ".json")
+            {
+                animations_.push_back(std::make_shared<JsonAnimation>(animation_path));
+            }
+            else
+            {
+
+                animations_.push_back(std::make_shared<AssimpAnimation>(animation_path));
+            }
+
             if (animations_.back()->get_duration() > 0)
             {
                 play_animation(animations_.size() - 1);

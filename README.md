@@ -74,11 +74,10 @@
     2. decompose this matrix
     3. update translation, rotation, scale
 
-or
+- or
 
     1. get `aiNode::mTransformation`
     2. mTransformation = mTransformation *T*R*S
-
     ![](/screenshot/Apr_2022-04-17_12-45-38.png)
 
 
@@ -89,8 +88,9 @@ or
 
 ### 4/29
 
-- animation gui: simple timeline, retargeting(same bone hierarchy)
+- animation gui: simple timeline
     ![](/screenshot/Apr-30-2022-00-11-45.gif)
+- retargeting(same bone hierarchy: mixamo):  model B * animation B^-1 * (animation TRS)
     ![](/screenshot/Apr-30-2022-00-32-28.gif)
 
 ## build

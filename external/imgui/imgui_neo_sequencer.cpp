@@ -26,7 +26,7 @@ namespace ImGui
 		uint32_t StartFrame = 0;
 		uint32_t EndFrame = 0;
 		uint32_t OffsetFrame = 0; // Offset from start
-		uint32_t zoomSiliderWidth = 0;
+		uint32_t ZoomSliderWidth = 0;
 		uint32_t FinalCurrentFrame = 0;
 
 		float ValuesWidth = 32.0f; // Width of biggest label in timeline, used for offset of timeline
@@ -67,7 +67,7 @@ namespace ImGui
 	///////////// STATIC HELPERS ///////////////////////
 	static bool isFrameInTimeline(ImGuiNeoSequencerInternalData &context, uint32_t frame)
 	{
-		return (context.OffsetFrame <= frame && frame <= context.OffsetFrame + context.zoomSiliderWidth);
+		return (context.OffsetFrame <= frame && frame <= context.OffsetFrame + context.ZoomSliderWidth);
 	}
 
 	static float getPerFrameWidth(ImGuiNeoSequencerInternalData &context)
@@ -174,6 +174,22 @@ namespace ImGui
 				context.CurrentFrameColor = GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_FramePointerPressed);
 
 				*frame = finalFrame;
+
+				uint32_t zoombarEnd = context.OffsetFrame + context.ZoomSliderWidth;
+				if (*frame >= zoombarEnd)
+				{
+					if (zoombarEnd < context.EndFrame)
+					{
+						context.OffsetFrame++;
+					}
+				}
+				if (*frame == context.OffsetFrame)
+				{
+					if (context.OffsetFrame != 0)
+					{
+						context.OffsetFrame--;
+					}
+				}
 			}
 
 			if (!IsMouseDown(ImGuiMouseButton_Left))
@@ -390,7 +406,7 @@ namespace ImGui
 		const auto resBG = ItemAdd(bb, 0);
 
 		const auto viewWidth = (uint32_t)((float)totalFrames / context.Zoom);
-		context.zoomSiliderWidth = (uint32_t)((float)totalFrames / context.Zoom);
+		context.ZoomSliderWidth = (uint32_t)((float)totalFrames / context.Zoom);
 
 		if (resBG)
 		{
@@ -401,13 +417,12 @@ namespace ImGui
 				const float currentScroll = GetIO().MouseWheel;
 
 				context.Zoom = ImClamp(context.Zoom + currentScroll, 1.0f, (float)viewWidth);
-				context.zoomSiliderWidth = (uint32_t)((float)totalFrames / context.Zoom);
+				context.ZoomSliderWidth = (uint32_t)((float)totalFrames / context.Zoom);
 
-				if (*start + context.OffsetFrame + context.zoomSiliderWidth > *end)
+				if (*start + context.OffsetFrame + context.ZoomSliderWidth > *end)
 					context.OffsetFrame = ImMax(0U, totalFrames - viewWidth);
 				context.HoverZoomSlider = true;
 			}
-
 			if (context.HoldingZoomSlider)
 			{
 				if (IsMouseDragging(ImGuiMouseButton_Left, 0.01f))
@@ -560,11 +575,6 @@ namespace ImGui
 										context.TopBarStartCursor, context.TopBarSize, drawList,
 										style.TopBarShowFrameLines, style.TopBarShowFrameTexts);
 
-		if (showZoom)
-		{
-			processAndRenderZoom(context, flags & ImGuiNeoSequencerFlags_AllowLengthChanging, startFrame, endFrame);
-		}
-
 		context.TopBarSize = ImVec2(context.Size.x, style.TopBarHeight);
 
 		if (context.TopBarSize.y <= 0.0f)
@@ -580,7 +590,10 @@ namespace ImGui
 		context.ValuesCursor = context.StartValuesCursor;
 
 		processCurrentFrame(frame, context);
-
+		if (showZoom)
+		{
+			processAndRenderZoom(context, flags & ImGuiNeoSequencerFlags_AllowLengthChanging, startFrame, endFrame);
+		}
 		return true;
 	}
 

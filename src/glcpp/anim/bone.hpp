@@ -91,13 +91,14 @@ namespace glcpp
                 time_set.insert(time);
             }
             time_list_.reserve(time_set.size());
+
             for (auto time : time_set)
             {
                 auto it_pose = time_positions_map_.find(time);
                 auto it_scale = time_scales_map_.find(time);
                 auto it_rotate = time_rotations_map_.find(time);
-                glm::vec3 v_pose = (it_pose != time_positions_map_.end()) ? positions_[it_pose->second].position : glm::vec3(0.0f, 0.0f, 0.0f);
                 glm::vec3 v_scale = (it_scale != time_scales_map_.end()) ? scales_[it_scale->second].scale : glm::vec3(1.0f, 1.0f, 1.0f);
+                glm::vec3 v_pose = (it_pose != time_positions_map_.end()) ? positions_[it_pose->second].position : glm::vec3(0.0f, 0.0f, 0.0f);
                 glm::quat v_rotate = (it_rotate != time_rotations_map_.end()) ? rotations_[it_rotate->second].orientation : glm::vec3(0.0f, 0.0f, 0.0f);
                 glm::mat4 transformation = glm::translate(glm::mat4(1.0f), v_pose) * glm::toMat4(glm::normalize(v_rotate)) * glm::scale(glm::mat4(1.0f), v_scale);
                 transformation = inverse_binding_pose * transformation;
@@ -108,9 +109,18 @@ namespace glcpp
                 glm::vec3 skew;
                 glm::vec4 perspective;
                 glm::decompose(transformation, scale, rotation, translation, skew, perspective);
-                scales_[it_scale->second].scale = scale;
-                positions_[it_pose->second].position = translation;
-                rotations_[it_rotate->second].orientation = rotation;
+                if (it_pose != time_positions_map_.end())
+                {
+                    positions_[it_pose->second].position = translation;
+                }
+                if (it_rotate != time_rotations_map_.end())
+                {
+                    rotations_[it_rotate->second].orientation = rotation;
+                }
+                if (it_scale != time_scales_map_.end())
+                {
+                    scales_[it_scale->second].scale = scale;
+                }
                 time_list_.push_back(time);
             }
         }
@@ -135,9 +145,12 @@ namespace glcpp
             for (int index = 0; index < num_positions_ - 1; ++index)
             {
                 if (animationTime < positions_[index + 1].get_time(factor_))
+                {
+                    recently_used_position_idx_ = index;
                     return index;
+                }
             }
-            return 0;
+            return -1;
         }
 
         int GetRotationIndex(float animationTime)
@@ -145,9 +158,12 @@ namespace glcpp
             for (int index = 0; index < num_rotations_ - 1; ++index)
             {
                 if (animationTime < rotations_[index + 1].get_time(factor_))
+                {
+                    recently_used_rotation_idx_ = index;
                     return index;
+                }
             }
-            return 0;
+            return -1;
         }
 
         int GetScaleIndex(float animationTime)
@@ -156,9 +172,12 @@ namespace glcpp
             for (int index = 0; index < num_scales_ - 1; ++index)
             {
                 if (animationTime < scales_[index + 1].get_time(factor_))
+                {
+                    recently_used_scale_idx_ = index;
                     return index;
+                }
             }
-            return 0;
+            return -1;
         }
 
         std::vector<float> &get_mutable_time_list()
@@ -181,12 +200,12 @@ namespace glcpp
         }
         glm::quat *get_mutable_pointer_rotations(float time)
         {
-           auto it = time_rotations_map_.find(time);
+            auto it = time_rotations_map_.find(time);
             if (it == time_rotations_map_.end())
             {
                 return nullptr;
             }
-            return &(rotations_[it->second].orientation); 
+            return &(rotations_[it->second].orientation);
         }
         glm::vec3 *get_mutable_pointer_scales(float time)
         {
@@ -196,6 +215,30 @@ namespace glcpp
                 return nullptr;
             }
             return &(scales_[it->second].scale);
+        }
+        glm::vec3 *get_mutable_pointer_recently_used_position()
+        {
+            if (positions_.size() == 0)
+            {
+                return nullptr;
+            }
+            return &(positions_[recently_used_position_idx_].position);
+        }
+        glm::quat *get_mutable_pointer_recently_used_rotation()
+        {
+            if (rotations_.size() == 0)
+            {
+                return nullptr;
+            }
+            return &(rotations_[recently_used_rotation_idx_].orientation);
+        }
+        glm::vec3 *get_mutable_pointer_recently_used_scale()
+        {
+            if (scales_.size() == 0)
+            {
+                return nullptr;
+            }
+            return &(scales_[recently_used_scale_idx_].scale);
         }
 
     private:
@@ -214,6 +257,10 @@ namespace glcpp
                 return glm::translate(glm::mat4(1.0f), positions_[0].position);
 
             int p0Index = GetPositionIndex(animationTime);
+            if (p0Index == -1)
+            {
+                return glm::mat4(1.0f);
+            }
             int p1Index = p0Index + 1;
             float scaleFactor = GetScaleFactor(positions_[p0Index].get_time(factor_),
                                                positions_[p1Index].get_time(factor_), animationTime);
@@ -230,6 +277,10 @@ namespace glcpp
             }
 
             int p0Index = GetRotationIndex(animationTime);
+            if (p0Index == -1)
+            {
+                return glm::mat4(1.0f);
+            }
             int p1Index = p0Index + 1;
             float scaleFactor = GetScaleFactor(rotations_[p0Index].get_time(factor_),
                                                rotations_[p1Index].get_time(factor_), animationTime);
@@ -244,6 +295,10 @@ namespace glcpp
                 return glm::scale(glm::mat4(1.0f), scales_[0].scale);
 
             int p0Index = GetScaleIndex(animationTime);
+            if (p0Index == -1)
+            {
+                return glm::mat4(1.0f);
+            }
             int p1Index = p0Index + 1;
             float scaleFactor = GetScaleFactor(scales_[p0Index].get_time(factor_),
                                                scales_[p1Index].get_time(factor_), animationTime);
@@ -255,9 +310,9 @@ namespace glcpp
         std::vector<KeyRotation> rotations_;
         std::vector<KeyScale> scales_;
 
-        int num_positions_;
-        int num_rotations_;
-        int num_scales_;
+        int num_positions_ = 0;
+        int num_rotations_ = 0;
+        int num_scales_ = 0;
 
         std::string name_;
         glm::mat4 local_transform_;
@@ -268,6 +323,10 @@ namespace glcpp
         std::map<float, int> time_rotations_map_;
         std::map<float, int> time_scales_map_;
         std::vector<float> time_list_;
+
+        uint32_t recently_used_position_idx_ = 0;
+        uint32_t recently_used_rotation_idx_ = 0;
+        uint32_t recently_used_scale_idx_ = 0;
     };
 }
 #endif

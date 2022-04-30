@@ -149,27 +149,87 @@ namespace ui
             bool s = true;
             ShowExampleAppDockSpace(&s);
         }
-        void dfs(std::shared_ptr<glcpp::ModelNode> &anim_node)
+        const char *dfs(std::shared_ptr<glcpp::ModelNode> &anim_node, const ImGuiTreeNodeFlags &node_flags, int &count)
         {
-            if (ImGui::TreeNode(anim_node->name.c_str()))
+            static int selected_idx = 0;
+            const char *selected_node = nullptr;
+            auto selected_flags = node_flags;
+            count++;
+            if (selected_idx == count)
             {
+                selected_flags |= ImGuiTreeNodeFlags_Selected;
+            }
+            if (anim_node->childrens.size() == 0)
+            {
+                selected_flags |= ImGuiTreeNodeFlags_Leaf;
+            }
+            bool node_open = ImGui::TreeNodeEx(anim_node->name.c_str(), selected_flags);
+            if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+            {
+                selected_idx = count;
+                selected_node = anim_node->name.c_str();
+            }
 
-                ImGui::InputFloat3("translation", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_translation())[0]);
-                ImGui::SliderFloat3("scale", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_scale())[0], 0.01f, 10.0f);
-                ImGui::SliderFloat3("rotation", &const_cast<glm::vec3 &>(anim_node->relative_transformation.get_rotation())[0], -6.5f, 6.5f);
+            if (node_open)
+            {
                 for (size_t i = 0; i < anim_node->childrens.size(); i++)
                 {
-                    dfs(anim_node->childrens[i]);
+                    const char *selected_child_node = dfs(anim_node->childrens[i], node_flags, count);
+                    if (selected_child_node != nullptr)
+                    {
+                        selected_node = selected_child_node;
+                    }
                 }
-
                 ImGui::TreePop();
             }
+            return selected_node;
         }
-        void draw_model_hierarchy(std::shared_ptr<glcpp::ModelNode> &root_node)
+        void draw_model_hierarchy(std::shared_ptr<glcpp::ModelNode> &root_node, glcpp::Animator *animator)
         {
+            static const char *selected_node_name = nullptr;
+            ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+            int node_count = 0;
             ImGui::Begin("Model Hierarchy");
-
-            dfs(root_node);
+            auto node_name = dfs(root_node, node_flags, node_count);
+            if (node_name)
+            {
+                selected_node_name = node_name;
+            }
+            if (selected_node_name)
+            {
+                ImGui::BeginChild("Bone property", {0, 100}, true);
+                ImGui::Text("%s", selected_node_name);
+                glcpp::Bone *bone = animator->get_mutable_current_animation()->FindBone(selected_node_name);
+                if (bone)
+                {
+                    // TODO: FIX BUG: pointer error
+                    glm::vec3 *p_pos = bone->get_mutable_pointer_recently_used_position();
+                    glm::quat *p_quat = bone->get_mutable_pointer_recently_used_rotation();
+                    glm::vec3 *p_scale = bone->get_mutable_pointer_recently_used_scale();
+                    if (p_pos)
+                    {
+                        ImGui::SliderFloat3("position", &(*p_pos)[0], -10.0f, 10.0f);
+                    }
+                    if (p_quat)
+                    {
+                        auto before_quat = *p_quat;
+                        ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
+                        if (before_quat != *p_quat)
+                        {
+                            *p_quat = glm::normalize(*p_quat);
+                        }
+                    }
+                    if (p_scale)
+                    {
+                        ImGui::SliderFloat3("scale", &(*p_scale)[0], 10.0f, -10.0f);
+                    }
+                }
+                else
+                {
+                    ImGui::Text("Can't find bone");
+                }
+                ImGui::EndChild();
+            }
             ImGui::End();
         }
         void draw_animation_bar(glcpp::Animator *animator)
@@ -285,10 +345,23 @@ namespace ui
                             glm::vec3 *p_pos = clicked_bone->get_mutable_pointer_positions(clicked_time);
                             glm::quat *p_quat = clicked_bone->get_mutable_pointer_rotations(clicked_time);
                             glm::vec3 *p_scale = clicked_bone->get_mutable_pointer_scales(clicked_time);
-                            ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
-                            ImGui::SliderFloat4("quat", &((*p_quat)[0]), -1.0f, 1.0f);
-                            *p_quat = glm::normalize(*p_quat);
-                            ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
+                            if (p_pos)
+                            {
+                                ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
+                            }
+                            if (p_quat)
+                            {
+                                auto before_quat = *p_quat;
+                                ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
+                                if (before_quat != *p_quat)
+                                {
+                                    *p_quat = glm::normalize(*p_quat);
+                                }
+                            }
+                            if (p_scale)
+                            {
+                                ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
+                            }
 
                             ImGui::EndPopup();
                         }
@@ -325,7 +398,6 @@ namespace ui
         void draw_property(Scene *scene)
         {
             static int count = 0;
-            draw_model_hierarchy(scene->get_model()->get_mutable_root_node());
 
             // render your GUI
             ImGui::Begin("Model Property");
@@ -366,6 +438,7 @@ namespace ui
             }
             ImGui::End();
 
+            draw_model_hierarchy(scene->get_model()->get_mutable_root_node(), scene->get_mutable_animator());
             draw_animation_bar(scene->get_mutable_animator());
         }
         void process_option(ImguiOption &imgui_options)

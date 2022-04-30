@@ -79,7 +79,7 @@ public:
             scene_->set_delta_time(delta_frame_);
 
             processInput(window_->get_handle());
-            
+
             pre_draw();
             {
                 imgui_->begin();
@@ -88,8 +88,6 @@ public:
                 scene_->pre_draw();
                 imgui_->draw_property(scene_.get());
 
-                imgui_->draw_texture("pixelate", scene_->get_pixelate_framebuffer().get_framebuffer());
-                imgui_->draw_texture("outline", scene_->get_pixelate_framebuffer().get_outline_framebuffer());
                 imgui_->draw_scene("scene", scene_.get());
                 imgui_->ShowStatus(fps_);
 

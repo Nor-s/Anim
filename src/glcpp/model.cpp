@@ -20,7 +20,6 @@ namespace glcpp
     Model::Model(const char *path)
     {
         load_model(path);
-        std::cout << "bone_count : " << bone_count_ << "\n";
     }
     Model::~Model()
     {
@@ -55,7 +54,6 @@ namespace glcpp
         directory_ = tmp;
         process_node(root_node_, scene->mRootNode, scene);
         transform_ = &(root_node_->relative_transformation);
-        std::cout << "mRoot child: " << node_count_ << "\n";
     }
     void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
     {
@@ -95,12 +93,12 @@ namespace glcpp
             {
                 vertex.set_texture_coords(glm::vec2{mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y});
             }
-            if(mesh->mTangents)
-            vertex.set_tangent(glm::vec3{
-                mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z});
-            if(mesh->mBitangents)
-            vertex.set_bitangent(glm::vec3{
-                mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z});
+            if (mesh->mTangents)
+                vertex.set_tangent(glm::vec3{
+                    mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z});
+            if (mesh->mBitangents)
+                vertex.set_bitangent(glm::vec3{
+                    mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z});
 
             vertices.push_back(vertex);
         }

@@ -46,6 +46,7 @@ namespace glcpp
     class Bone
     {
     public:
+        Bone() = default;
         Bone(const std::string &name, const aiNodeAnim *channel, const glm::mat4 &inverse_binding_pose)
             : name_(name),
               local_transform_(1.0f)
@@ -240,6 +241,60 @@ namespace glcpp
             }
             return &(scales_[recently_used_scale_idx_].scale);
         }
+        void set_name(const std::string &name)
+        {
+            name_ = name;
+        }
+        void push_position(const glm::vec3 &pos, float time)
+        {
+            if (positions_.empty() || positions_.back().time <= time)
+            {
+                positions_.push_back({pos, time});
+                time_positions_map_[time] = positions_.size() - 1;
+                num_positions_++;
+            }
+        }
+        void push_rotation(const glm::quat &quat, float time)
+        {
+            if (rotations_.empty() || rotations_.back().time <= time)
+            {
+                // quat = glm::normalize(quat);
+                rotations_.push_back({quat, time});
+                time_rotations_map_[time] = rotations_.size() - 1;
+                num_rotations_++;
+            }
+        }
+        void push_scale(const glm::vec3 &scale, float time)
+        {
+            if (scales_.empty() || scales_.back().time <= time)
+            {
+                scales_.push_back({scale, time});
+                time_scales_map_[time] = scales_.size() - 1;
+                num_scales_++;
+            }
+        }
+        void init_time_list()
+        {
+            std::set<float> time_set;
+            std::transform(time_scales_map_.begin(), time_scales_map_.end(),
+                           std::inserter(time_set, time_set.begin()),
+                           [](const std::pair<float, int> &key_value)
+                           { return key_value.first; });
+            std::transform(time_rotations_map_.begin(), time_rotations_map_.end(),
+                           std::inserter(time_set, time_set.begin()),
+                           [](const std::pair<float, int> &key_value)
+                           { return key_value.first; });
+            std::transform(time_scales_map_.begin(), time_scales_map_.end(),
+                           std::inserter(time_set, time_set.begin()),
+                           [](const std::pair<float, int> &key_value)
+                           { return key_value.first; });
+            time_list_.clear();
+            time_list_.reserve(time_set.size());
+            for (auto &time : time_set)
+            {
+                time_list_.push_back(time);
+            }
+        }
 
     private:
         float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime)
@@ -314,9 +369,9 @@ namespace glcpp
         int num_rotations_ = 0;
         int num_scales_ = 0;
 
-        std::string name_;
-        glm::mat4 local_transform_;
-        float factor_;
+        std::string name_ = "";
+        glm::mat4 local_transform_{1.0f};
+        float factor_ = 1.0f;
 
         // keyframe, position, rotation, scale
         std::map<float, int> time_positions_map_;

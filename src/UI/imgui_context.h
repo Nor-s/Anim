@@ -307,7 +307,7 @@ namespace ui
             ImGui::SameLine();
             if (ImGui::BeginCombo("animations", current_item))
             {
-                for (int i = 0; i < animation_items.size(); i++)
+                for (size_t i = 0; i < animation_items.size(); i++)
                 {
                     bool is_selected = (current_item == animation_items[i]);
                     if (ImGui::Selectable(animation_items[i], is_selected))

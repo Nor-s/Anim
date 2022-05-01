@@ -46,7 +46,7 @@ namespace glcpp
         {
 
             std::filesystem::path anim_path(animation_path);
-            for (int i = 0; i < animations_.size(); i++)
+            for (size_t i = 0; i < animations_.size(); i++)
             {
                 if (std::strcmp(animations_[i]->get_name(), animation_path) == 0)
                 {
@@ -125,7 +125,7 @@ namespace glcpp
                 final_bone_matrices_[it->second.get_id()] = globalTransformation * it->second.get_offset();
             }
 
-            for (int i = 0; i < node->childrens.size(); i++)
+            for (size_t i = 0; i < node->childrens.size(); i++)
                 calculate_bone_transform(model, node->childrens[i].get(), globalTransformation);
         }
 

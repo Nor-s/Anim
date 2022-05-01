@@ -3,6 +3,7 @@
 
 #include "imgui/imgui.h"
 #include "imgui/TextEditor.h"
+#include <nfd.h>
 #include <filesystem>
 
 class ImGuiTextEditor
@@ -30,14 +31,14 @@ public: // Load Fonts
 
     void init()
     {
-        for (int i = 0; i < sizeof(ppnames) / sizeof(ppnames[0]); ++i)
+        for (int i = 0; i < static_cast<int>(sizeof(ppnames) / sizeof(ppnames[0])); ++i)
         {
             TextEditor::Identifier id;
             id.mDeclaration = ppvalues[i];
             lang.mPreprocIdentifiers.insert(std::make_pair(std::string(ppnames[i]), id));
         }
 
-        for (int i = 0; i < sizeof(identifiers) / sizeof(identifiers[0]); ++i)
+        for (int i = 0; i < static_cast<int>(sizeof(identifiers) / sizeof(identifiers[0])); ++i)
         {
             TextEditor::Identifier id;
             id.mDeclaration = std::string(idecls[i]);
@@ -52,19 +53,19 @@ public: // Load Fonts
         {
             return;
         }
-        std::ifstream t(file_path);
-        if (t.good())
+        std::ifstream file_stream(file_path);
+        if (file_stream.good())
         {
-            std::string str((std::istreambuf_iterator<char>(t)), std::istreambuf_iterator<char>());
+            std::string str((std::istreambuf_iterator<char>(file_stream)), std::istreambuf_iterator<char>());
             editor.SetText(str);
             current_file_name_ = path.filename().string();
             current_file_path_ = path.string();
-            lang.mName = path.extension();
+            lang.mName = path.extension().string();
             editor.SetLanguageDefinition(lang);
         }
-        if (t.is_open())
+        if (file_stream.is_open())
         {
-            t.close();
+            file_stream.close();
         }
     }
     void quick_save(const std::string &str)
@@ -74,14 +75,14 @@ public: // Load Fonts
         {
             path = current_file_path_;
         }
-        std::ofstream t(path.c_str());
-        if (t.good())
+        std::ofstream file_stream(path.c_str());
+        if (file_stream.good())
         {
-            t.write(str.c_str(), str.size());
+            file_stream.write(str.c_str(), str.size());
         }
-        if (t.is_open())
+        if (file_stream.is_open())
         {
-            t.close();
+            file_stream.close();
         }
     }
     void save(const std::string &str)
@@ -102,10 +103,6 @@ public: // Load Fonts
                 ImGui::CloseCurrentPopup();
             }
             ImGui::EndPopup();
-        }
-        else
-        {
-            std::cout << "fail\n";
         }
     }
     void draw(bool *p_open)

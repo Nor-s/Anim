@@ -5,24 +5,12 @@
 
 ## TODO
 
-- 커스텀 json 애니메이션 파일 읽기/쓰기(5)
-
 -   GUI 작업 (4)
 
 -   object 셀렉트 (1)
 
 -   그리드 평면 (1)
 
-## bug fix
-
--   몇몇 mixamo 모델에서 애니메이션 오류
-    -   이유?
-        -   바인딩포즈는 로딩되므로, 애니메이션 변환 행렬 문제일 가능성이 있음.
-    -   해결
-        -   $AssimpFbx$\_PreRotation, $AssimpFbx$\_PreTranslation
-        -   https://github.com/assimp/assimp/issues/1974
-        -   assimp에서 모델을 임포트할 때 생기는 문제였다. 아래의 코드를 삽입하면 해결된다.
-        -   `import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);`
 
 ## external
 
@@ -35,6 +23,8 @@
 -   Assimp: https://github.com/assimp/assimp
 
 -   ImGUI: https://github.com/ocornut/imgui
+    - timeline: https://gitlab.com/GroGy/im-neo-sequencer
+    - text editor: https://github.com/BalazsJako/ImGuiColorTextEdit
 
 -   stb: https://github.com/nothings/stb
 
@@ -93,6 +83,12 @@
 - retargeting(same bone hierarchy: mixamo):  model B * animation B^-1 * (animation TRS)
     ![](/screenshot/Apr-30-2022-00-32-28.gif)
 
+### 5/1
+
+- animation with json file, text edit 
+
+    ![](/screenshot/May-01-2022-10-54-32.gif)
+
 ## build
 
 ### windows10, 11
@@ -123,7 +119,7 @@ pacman -S mingw-w64-x86_64-assimp
 
 ## references
 
--   [render: learnopengl](https://learnopengl.com/)
+-   [learnopengl](https://learnopengl.com/)
 
 -   [texture to file](https://stackoverflow.com/questions/11863416/read-texture-bytes-with-glreadpixels)
 -   [pixelate shader](https://github.com/genekogan/Processing-Shader-Examples/blob/master/TextureShaders/data/pixelate.glsl)

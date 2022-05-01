@@ -46,13 +46,33 @@ namespace glcpp
   public:
     JsonAnimation() = default;
     JsonAnimation(const char *animation_path)
+        : Animation(animation_path)
+    {
+      init();
+    }
+    ~JsonAnimation()
+    {
+      name_bone_map_.clear();
+    }
+
+    void reload() override
+    {
+      destroy();
+      init();
+    }
+
+  private:
+    void destroy()
+    {
+      name_bone_map_.clear();
+    }
+    void init()
     {
       type = AnimationType::Json;
       Json::Value root;
-      std::ifstream anim_stream(animation_path, std::ifstream::binary);
+      std::ifstream anim_stream(name_.c_str(), std::ifstream::binary);
       anim_stream >> root;
 
-      name_ = std::string(animation_path); // root.get("fileName", "").asString();
       duration_ = root.get("duration", "0").asFloat();
       ticks_per_second_ = root.get("ticksPerSecond", "1").asFloat();
       const Json::Value frames = root["frames"];
@@ -61,8 +81,6 @@ namespace glcpp
         process_frames(frames);
       }
     }
-
-  private:
     void process_frames(const Json::Value &frames)
     {
       for (int idx = 0; idx < frames.size(); idx++)

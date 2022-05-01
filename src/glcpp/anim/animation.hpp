@@ -16,6 +16,11 @@ namespace glcpp
     class Animation
     {
     public:
+        Animation() = default;
+        Animation(const char *file_path)
+            : name_(file_path)
+        {
+        }
         virtual ~Animation() = default;
         Bone *FindBone(const std::string &name)
         {
@@ -42,6 +47,9 @@ namespace glcpp
         const AnimationType &get_type() const
         {
             return type;
+        }
+        virtual void reload()
+        {
         }
 
     protected:

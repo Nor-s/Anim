@@ -320,15 +320,18 @@ namespace ui
             if (is_json)
             {
                 ImGui::SameLine();
+                static bool edit_open = false;
                 if (ImGui::Button("edit"))
                 {
-                    ImGui::OpenPopup(text_editor_.get_modal_name());
+                    text_editor_.open(animator->get_mutable_current_animation()->get_name());
+                    edit_open = true;
                 }
-                text_editor_.draw_to_modal(animator->get_mutable_current_animation()->get_name());
+                text_editor_.draw(&edit_open);
 
                 ImGui::SameLine();
                 if (ImGui::Button("reload"))
                 {
+                    animator->get_mutable_current_animation()->reload();
                 }
             }
             ImGui::SameLine();

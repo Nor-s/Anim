@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 3.21)
 
 message("Using CMake version ${CMAKE_VERSION}")
-find_program(CCACHE_PROGRAM ccache)
-if(CCACHE_PROGRAM)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+if(APPLE)
+  find_program(CCACHE_PROGRAM ccache)
+  if(CCACHE_PROGRAM)
+      set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CCACHE_PROGRAM}")
+  endif()
 endif()
 
 project(
@@ -11,6 +13,7 @@ project(
   LANGUAGES CXX
   VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
+
 if(APPLE)
   get_property(RULE_LAUNCH_COMPILE GLOBAL PROPERTY RULE_LAUNCH_COMPILE)
   if(RULE_LAUNCH_COMPILE AND CMAKE_GENERATOR STREQUAL "Xcode")
@@ -30,6 +33,7 @@ if(APPLE)
       set(CMAKE_XCODE_ATTRIBUTE_LDPLUSPLUS "${CMAKE_BINARY_DIR}/launch-cxx")
   endif()
 endif()
+
 # set(CMAKE_BUILD_TYPE Debug)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -43,19 +47,21 @@ message(STATUS " - Path     \t: ${CMAKE_CXX_COMPILER}")
 
 # option(BUILD_SHARED_LIBS ON)
 
+option(JSONCPP_WITH_TESTS OFF)
 option(GLFW_BUILD_DOCS OFF)
 option(ASSIMP_BUILD_TESTS OFF)
 option(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+
 add_subdirectory(external/glad/)
 if(APPLE)
   add_subdirectory(external/imgui/)
-  add_subdirectory(external/assimp)
+  add_subdirectory(external/assimp/)
   add_subdirectory(external/glfw/)
 endif()
 if(WIN32)
   add_subdirectory(external/glfw/)
   add_subdirectory(external/imgui/)
-  add_subdirectory(external/assimp)
+  add_subdirectory(external/assimp/)
 endif()
 add_subdirectory(external/nfd)
 add_subdirectory(external/jsoncpp)

@@ -31,7 +31,7 @@ set(LIBs STB_IMAGE assimp imgui glad nfd jsoncpp_static)
 
 if(WIN32)
     target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
-    target_link_libraries(glcpp PUBLIC ${LIBs} glm -lpthread -lgdi32 -lopengl32)
+    target_link_libraries(glcpp PUBLIC ${LIBs} glm -lpthread -lgdi32 -lopengl32 -static)
 endif(WIN32)
 
 if(APPLE) 
@@ -54,6 +54,6 @@ add_executable(pixel3D
 
 target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)
 target_include_directories(pixel3D  PUBLIC ./)
-target_link_libraries(pixel3D  glcpp )
+target_link_libraries(pixel3D  glcpp -static)
 
 

@@ -1,6 +1,7 @@
 ## bug
 
 - gui에서 scene의 객체들에 대한 포인터를 조작할 때 문제가 생길 가능성이 있음
+- imgui neo sequencer에서 current frame이 렌더링되지 않으면 current frame line 정지됨
 
 ## bug fix
 

@@ -7,6 +7,7 @@
 
 #include "imgui.h"
 #include <vector>
+#include <stdint.h>
 
 typedef int ImGuiNeoSequencerFlags;
 typedef int ImGuiNeoSequencerCol;

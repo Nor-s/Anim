@@ -38,6 +38,7 @@
 #include <json/json.h>
 #include <fstream>
 #include "animation.hpp"
+#include "bone.hpp"
 
 namespace glcpp
 {
@@ -76,18 +77,19 @@ namespace glcpp
       duration_ = root.get("duration", "0").asFloat();
       ticks_per_second_ = root.get("ticksPerSecond", "1").asFloat();
       const Json::Value frames = root["frames"];
-      if (frames != 'null')
+      if (frames != "null")
       {
         process_frames(frames);
       }
     }
     void process_frames(const Json::Value &frames)
     {
-      for (int idx = 0; idx < frames.size(); idx++)
+      uint32_t size = static_cast<uint32_t>(frames.size());
+      for (uint32_t idx = 0; idx < size; idx++)
       {
         float time = frames[idx].get("time", "0").asFloat();
         const auto &bones = frames[idx]["bones"];
-        if (bones != 'null')
+        if (bones != "null")
         {
           process_bones(bones, time);
         }
@@ -99,7 +101,9 @@ namespace glcpp
     }
     void process_bones(const Json::Value &bones, float time)
     {
-      for (int idx = 0; idx < bones.size(); idx++)
+      uint32_t size = static_cast<uint32_t>(bones.size());
+
+      for (uint32_t idx = 0; idx < size; idx++)
       {
         Bone *bone;
         std::string bone_name = bones[idx].get("name", "").asString();
@@ -121,7 +125,7 @@ namespace glcpp
     }
     glm::vec3 get_position(const Json::Value &bone)
     {
-      if (bone == 'null')
+      if (bone == "null")
       {
         return glm::vec3(0.0f, 0.0f, 0.0f);
       }
@@ -129,7 +133,7 @@ namespace glcpp
     }
     glm::quat get_rotation(const Json::Value &bone)
     {
-      if (bone == 'null')
+      if (bone == "null")
       {
         return glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
       }
@@ -137,7 +141,7 @@ namespace glcpp
     }
     glm::vec3 get_scale(const Json::Value &bone)
     {
-      if (bone == 'null')
+      if (bone == "null")
       {
         return glm::vec3(1.0f, 1.0f, 1.0f);
       }

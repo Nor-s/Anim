@@ -50,7 +50,6 @@ add_executable(pixel3D
 ./pixel3D.h 
 ./scene/scene.hpp
 ./scene/scene1.hpp
-./scene/bone_scene.hpp
 )
 
 target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)

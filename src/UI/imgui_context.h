@@ -70,6 +70,7 @@ namespace ui
             io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
             ImGui::StyleColorsLight();
             ImGuiStyle &style = ImGui::GetStyle();
+            set_style();
             if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             {
                 style.WindowRounding = 0.0f;
@@ -82,9 +83,13 @@ namespace ui
 
             text_editor_.init();
         }
-        void set_color()
+        void set_style()
         {
-            // ImGuiStyle *style = &ImGui::GetStyle();
+            ImGuiStyle *style = &ImGui::GetStyle();
+            style->GrabRounding = style->FrameRounding = 3.0f;
+            style->WindowPadding = {3.0f, 3.0f};
+            style->WindowBorderSize = style->FrameBorderSize = style->PopupBorderSize = 1.0f;
+
             // style->Colors[ImGuiCol_WindowBg] = ImVec4{0.7f, 0.7f, 0.7f, 1.0f};
             // style->Colors[ImGuiCol_Header] = ImVec4{0.2f, 0.2f, 0.2f, 1.0f};
             // style->Colors[ImGuiCol_HeaderHovered] = ImVec4{0.3f, 0.3f, 0.3f, 1.0f};

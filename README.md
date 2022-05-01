@@ -2,6 +2,8 @@
 
 3D Model to Pixel Art
 
+![](/screenshot/2022-05-01-1.05.03.png) 
+
 
 ## TODO
 
@@ -74,6 +76,7 @@
 ### 4/23
 
 -   gui for hierarchy, gui for transformation
+
     ![](/screenshot/anim.gif)
 
 ### 4/29

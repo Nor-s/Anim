@@ -121,16 +121,16 @@ public: // Load Fonts
             {
                 if (ImGui::BeginMenu("File"))
                 {
-                    if (ImGui::MenuItem("Save", "Ctrl-S"))
+                    if (ImGui::MenuItem("Save"))
                     {
                         is_save_open_ = true;
                     }
 
-                    if (ImGui::MenuItem("Quit", "Alt-F4"))
+                    if (ImGui::MenuItem("Quit"))
                     {
                         *p_open = false;
                     }
-                    if (ImGui::MenuItem("Open", "Alt-F1"))
+                    if (ImGui::MenuItem("Open"))
                     {
                         nfdchar_t *outPath;
                         nfdfilteritem_t filterItem[1] = {{"file", "glsl,json"}};
@@ -200,6 +200,11 @@ public: // Load Fonts
 
                 ImGui::EndMenuBar();
             }
+            if (ImGui::SmallButton("save"))
+            {
+                quick_save(editor.GetText());
+            }
+            ImGui::SameLine();
             ImGui::Text("%6d/%-6d %6d lines  | %s | %s | %s | %s", cpos.mLine + 1, cpos.mColumn + 1, editor.GetTotalLines(),
                         editor.IsOverwrite() ? "Ovr" : "Ins",
                         editor.CanUndo() ? "*" : " ",
@@ -212,10 +217,6 @@ public: // Load Fonts
                 if (!ImGui::IsPopupOpen("Save?"))
                     ImGui::OpenPopup("Save?");
                 save(editor.GetText());
-            }
-            if (ImGui::SmallButton("save"))
-            {
-                quick_save(editor.GetText());
             }
 
             ImGui::End();

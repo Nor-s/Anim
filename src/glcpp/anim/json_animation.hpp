@@ -69,58 +69,85 @@ namespace glcpp
     }
     void init()
     {
-      type = AnimationType::Json;
-      Json::Value root;
-      std::ifstream anim_stream(name_.c_str(), std::ifstream::binary);
-      anim_stream >> root;
-
-      duration_ = root.get("duration", "0").asFloat();
-      ticks_per_second_ = root.get("ticksPerSecond", "1").asFloat();
-      const Json::Value frames = root["frames"];
-      if (frames != "null")
+      try
       {
-        process_frames(frames);
+        type = AnimationType::Json;
+        Json::Value root;
+        std::ifstream anim_stream(name_.c_str(), std::ifstream::binary);
+        anim_stream >> root;
+
+        duration_ = root.get("duration", "0").asFloat();
+        ticks_per_second_ = root.get("ticksPerSecond", "1").asFloat();
+        const Json::Value frames = root["frames"];
+        if (frames != "null")
+        {
+          process_frames(frames);
+        }
+      }
+      catch (std::exception &e)
+      {
+#ifndef NDEBUG
+        std::cout << e.what() << std::endl;
+#endif
       }
     }
     void process_frames(const Json::Value &frames)
     {
-      uint32_t size = static_cast<uint32_t>(frames.size());
-      for (uint32_t idx = 0; idx < size; idx++)
+      try
       {
-        float time = frames[idx].get("time", "0").asFloat();
-        const auto &bones = frames[idx]["bones"];
-        if (bones != "null")
+        uint32_t size = static_cast<uint32_t>(frames.size());
+        for (uint32_t idx = 0; idx < size; idx++)
         {
-          process_bones(bones, time);
+          float time = frames[idx].get("time", "0").asFloat();
+          const auto &bones = frames[idx]["bones"];
+          if (bones != "null")
+          {
+            process_bones(bones, time);
+          }
+        }
+        for (auto &name_bone : name_bone_map_)
+        {
+          name_bone.second->init_time_list();
         }
       }
-      for (auto &name_bone : name_bone_map_)
+      catch (std::exception &e)
       {
-        name_bone.second->init_time_list();
+#ifndef NDEBUG
+        std::cout << e.what() << std::endl;
+#endif
       }
     }
     void process_bones(const Json::Value &bones, float time)
     {
-      uint32_t size = static_cast<uint32_t>(bones.size());
-
-      for (uint32_t idx = 0; idx < size; idx++)
+      try
       {
-        Bone *bone;
-        std::string bone_name = bones[idx].get("name", "").asString();
-        auto it = name_bone_map_.find(bone_name);
-        if (it != name_bone_map_.end())
+        uint32_t size = static_cast<uint32_t>(bones.size());
+
+        for (uint32_t idx = 0; idx < size; idx++)
         {
-          bone = it->second.get();
+          Bone *bone;
+          std::string bone_name = bones[idx].get("name", "").asString();
+          auto it = name_bone_map_.find(bone_name);
+          if (it != name_bone_map_.end())
+          {
+            bone = it->second.get();
+          }
+          else
+          {
+            name_bone_map_[bone_name] = std::make_unique<Bone>();
+            bone = name_bone_map_[bone_name].get();
+            bone->set_name(bone_name);
+          }
+          bone->push_position(get_position(bones[idx]["position"]), time);
+          bone->push_rotation(get_rotation(bones[idx]["rotation"]), time);
+          bone->push_scale(get_scale(bones[idx]["scale"]), time);
         }
-        else
-        {
-          name_bone_map_[bone_name] = std::make_unique<Bone>();
-          bone = name_bone_map_[bone_name].get();
-          bone->set_name(bone_name);
-        }
-        bone->push_position(get_position(bones[idx]["position"]), time);
-        bone->push_rotation(get_rotation(bones[idx]["rotation"]), time);
-        bone->push_scale(get_scale(bones[idx]["scale"]), time);
+      }
+      catch (std::exception &e)
+      {
+#ifndef NDEBUG
+        std::cout << e.what() << std::endl;
+#endif
       }
     }
     glm::vec3 get_position(const Json::Value &bone)

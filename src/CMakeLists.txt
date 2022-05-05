@@ -47,6 +47,7 @@ add_executable(pixel3D
 ./UI/imgui_context.h 
 ./UI/imgui_scene_window.h
 ./UI/imgui_text_edit.h
+./UI/imgui_json.h
 ./pixel3D.h 
 ./scene/scene.hpp
 ./scene/scene1.hpp

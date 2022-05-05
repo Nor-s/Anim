@@ -24,6 +24,7 @@
 #include "imgui_scene_window.h"
 #include "imgui_text_edit.h"
 #include "scene/scene.hpp"
+#include "imgui_json.h"
 
 struct GLFWwindow;
 
@@ -448,6 +449,18 @@ namespace ui
         void draw_property(Scene *scene)
         {
             static int count = 0;
+            ImGui::Begin("Debug");
+            {
+                if (ImGui::Button("get binding pose json"))
+                {
+                    ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
+                }
+                if (ImGui::Button("get animation to json"))
+                {
+                    ImguiJson::AnimationToJson("animation.json", scene->get_mutable_animator()->get_mutable_current_animation().get());
+                }
+            }
+            ImGui::End();
 
             // render your GUI
             ImGui::Begin("Model Property");
@@ -456,6 +469,7 @@ namespace ui
                 {
                     scene->print_to_png("pixel" + std::to_string(count++) + ".png");
                 }
+
                 ImGui::SameLine();
                 process_option(scene->get_option());
 

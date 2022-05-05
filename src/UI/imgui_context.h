@@ -444,7 +444,9 @@ namespace ui
             {
                 animator->set_current_frame_num_to_time(currentFrame);
             }
+#ifndef NDEBUG
             ImGui::ShowDemoWindow();
+#endif
         }
         void draw_property(Scene *scene)
         {

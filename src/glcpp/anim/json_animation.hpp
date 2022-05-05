@@ -75,7 +75,10 @@ namespace glcpp
         Json::Value root;
         std::ifstream anim_stream(name_.c_str(), std::ifstream::binary);
         anim_stream >> root;
-
+        if (anim_stream.is_open())
+        {
+          anim_stream.close();
+        }
         duration_ = root.get("duration", "0").asFloat();
         ticks_per_second_ = root.get("ticksPerSecond", "1").asFloat();
         const Json::Value frames = root["frames"];

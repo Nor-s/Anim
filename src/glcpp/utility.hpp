@@ -4,11 +4,14 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <assimp/quaternion.h>
+
+#include <tuple>
 
 namespace glcpp
 {
@@ -42,6 +45,17 @@ namespace glcpp
     static inline glm::quat AiQuatToGlmQuat(const aiQuaternion &pOrientation)
     {
         return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+    }
+    //return translate, rotattion, scale
+    static inline std::tuple<glm::vec3, glm::quat, glm::vec3> DecomposeTransform(const glm::mat4 &transform)
+    {
+        glm::vec3 scale;
+        glm::quat rotation;
+        glm::vec3 translation;
+        glm::vec3 skew;
+        glm::vec4 perspective;
+        glm::decompose(transform, scale, rotation, translation, skew, perspective);
+        return {translation, rotation, scale};
     }
 }
 

@@ -129,11 +129,11 @@ namespace glcpp
         void
         Update(float animationTime, float factor)
         {
+            factor_ = factor;
             glm::mat4 translation = InterpolatePosition(animationTime);
             glm::mat4 rotation = InterpolateRotation(animationTime);
             glm::mat4 scale = InterpolateScaling(animationTime);
             local_transform_ = translation * rotation * scale;
-            factor_ = factor;
         }
 
         glm::mat4 &GetLocalTransform() { return local_transform_; }
@@ -316,10 +316,16 @@ namespace glcpp
             {
                 return glm::mat4(1.0f);
             }
-            int p1Index = p0Index + 1;
+            int p1Index = 0;
+            // for nested frame
+            auto it = time_positions_map_.find(positions_[p0Index].time);
+            it++;
+            if (it != time_positions_map_.end())
+                p1Index = it->second;
             float scaleFactor = GetScaleFactor(positions_[p0Index].get_time(factor_),
                                                positions_[p1Index].get_time(factor_), animationTime);
             glm::vec3 finalPosition = glm::mix(positions_[p0Index].position, positions_[p1Index].position, scaleFactor);
+
             return glm::translate(glm::mat4(1.0f), finalPosition);
         }
 

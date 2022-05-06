@@ -60,7 +60,7 @@
 
 ### 4/17
 
--   I studied how to move around with code. (I think this is an inefficient method)
+-   custom animation 
 
     1. get `aiNode ::mTransformation`
     2. decompose this matrix

@@ -20,6 +20,8 @@
 #include "pixelate_framebuffer.h"
 #include <memory>
 #include <map>
+#include <thread>
+#include <filesystem>
 
 #include "imgui_scene_window.h"
 #include "imgui_text_edit.h"
@@ -28,6 +30,12 @@
 
 struct GLFWwindow;
 
+static void executeProcess(const char *process_name, std::string arg, bool *is_exit)
+{
+    std::string process = std::string(process_name) + " " + arg;
+    system(process.c_str());
+    *is_exit = true;
+}
 namespace ui
 {
 
@@ -47,12 +55,16 @@ namespace ui
     class ImGuiContext
     {
     public:
-        ~ImGuiContext()
+        virtual ~ImGuiContext()
         {
             shutdown();
         }
         void shutdown()
         {
+            if (thread_for_process_open.joinable())
+            {
+                thread_for_process_open.detach();
+            }
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();
             ImGui::DestroyContext();
@@ -241,19 +253,20 @@ namespace ui
             }
             ImGui::End();
         }
-        void draw_animation_bar(glcpp::Animator *animator)
+        void draw_animation_bar(Scene *scene)
         {
             static bool is_hovered_animation_zoom_slider = false;
             static bool m_pTransformOpen = true;
-            bool &play = animator->get_mutable_is_stop();
             static std::string play_stop_button = "stop";
-            std::vector<const char *> animation_items = animator->get_animation_name_list();
             static const char *current_item = NULL;
             static float clicked_time = -1.0f;
             static uint32_t clicked_frame = 0;
             static glcpp::Bone *clicked_bone = nullptr;
+            static bool is_load_animation = false;
+            glcpp::Animator *animator = scene->get_mutable_animator();
+            bool &play = animator->get_mutable_is_stop();
+            std::vector<const char *> animation_items = animator->get_animation_name_list();
             bool is_json = (animator->get_mutable_current_animation()->get_type() == glcpp::AnimationType::Json);
-
             uint32_t currentFrame = animator->get_current_frame_num();
             uint32_t beforeFrame = currentFrame;
             uint32_t startFrame = 0;
@@ -267,7 +280,6 @@ namespace ui
             }
 
             ImGui::Begin("Animation bar", NULL, window_flags);
-            // ImGui::ListBox("list", &idx__, items_, 3, 1);
             if (ImGui::Button(play_stop_button.c_str()))
             {
                 play = !play;
@@ -281,8 +293,9 @@ namespace ui
                 }
             }
             ImGui::SameLine();
-            if (ImGui::Button("load animation"))
+            if (ImGui::Button("load animation") && !is_load_animation)
             {
+                // is_load_animation = true;
                 nfdchar_t *outPath;
                 nfdfilteritem_t filterItem[1] = {{"model file", "dae,fbx,json,md5anim"}};
                 nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
@@ -304,6 +317,7 @@ namespace ui
                 }
 
                 NFD_Quit();
+                is_load_animation = false;
             }
             ImGui::SameLine();
             if (ImGui::BeginCombo("animations", current_item))
@@ -342,6 +356,11 @@ namespace ui
             }
             ImGui::SameLine();
             ImGui::InputFloat("fps", &fps);
+            ImGui::SameLine();
+            if (ImGui::Button("Mediapipe Open"))
+            {
+                execute_process("./gui", scene);
+            }
 
             if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
             {
@@ -477,22 +496,21 @@ namespace ui
                 // open Dialog Simple
                 if (ImGui::Button("load"))
                 {
-                    nfdchar_t *outPath;
-                    nfdfilteritem_t filterItem[1] = {{"model file", "obj,dae,pmx,fbx,md5mesh"}};
-                    nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+                    nfdchar_t *out_path;
+                    nfdfilteritem_t filter_item[1] = {{"model file", "obj,dae,pmx,fbx,md5mesh"}};
+                    nfdresult_t result = NFD_OpenDialog(&out_path, filter_item, 1, NULL);
 
                     if (result == NFD_OKAY)
                     {
+#ifdef NDEBUG
                         puts("Success!");
-                        puts(outPath);
-                        scene->add_model(outPath);
-                        NFD_FreePath(outPath);
+                        puts(out_path);
+#endif
+                        scene->add_model(out_path);
+                        ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
+                        NFD_FreePath(out_path);
                     }
-                    else if (result == NFD_CANCEL)
-                    {
-                        puts("User pressed cancel.");
-                    }
-                    else
+                    else if(result != NFD_CANCEL)
                     {
                         printf("Error: %s\n", NFD_GetError());
                     }
@@ -503,7 +521,7 @@ namespace ui
             ImGui::End();
 
             draw_model_hierarchy(scene->get_model()->get_mutable_root_node(), scene->get_mutable_animator());
-            draw_animation_bar(scene->get_mutable_animator());
+            draw_animation_bar(scene);
         }
         void process_option(ImguiOption &imgui_options)
         {
@@ -737,9 +755,34 @@ namespace ui
             ImGui::End();
         }
 
+        bool execute_process(const char *process_name, Scene *scene)
+        {
+            static bool is_exit = true;
+            if (is_exit)
+            {
+                is_exit = false;
+                ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
+
+                if (thread_for_process_open.joinable())
+                {
+                    thread_for_process_open.join();
+                }
+                std::filesystem::path path_default_model = "model.json";
+                std::filesystem::path path_default_anim = "anim.json";
+                std::string arg = std::filesystem::absolute(path_default_model).string() + " " +
+                                  std::filesystem::absolute(path_default_anim).string();
+
+                thread_for_process_open = std::thread(executeProcess, process_name, arg, &is_exit);
+
+                return true;
+            }
+            return false;
+        }
+
     private:
         std::map<std::string, std::unique_ptr<ImguiSceneWindow>> scene_map_;
         ImGuiTextEditor text_editor_;
+        std::thread thread_for_process_open;
     };
 }
 

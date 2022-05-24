@@ -29,8 +29,8 @@ private:
 public:
     virtual ~Pixel3D()
     {
-        imgui_.release();
-        window_.release();
+        scene_.reset();
+        imgui_.reset();
     }
     virtual void init(int width, int height, const std::string &title) override
     {

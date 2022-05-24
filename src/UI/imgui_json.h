@@ -29,7 +29,7 @@ public:
         ret_json["z"] = p.z;
         return ret_json;
     }
-    static void dfs(std::shared_ptr<glcpp::ModelNode> &node, Json::Value &result_json, const std::string &parent_name)
+    static Json::Value dfs(std::shared_ptr<glcpp::ModelNode> &node, const std::string &parent_name)
     {
         Json::Value node_json;
         auto &transform = node->initial_transformation;
@@ -39,16 +39,17 @@ public:
         node_json["rotation"] = get_quat_json(r);
         node_json["scale"] = get_vec_json(s);
         node_json["parent_name"] = parent_name;
-        result_json["bindingPose"].append(node_json);
+        node_json["child"] = Json::arrayValue;
         for (auto &sub_node : node->childrens)
         {
-            dfs(sub_node, result_json, node->name);
+            node_json["child"].append(dfs(sub_node, node->name));
         }
+        return node_json;
     }
     static void ModelBindingPoseToJson(const std::string &file_name, glcpp::Model *model)
     {
         Json::Value result_json;
-        dfs(model->get_mutable_root_node(), result_json, "");
+        result_json["node"] = dfs(model->get_mutable_root_node(), "");
         result_json["name"] = "model";
         std::ofstream json_stream(file_name.c_str(), std::ofstream::binary);
         json_stream << result_json.toStyledString();

@@ -26,18 +26,17 @@ namespace glcpp
             instance_ = new T();
             return true;
         }
-
-    public:
         virtual ~Application()
         {
             window_.reset();
-            destroy_instance();
         }
+
+    public:
         static void destroy_instance()
         {
             if (instance_ != nullptr)
             {
-                delete[] instance_;
+                delete instance_;
                 instance_ = nullptr;
             }
         }

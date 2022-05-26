@@ -73,8 +73,7 @@ namespace glcpp
       {
         type = AnimationType::Json;
         Json::Value root;
-        std::string path(name_);
-        std::ifstream anim_stream(ConvertStringToWString(path).c_str(), std::ios::binary);
+        std::ifstream anim_stream(std::filesystem::u8path((name_).c_str()), std::ifstream::in | std::ifstream::binary);
         anim_stream >> root;
         if (anim_stream.is_open())
         {
@@ -90,8 +89,9 @@ namespace glcpp
       }
       catch (std::exception &e)
       {
-#ifndef NDEBUG
         std::cout << e.what() << std::endl;
+
+#ifndef NDEBUG
 #endif
       }
     }

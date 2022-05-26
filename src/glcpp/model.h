@@ -94,7 +94,7 @@ namespace glcpp
         // bool gamma_correction;
         // int bone_count_;
 
-        void load_model(const std::string &path);
+        void load_model(const char *path);
         /**
          * @brief 루트노드를 처음에 입력받아, 자식노드들을 순회하면서 메쉬들을 찾음
          *

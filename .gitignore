@@ -7,3 +7,6 @@ doxy/
 doxy2/
 
 tmp/
+mp_gui/
+
+.vs/

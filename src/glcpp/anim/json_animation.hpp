@@ -73,7 +73,8 @@ namespace glcpp
       {
         type = AnimationType::Json;
         Json::Value root;
-        std::ifstream anim_stream(name_.c_str(), std::ifstream::binary);
+        std::string path(name_);
+        std::ifstream anim_stream(ConvertStringToWString(path).c_str(), std::ios::binary);
         anim_stream >> root;
         if (anim_stream.is_open())
         {

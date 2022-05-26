@@ -26,7 +26,7 @@ namespace glcpp
         root_node_.reset();
     }
 
-    void Model::load_model(const std::string &path)
+    void Model::load_model(const char *path)
     {
         Assimp::Importer import;
         unsigned int assimp_read_flag = aiProcess_Triangulate |
@@ -50,7 +50,7 @@ namespace glcpp
             std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
             return;
         }
-        std::filesystem::path tmp(path);
+        std::filesystem::path tmp(ConvertStringToWString(std::string(path)).c_str());
         directory_ = tmp;
         process_node(root_node_, scene->mRootNode, scene);
         transform_ = &(root_node_->relative_transformation);
@@ -204,21 +204,21 @@ namespace glcpp
 
     unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory)
     {
-        std::string filename = std::string(path);
-        size_t idx = filename.find_first_of("/\\");
+        std::wstring filename = ConvertStringToWString(std::string(path));
+        size_t idx = filename.find_first_of(L"/\\");
         if (filename[0] == '.' || idx == 0)
         {
             filename = filename.substr(idx + 1);
         }
         std::filesystem::path tmp = directory;
-        filename = tmp.replace_filename(filename).string();
+        filename = tmp.replace_filename(filename).wstring();
         std::replace(filename.begin(), filename.end(), '\\', '/');
 
         unsigned int textureID;
         glGenTextures(1, &textureID);
 
         int width, height, nrComponents;
-        unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
+        unsigned char *data = stbi_load(ConvertWStringToString(filename).c_str(), &width, &height, &nrComponents, 0);
         if (data)
         {
             GLenum format = GL_RGB;
@@ -242,7 +242,8 @@ namespace glcpp
         }
         else
         {
-            std::cout << "Texture failed to load at path: " << path << "\n";
+            std::wcout << L"Texture failed to load at path: " << L":" << filename<< L"\n";
+            std::cout << "Texture failed to load at path: " << ":" << path << "\n";
             stbi_image_free(data);
         }
 

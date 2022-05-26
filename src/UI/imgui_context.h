@@ -27,13 +27,19 @@
 #include "imgui_text_edit.h"
 #include "scene/scene.hpp"
 #include "imgui_json.h"
-
+#include "glcpp/utility.hpp"
 struct GLFWwindow;
 
 static void executeProcess(const char *process_name, std::string arg, bool *is_exit)
 {
-    std::string process = std::string(process_name) + " " + arg;
-    system(process.c_str());
+    std::filesystem::path process(glcpp::ConvertStringToWString(std::string(process_name)));
+    std::string abs_process = std::filesystem::absolute(process).string();
+#ifdef _WIN32
+    abs_process += ".exe " + arg;
+#else
+    abs_process += " " + arg;
+#endif
+    system(abs_process.c_str());
     *is_exit = true;
 }
 namespace ui
@@ -258,7 +264,7 @@ namespace ui
             static bool is_hovered_animation_zoom_slider = false;
             static bool m_pTransformOpen = true;
             static std::string play_stop_button = "stop";
-            static const char *current_item = NULL;
+            static const char *current_item = nullptr;
             static float clicked_time = -1.0f;
             static uint32_t clicked_frame = 0;
             static glcpp::Bone *clicked_bone = nullptr;
@@ -324,7 +330,12 @@ namespace ui
             {
                 for (size_t i = 0; i < animation_items.size(); i++)
                 {
-                    bool is_selected = (current_item == animation_items[i]);
+
+                    bool is_selected = false;
+                    if (current_item != nullptr)
+                    {
+                        is_selected = (strcmp(current_item, animation_items[i]) == 0);
+                    }
                     if (ImGui::Selectable(animation_items[i], is_selected))
                     {
                         current_item = animation_items[i];
@@ -359,7 +370,7 @@ namespace ui
             ImGui::SameLine();
             if (ImGui::Button("Mediapipe Open"))
             {
-                execute_process("./gui", scene);
+                execute_process("./mp_gui/demo_gui", scene);
             }
 
             if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
@@ -512,7 +523,7 @@ namespace ui
                         ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
                         NFD_FreePath(out_path);
                     }
-                    else if(result != NFD_CANCEL)
+                    else if (result != NFD_CANCEL)
                     {
                         printf("Error: %s\n", NFD_GetError());
                     }
@@ -771,7 +782,7 @@ namespace ui
                 }
                 std::filesystem::path path_default_model = "model.json";
                 std::filesystem::path path_default_anim = "anim.json";
-                std::string arg = std::filesystem::absolute(path_default_model).string() + " " +
+                std::string arg = "--arg1 " + std::filesystem::absolute(path_default_model).string() + " --arg2 " +
                                   std::filesystem::absolute(path_default_anim).string();
 
                 thread_for_process_open = std::thread(executeProcess, process_name, arg, &is_exit);

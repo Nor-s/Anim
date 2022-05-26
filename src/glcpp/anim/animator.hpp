@@ -15,6 +15,7 @@
 #include "assimp_animation.hpp"
 #include "json_animation.hpp"
 #include "bone.hpp"
+#include "utility.hpp"
 
 namespace glcpp
 {
@@ -44,8 +45,7 @@ namespace glcpp
 
         void add_animation(const char *animation_path)
         {
-
-            std::filesystem::path anim_path(animation_path);
+            std::filesystem::path anim_path(ConvertStringToWString(std::string(animation_path)).c_str());
             for (size_t i = 0; i < animations_.size(); i++)
             {
                 if (std::strcmp(animations_[i]->get_name(), animation_path) == 0)

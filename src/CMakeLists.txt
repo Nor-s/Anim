@@ -25,19 +25,27 @@ set(GLCPP_SRC
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
-target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
-set(LIBs STB_IMAGE assimp imgui glad nfd jsoncpp_static)
+set(LIBs STB_IMAGE imgui glad nfd jsoncpp_static)
 
-if(WIN32)
-    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
-    target_link_libraries(glcpp PUBLIC ${LIBs} glm -lpthread -lgdi32 -lopengl32 -static)
-endif(WIN32)
+if(MSVC)
+#  target_compile_options(glcpp PUBLIC "/ZI")
+  target_link_options(glcpp PUBLIC "/INCREMENTAL")
+  target_link_libraries(glcpp PUBLIC ${LIBs} glm assimp::assimp)
+  target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
 
-if(APPLE) 
+
+elseif(APPLE)
+    target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
+
     target_include_directories(glcpp PUBLIC ./ ../ ${CMAKE_HOME_DIRECTORY}/external)
-    target_link_libraries(glcpp PUBLIC ${LIBs} glm::glm -ldl -lpthread)
-endif(APPLE)
+    target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm::glm -ldl -lpthread)
+else()
+    target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -static)
+
+    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
+    target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm -lpthread -lgdi32 -lopengl32 -static)
+endif()
 
 
 
@@ -53,12 +61,16 @@ add_executable(pixel3D
 ./scene/scene1.hpp
 )
 
-target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17)
-target_include_directories(pixel3D  PUBLIC ./)
-if(WIN32)
-    target_link_libraries(pixel3D  glcpp -static)
-else()
+if(MSVC)
+#  target_compile_options(pixel3D PUBLIC "/ZI")
+#  target_link_options(pixel3D PUBLIC "/INCREMENTAL")
+      target_link_libraries(pixel3D  glcpp)
+elseif(APPLE)
     target_link_libraries(pixel3D  glcpp)
+else()
+    target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17 -static)
+    target_link_libraries(pixel3D  glcpp)
+    target_include_directories(pixel3D  PUBLIC ./)
 endif()
 
 

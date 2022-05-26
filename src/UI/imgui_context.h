@@ -764,7 +764,7 @@ namespace ui
             ImGui::Begin(title);
             float width = (float)framebuffer.get_width();
             float height = (float)framebuffer.get_height();
-            ImGui::Image(reinterpret_cast<void *>(framebuffer.get_color_texture()), ImVec2{width, height}, ImVec2{0, 1}, ImVec2{1, 0});
+            ImGui::Image(reinterpret_cast<ImTextureID>(framebuffer.get_color_texture()), ImVec2{width, height}, ImVec2{0, 1}, ImVec2{1, 0});
             ImGui::End();
         }
 

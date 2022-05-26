@@ -21,7 +21,7 @@ namespace glcpp
     public:
         AssimpAnimation() = default;
 
-        AssimpAnimation(const char *animationPath)
+        AssimpAnimation(const char *animation_path)
         {
             type = AnimationType::Assimp;
             Assimp::Importer importer;
@@ -31,7 +31,7 @@ namespace glcpp
                 aiProcess_LimitBoneWeights;
 
             importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-            const aiScene *scene = importer.ReadFile(animationPath, assimp_read_flag);
+            const aiScene *scene = importer.ReadFile(animation_path, assimp_read_flag);
 
             if (!scene || !scene->mRootNode || !scene->HasAnimations())
             {
@@ -40,7 +40,7 @@ namespace glcpp
             else
             {
                 auto animation = scene->mAnimations[0];
-                name_ = animationPath;
+                name_ = animation_path;
                 duration_ = animation->mDuration;
                 ticks_per_second_ = animation->mTicksPerSecond;
                 process_bones(animation, scene->mRootNode);
@@ -66,14 +66,14 @@ namespace glcpp
                 const aiNode *node = root_node->FindNode(channel->mNodeName);
                 if (node)
                 {
-                    animation_inverse_transform_map_[bone_name] = glm::inverse(AiMatToGlmMat(node->mTransformation));
-                    name_bone_map_[bone_name] = std::make_unique<Bone>(bone_name, channel, animation_inverse_transform_map_[bone_name]);
+                    bone_inverse_transform_map_[bone_name] = glm::inverse(AiMatToGlmMat(node->mTransformation));
+                    name_bone_map_[bone_name] = std::make_unique<Bone>(bone_name, channel, bone_inverse_transform_map_[bone_name]);
                 }
             }
         }
 
     private:
-        std::map<std::string, glm::mat4> animation_inverse_transform_map_;
+        std::map<std::string, glm::mat4> bone_inverse_transform_map_;
     };
 
 }

@@ -183,7 +183,7 @@ private:
     }
     void init_model()
     {
-        add_model(fs::canonical(fs::path("./resources/models/vampire/zom.fbx")).string().c_str());
+        add_model(fs::canonical(fs::path("./resources/models2/vampire/zom.fbx")).string().c_str());
         models_.back()->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
     }
     void init_anim()

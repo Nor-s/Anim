@@ -11,7 +11,7 @@ endif()
 project(
   n-glcpp
   LANGUAGES CXX
-  VERSION 0.1.0)
+  VERSION 0.0.3)
 set(CMAKE_CXX_STANDARD 17)
 
 if(APPLE)

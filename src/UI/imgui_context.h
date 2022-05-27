@@ -32,7 +32,7 @@ struct GLFWwindow;
 
 static void executeProcess(const char *process_name, std::string arg, bool *is_exit)
 {
-    std::filesystem::path process(glcpp::ConvertStringToWString(std::string(process_name)));
+    std::filesystem::path process = std::filesystem::u8path(process_name);
     std::string abs_process = std::filesystem::absolute(process).string();
 #ifdef _WIN32
     abs_process += ".exe " + arg;
@@ -95,6 +95,7 @@ namespace ui
                 style.WindowRounding = 0.0f;
                 style.Colors[ImGuiCol_WindowBg].w = 1.0f;
             }
+            io.Fonts->AddFontFromFileTTF("./resources/font/D2Coding.ttf", 16.0f, NULL, io.Fonts->GetGlyphRangesKorean());
 
             // Setup Platform/Renderer backends
             ImGui_ImplGlfw_InitForOpenGL(window, true);
@@ -284,7 +285,8 @@ namespace ui
             {
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
             }
-            try {
+            try
+            {
                 ImGui::Begin("Animation bar", NULL, window_flags);
                 if (ImGui::Button(play_stop_button.c_str()))
                 {
@@ -302,8 +304,8 @@ namespace ui
                 if (ImGui::Button("load animation") && !is_load_animation)
                 {
                     is_load_animation = true;
-                    nfdchar_t* outPath;
-                    nfdfilteritem_t filterItem[1] = { {"model file", "dae,fbx,json,md5anim"} };
+                    nfdchar_t *outPath;
+                    nfdfilteritem_t filterItem[1] = {{"model file", "dae,fbx,json,md5anim"}};
                     nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
 
                     if (result == NFD_OKAY)
@@ -378,13 +380,13 @@ namespace ui
                     // Timeline code here
                     if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
                     {
-                        auto& current_animation = animator->get_mutable_current_animation();
-                        auto& name_bone_map = current_animation->get_mutable_name_bone_map();
+                        auto &current_animation = animator->get_mutable_current_animation();
+                        auto &name_bone_map = current_animation->get_mutable_name_bone_map();
                         bool is_hovered = false;
-                        for (auto& bone : name_bone_map)
+                        for (auto &bone : name_bone_map)
                         {
                             float factor = bone.second->get_factor();
-                            std::vector<float>& keys = bone.second->get_mutable_time_list();
+                            std::vector<float> &keys = bone.second->get_mutable_time_list();
 
                             if (ImGui::BeginNeoTimeline(bone.second->get_bone_name().c_str()))
                             {
@@ -407,8 +409,8 @@ namespace ui
                         }
                         if (clicked_time != -1.0f && clicked_bone)
                         {
-                            ImVec2 vMin{ 0, 0 };
-                            ImVec2 vMax{ 0, 0 };
+                            ImVec2 vMin{0, 0};
+                            ImVec2 vMax{0, 0};
                             currentFrame = clicked_frame;
                             play = true;
                             play_stop_button = "play";
@@ -423,9 +425,9 @@ namespace ui
                                 vMax.x += ImGui::GetWindowPos().x + 10;
                                 vMax.y += ImGui::GetWindowPos().y + 10;
                                 ImGui::Text("%s: %u", clicked_bone->get_bone_name().c_str(), clicked_frame);
-                                glm::vec3* p_pos = clicked_bone->get_mutable_pointer_positions(clicked_time);
-                                glm::quat* p_quat = clicked_bone->get_mutable_pointer_rotations(clicked_time);
-                                glm::vec3* p_scale = clicked_bone->get_mutable_pointer_scales(clicked_time);
+                                glm::vec3 *p_pos = clicked_bone->get_mutable_pointer_positions(clicked_time);
+                                glm::quat *p_quat = clicked_bone->get_mutable_pointer_rotations(clicked_time);
+                                glm::vec3 *p_scale = clicked_bone->get_mutable_pointer_scales(clicked_time);
                                 if (p_pos)
                                 {
                                     ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
@@ -475,12 +477,13 @@ namespace ui
                     animator->set_current_frame_num_to_time(currentFrame);
                 }
             }
-            catch(std::exception & e) {
+            catch (std::exception &e)
+            {
 #ifndef NDEBUG
                 std::cout << e.what() << "\n";
-#endif 
+#endif
             }
-            
+
 #ifndef NDEBUG
             ImGui::ShowDemoWindow();
 #endif
@@ -787,8 +790,8 @@ namespace ui
                 {
                     thread_for_process_open.join();
                 }
-                std::filesystem::path path_default_model = "model.json";
-                std::filesystem::path path_default_anim = "anim.json";
+                std::filesystem::path path_default_model = std::filesystem::u8path("model.json");
+                std::filesystem::path path_default_anim = std::filesystem::u8path( "anim.json");
                 std::string arg = "--arg1 " + std::filesystem::absolute(path_default_model).string() + " --arg2 " +
                                   std::filesystem::absolute(path_default_anim).string();
 

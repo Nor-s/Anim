@@ -80,7 +80,10 @@ namespace glcpp
         int window_width, window_height;
         glfwGetFramebufferSize(handle_, &frame_width, &frame_height);
         glfwGetWindowSize(handle_, &window_width, &window_height);
-        factor_ = frame_width / window_width;
+        if (window_width != 0)
+            factor_ = frame_width / window_width;
+        else
+            factor_ = 1;
     }
 
     void Window::set_window(uint32_t width, uint32_t height, const std::string &title)

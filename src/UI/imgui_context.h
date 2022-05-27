@@ -284,196 +284,203 @@ namespace ui
             {
                 window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
             }
-
-            ImGui::Begin("Animation bar", NULL, window_flags);
-            if (ImGui::Button(play_stop_button.c_str()))
-            {
-                play = !play;
-                if (play_stop_button == "play")
+            try {
+                ImGui::Begin("Animation bar", NULL, window_flags);
+                if (ImGui::Button(play_stop_button.c_str()))
                 {
-                    play_stop_button = "stop";
-                }
-                else
-                {
-                    play_stop_button = "play";
-                }
-            }
-            ImGui::SameLine();
-            if (ImGui::Button("load animation") && !is_load_animation)
-            {
-                // is_load_animation = true;
-                nfdchar_t *outPath;
-                nfdfilteritem_t filterItem[1] = {{"model file", "dae,fbx,json,md5anim"}};
-                nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
-
-                if (result == NFD_OKAY)
-                {
-                    puts("Success!");
-                    puts(outPath);
-                    animator->add_animation(outPath);
-                    NFD_FreePath(outPath);
-                }
-                else if (result == NFD_CANCEL)
-                {
-                    puts("User pressed cancel.");
-                }
-                else
-                {
-                    printf("Error: %s\n", NFD_GetError());
-                }
-
-                NFD_Quit();
-                is_load_animation = false;
-            }
-            ImGui::SameLine();
-            if (ImGui::BeginCombo("animations", current_item))
-            {
-                for (size_t i = 0; i < animation_items.size(); i++)
-                {
-
-                    bool is_selected = false;
-                    if (current_item != nullptr)
+                    play = !play;
+                    if (play_stop_button == "play")
                     {
-                        is_selected = (strcmp(current_item, animation_items[i]) == 0);
-                    }
-                    if (ImGui::Selectable(animation_items[i], is_selected))
-                    {
-                        current_item = animation_items[i];
-                        animator->play_animation(i);
-                    }
-                    if (is_selected)
-                    {
-                        ImGui::SetItemDefaultFocus();
-                    }
-                }
-                ImGui::EndCombo();
-            }
-            if (is_json)
-            {
-                ImGui::SameLine();
-                static bool edit_open = false;
-                if (ImGui::Button("edit"))
-                {
-                    text_editor_.open(animator->get_mutable_current_animation()->get_name());
-                    edit_open = true;
-                }
-                text_editor_.draw(&edit_open);
-
-                ImGui::SameLine();
-                if (ImGui::Button("reload"))
-                {
-                    animator->get_mutable_current_animation()->reload();
-                }
-            }
-            ImGui::SameLine();
-            ImGui::InputFloat("fps", &fps);
-            ImGui::SameLine();
-            if (ImGui::Button("Mediapipe Open"))
-            {
-                execute_process("./mp_gui/demo_gui", scene);
-            }
-
-            if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
-            {
-                // Timeline code here
-                if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
-                {
-                    auto &current_animation = animator->get_mutable_current_animation();
-                    auto &name_bone_map = current_animation->get_mutable_name_bone_map();
-                    bool is_hovered = false;
-                    for (auto &bone : name_bone_map)
-                    {
-                        float factor = bone.second->get_factor();
-                        std::vector<float> &keys = bone.second->get_mutable_time_list();
-
-                        if (ImGui::BeginNeoTimeline(bone.second->get_bone_name().c_str()))
-                        {
-                            for (size_t i = 0; i < keys.size(); i++)
-                            {
-                                uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
-                                if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && clicked_time == -1.0f)
-                                {
-                                    if (ImGui::IsItemClicked())
-                                    {
-                                        clicked_frame = key;
-                                        clicked_time = keys[i];
-                                        clicked_bone = bone.second.get();
-                                    }
-                                }
-                            }
-
-                            ImGui::EndNeoTimeLine();
-                        }
-                    }
-                    if (clicked_time != -1.0f && clicked_bone)
-                    {
-                        ImVec2 vMin{0, 0};
-                        ImVec2 vMax{0, 0};
-                        currentFrame = clicked_frame;
-                        play = true;
-                        play_stop_button = "play";
-                        ImGui::OpenPopup("my_select_popup");
-                        ImGui::SameLine();
-                        if (ImGui::BeginPopup("my_select_popup"))
-                        {
-                            vMin = ImGui::GetWindowContentRegionMin();
-                            vMax = ImGui::GetWindowContentRegionMax();
-                            vMin.x += ImGui::GetWindowPos().x - 10;
-                            vMin.y += ImGui::GetWindowPos().y - 10;
-                            vMax.x += ImGui::GetWindowPos().x + 10;
-                            vMax.y += ImGui::GetWindowPos().y + 10;
-                            ImGui::Text("%s: %u", clicked_bone->get_bone_name().c_str(), clicked_frame);
-                            glm::vec3 *p_pos = clicked_bone->get_mutable_pointer_positions(clicked_time);
-                            glm::quat *p_quat = clicked_bone->get_mutable_pointer_rotations(clicked_time);
-                            glm::vec3 *p_scale = clicked_bone->get_mutable_pointer_scales(clicked_time);
-                            if (p_pos)
-                            {
-                                ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
-                            }
-                            if (p_quat)
-                            {
-                                auto before_quat = *p_quat;
-                                ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
-                                if (before_quat != *p_quat)
-                                {
-                                    *p_quat = glm::normalize(*p_quat);
-                                }
-                            }
-                            if (p_scale)
-                            {
-                                ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
-                            }
-
-                            ImGui::EndPopup();
-                        }
-                        if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-                        {
-                            auto x = ImGui::GetMousePos().x;
-                            auto y = ImGui::GetMousePos().y;
-                            if (!(vMax.y > y && vMax.x > x && vMin.x < x && vMin.y < y))
-                            {
-                                clicked_time = -1.0f;
-                            }
-                        }
-                    }
-
-                    ImGui::EndNeoGroup();
-                    if (ImGui::IsZoomSliderHovered())
-                    {
-                        is_hovered_animation_zoom_slider = true;
+                        play_stop_button = "stop";
                     }
                     else
                     {
-                        is_hovered_animation_zoom_slider = false;
+                        play_stop_button = "play";
                     }
                 }
-                ImGui::EndNeoSequencer();
+                ImGui::SameLine();
+                if (ImGui::Button("load animation") && !is_load_animation)
+                {
+                    is_load_animation = true;
+                    nfdchar_t* outPath;
+                    nfdfilteritem_t filterItem[1] = { {"model file", "dae,fbx,json,md5anim"} };
+                    nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+
+                    if (result == NFD_OKAY)
+                    {
+                        puts("Success!");
+                        puts(outPath);
+                        animator->add_animation(outPath);
+                        NFD_FreePath(outPath);
+                    }
+                    else if (result == NFD_CANCEL)
+                    {
+                        puts("User pressed cancel.");
+                    }
+                    else
+                    {
+                        printf("Error: %s\n", NFD_GetError());
+                    }
+
+                    NFD_Quit();
+                    is_load_animation = false;
+                }
+                ImGui::SameLine();
+                if (ImGui::BeginCombo("animations", current_item))
+                {
+                    for (size_t i = 0; i < animation_items.size(); i++)
+                    {
+
+                        bool is_selected = false;
+                        if (current_item != nullptr)
+                        {
+                            is_selected = (strcmp(current_item, animation_items[i]) == 0);
+                        }
+                        if (ImGui::Selectable(animation_items[i], is_selected))
+                        {
+                            current_item = animation_items[i];
+                            animator->play_animation(i);
+                        }
+                        if (is_selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                if (is_json)
+                {
+                    ImGui::SameLine();
+                    static bool edit_open = false;
+                    if (ImGui::Button("edit"))
+                    {
+                        text_editor_.open(animator->get_mutable_current_animation()->get_name());
+                        edit_open = true;
+                    }
+                    text_editor_.draw(&edit_open);
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("reload"))
+                    {
+                        animator->get_mutable_current_animation()->reload();
+                    }
+                }
+                ImGui::SameLine();
+                ImGui::InputFloat("fps", &fps);
+                ImGui::SameLine();
+                if (ImGui::Button("Mediapipe Open"))
+                {
+                    execute_process("./mp_gui/demo_gui", scene);
+                }
+
+                if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
+                {
+                    // Timeline code here
+                    if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
+                    {
+                        auto& current_animation = animator->get_mutable_current_animation();
+                        auto& name_bone_map = current_animation->get_mutable_name_bone_map();
+                        bool is_hovered = false;
+                        for (auto& bone : name_bone_map)
+                        {
+                            float factor = bone.second->get_factor();
+                            std::vector<float>& keys = bone.second->get_mutable_time_list();
+
+                            if (ImGui::BeginNeoTimeline(bone.second->get_bone_name().c_str()))
+                            {
+                                for (size_t i = 0; i < keys.size(); i++)
+                                {
+                                    uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
+                                    if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && clicked_time == -1.0f)
+                                    {
+                                        if (ImGui::IsItemClicked())
+                                        {
+                                            clicked_frame = key;
+                                            clicked_time = keys[i];
+                                            clicked_bone = bone.second.get();
+                                        }
+                                    }
+                                }
+
+                                ImGui::EndNeoTimeLine();
+                            }
+                        }
+                        if (clicked_time != -1.0f && clicked_bone)
+                        {
+                            ImVec2 vMin{ 0, 0 };
+                            ImVec2 vMax{ 0, 0 };
+                            currentFrame = clicked_frame;
+                            play = true;
+                            play_stop_button = "play";
+                            ImGui::OpenPopup("my_select_popup");
+                            ImGui::SameLine();
+                            if (ImGui::BeginPopup("my_select_popup"))
+                            {
+                                vMin = ImGui::GetWindowContentRegionMin();
+                                vMax = ImGui::GetWindowContentRegionMax();
+                                vMin.x += ImGui::GetWindowPos().x - 10;
+                                vMin.y += ImGui::GetWindowPos().y - 10;
+                                vMax.x += ImGui::GetWindowPos().x + 10;
+                                vMax.y += ImGui::GetWindowPos().y + 10;
+                                ImGui::Text("%s: %u", clicked_bone->get_bone_name().c_str(), clicked_frame);
+                                glm::vec3* p_pos = clicked_bone->get_mutable_pointer_positions(clicked_time);
+                                glm::quat* p_quat = clicked_bone->get_mutable_pointer_rotations(clicked_time);
+                                glm::vec3* p_scale = clicked_bone->get_mutable_pointer_scales(clicked_time);
+                                if (p_pos)
+                                {
+                                    ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
+                                }
+                                if (p_quat)
+                                {
+                                    auto before_quat = *p_quat;
+                                    ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
+                                    if (before_quat != *p_quat)
+                                    {
+                                        *p_quat = glm::normalize(*p_quat);
+                                    }
+                                }
+                                if (p_scale)
+                                {
+                                    ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
+                                }
+
+                                ImGui::EndPopup();
+                            }
+                            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
+                            {
+                                auto x = ImGui::GetMousePos().x;
+                                auto y = ImGui::GetMousePos().y;
+                                if (!(vMax.y > y && vMax.x > x && vMin.x < x && vMin.y < y))
+                                {
+                                    clicked_time = -1.0f;
+                                }
+                            }
+                        }
+
+                        ImGui::EndNeoGroup();
+                        if (ImGui::IsZoomSliderHovered())
+                        {
+                            is_hovered_animation_zoom_slider = true;
+                        }
+                        else
+                        {
+                            is_hovered_animation_zoom_slider = false;
+                        }
+                    }
+                    ImGui::EndNeoSequencer();
+                }
+                ImGui::End();
+                if (beforeFrame != currentFrame)
+                {
+                    animator->set_current_frame_num_to_time(currentFrame);
+                }
             }
-            ImGui::End();
-            if (beforeFrame != currentFrame)
-            {
-                animator->set_current_frame_num_to_time(currentFrame);
+            catch(std::exception & e) {
+#ifndef NDEBUG
+                std::cout << e.what() << "\n";
+#endif 
             }
+            
 #ifndef NDEBUG
             ImGui::ShowDemoWindow();
 #endif

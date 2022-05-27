@@ -50,8 +50,8 @@ namespace glcpp
             std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
             return;
         }
-        std::filesystem::path tmp(ConvertStringToWString(std::string(path)).c_str());
-        directory_ = tmp;
+        directory_ = std::filesystem::u8path(path);
+
         process_node(root_node_, scene->mRootNode, scene);
         transform_ = &(root_node_->relative_transformation);
     }
@@ -204,21 +204,21 @@ namespace glcpp
 
     unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory)
     {
-        std::wstring filename = ConvertStringToWString(std::string(path));
-        size_t idx = filename.find_first_of(L"/\\");
+        std::string filename(path);
+        size_t idx = filename.find_first_of("/\\");
         if (filename[0] == '.' || idx == 0)
         {
             filename = filename.substr(idx + 1);
         }
         std::filesystem::path tmp = directory;
-        filename = tmp.replace_filename(filename).wstring();
+        filename = tmp.replace_filename(filename).string();
         std::replace(filename.begin(), filename.end(), '\\', '/');
 
         unsigned int textureID;
         glGenTextures(1, &textureID);
 
         int width, height, nrComponents;
-        unsigned char *data = stbi_load(ConvertWStringToString(filename).c_str(), &width, &height, &nrComponents, 0);
+        unsigned char *data = stbi_load(filename.c_str(), &width, &height, &nrComponents, 0);
         if (data)
         {
             GLenum format = GL_RGB;
@@ -242,8 +242,8 @@ namespace glcpp
         }
         else
         {
-            std::wcout << L"Texture failed to load at path: " << L":" << filename<< L"\n";
-            std::cout << "Texture failed to load at path: " << ":" << path << "\n";
+            std::cout << "Texture failed to load at path: "
+                      << ":" << path << "\n";
             stbi_image_free(data);
         }
 

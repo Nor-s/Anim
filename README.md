@@ -2,8 +2,7 @@
 
 3D Model to Pixel Art
 
-![](/screenshot/2022-05-01-1.05.03.png) 
-
+![](/screenshot/2022-05-01-1.05.03.png)
 
 ## TODO
 
@@ -12,7 +11,6 @@
 -   object 셀렉트 (1)
 
 -   그리드 평면 (1)
-
 
 ## external
 
@@ -25,14 +23,20 @@
 -   Assimp: https://github.com/assimp/assimp
 
 -   ImGUI: https://github.com/ocornut/imgui
-    - timeline: https://gitlab.com/GroGy/im-neo-sequencer
-    - text editor: https://github.com/BalazsJako/ImGuiColorTextEdit
+
+    -   timeline: https://gitlab.com/GroGy/im-neo-sequencer
+    -   text editor: https://github.com/BalazsJako/ImGuiColorTextEdit
 
 -   stb: https://github.com/nothings/stb
 
 -   nfd(extended): https://github.com/btzy/nativefiledialog-extended
 
 -   jsoncpp: https://github.com/open-source-parsers/jsoncpp
+
+## resources
+
+-   mixamo: https://www.mixamo.com/#/?page=1&type=Character
+-   d2coding font: https://github.com/naver/d2codingfont/wiki/Open-Font-License
 
 ## screenshot
 
@@ -60,18 +64,17 @@
 
 ### 4/17
 
--   custom animation 
+-   custom animation
 
     1. get `aiNode ::mTransformation`
     2. decompose this matrix
     3. update translation, rotation, scale
 
-- or
+-   or
 
     1. get `aiNode::mTransformation`
-    2. mTransformation = mTransformation *T*R*S
-    ![](/screenshot/Apr_2022-04-17_12-45-38.png)
-
+    2. mTransformation = mTransformation *T*R\*S
+       ![](/screenshot/Apr_2022-04-17_12-45-38.png)
 
 ### 4/23
 
@@ -81,16 +84,22 @@
 
 ### 4/29
 
-- animation gui: simple timeline
+-   animation gui: simple timeline
     ![](/screenshot/Apr-30-2022-00-11-45.gif)
-- retargeting(same bone hierarchy: mixamo):  model B * animation B^-1 * (animation TRS)
+-   retargeting(same bone hierarchy: mixamo): model B _ animation B^-1 _ (animation TRS)
     ![](/screenshot/Apr-30-2022-00-32-28.gif)
 
 ### 5/1
 
-- animation with json file, text edit 
+-   animation with json file, text edit
 
     ![](/screenshot/May-01-2022-10-54-32.gif)
+
+### 5/28
+
+-   add mediapipe open button
+
+    ![](/screenshot/animation22.gif)
 
 ## build
 

@@ -48,7 +48,7 @@ public:
     virtual void add_model(const char *file_name) override
     {
         models_.emplace_back(std::make_shared<glcpp::Model>(file_name));
-        if (std::filesystem::path(glcpp::ConvertStringToWString(std::string(file_name))).extension() != ".obj")
+        if (std::filesystem::path(std::filesystem::u8path(file_name)).extension() != ".obj")
         {
             animator_->add_animation(file_name);
             model_shader_.reset(new glcpp::Shader{"./resources/shaders/animation_loading.vs", "./resources/shaders/1.model_loading.fs"});

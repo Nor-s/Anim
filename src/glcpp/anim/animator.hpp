@@ -45,7 +45,7 @@ namespace glcpp
 
         void add_animation(const char *animation_path)
         {
-            std::filesystem::path anim_path(ConvertStringToWString(std::string(animation_path)).c_str());
+            std::filesystem::path anim_path = std::filesystem::u8path(animation_path);
             for (size_t i = 0; i < animations_.size(); i++)
             {
                 if (std::strcmp(animations_[i]->get_name(), animation_path) == 0)

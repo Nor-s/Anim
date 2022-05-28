@@ -40,7 +40,7 @@ if(MSVC)
 elseif(APPLE)
     target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
-    target_include_directories(glcpp PUBLIC ./ ../ ${CMAKE_HOME_DIRECTORY}/external)
+    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
     target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm::glm -ldl -lpthread)
 else()
     target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -static)

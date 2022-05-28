@@ -19,6 +19,8 @@
 #include <memory>
 #include <filesystem>
 
+#include <assimp/Exporter.hpp>
+
 namespace fs = std::filesystem;
 
 class Scene1 : public Scene
@@ -150,7 +152,23 @@ public:
     {
         delta_time_ = dt;
     }
+    virtual bool to_fbx(const std::string& file_name) override {
+        Assimp::Exporter exporter;
+        aiScene* scene = new aiScene();
+        scene->mRootNode = new aiNode();
+        models_.back()->get_ai_root_node_for_anim(scene->mRootNode);
+        scene->mAnimations = new aiAnimation * [1];
+        scene->mAnimations[0] = new aiAnimation();
+        scene->mNumAnimations = 1;
+        animator_->get_mutable_current_animation()->get_ai_animation(scene->mAnimations[0], scene->mRootNode);
+        
+        if (AI_SUCCESS == exporter.Export(scene, "fbx", file_name.c_str())){
+            return true;
+        }
 
+        std::cerr << exporter.GetErrorString() << std::endl;
+        return false;
+    }
 private:
     void init_option()
     {

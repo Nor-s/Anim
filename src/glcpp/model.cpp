@@ -76,6 +76,20 @@ namespace glcpp
             process_node(model_node->childrens[i], ai_node->mChildren[i], scene);
         }
     }
+    void Model::get_ai_node_for_anim(aiNode* ai_node, ModelNode* model_node, aiNode* parent_ai_node) {
+        ai_node->mName = aiString(model_node->name.c_str());
+        ai_node->mTransformation = GlmMatToAiMat(model_node->initial_transformation);
+        ai_node->mParent = parent_ai_node;
+        ai_node->mNumChildren = model_node->childrens.size();
+        ai_node->mChildren = new aiNode*[ai_node->mNumChildren];
+        for (int i = 0; i < ai_node->mNumChildren; i++) {
+            ai_node->mChildren[i] = new aiNode();
+            get_ai_node_for_anim(ai_node->mChildren[i], model_node->childrens[i].get(), ai_node);
+        }
+    }
+    void Model::get_ai_root_node_for_anim(aiNode* ai_root_node) {
+        get_ai_node_for_anim(ai_root_node, root_node_.get(), NULL);
+    }
 
     Mesh Model::process_mesh(aiMesh *mesh, const aiScene *scene)
     {

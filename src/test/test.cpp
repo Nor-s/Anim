@@ -60,7 +60,7 @@ int before_viewport_size = SCR_WIDTH;
 float deltaTime = 0.0f;
 float lastFrame = 0.0f;
 glcpp::Window g_window(SCR_WIDTH, SCR_HEIGHT, "glcpp-test");
-glcpp::Model ourModel(fs::canonical(fs::path("./../../resources/models/nanosuit/nanosuit.obj")).string().c_str());
+glcpp::Model ourModel(fs::canonical(fs::path("./resources/models/nanosuit/nanosuit.obj")).string().c_str());
 std::unique_ptr<glcpp::Framebuffer> model_framebuffer;
 std::unique_ptr<glcpp::Framebuffer> skybox_framebuffer;
 std::unique_ptr<glcpp::Framebuffer> RGB_fb;
@@ -69,30 +69,30 @@ std::unique_ptr<glcpp::Framebuffer> target_fb;
 
 // skybox
 std::vector<std::string> skybox_faces[]{
-    {"./../../resources/textures/skybox/right.jpg",
-     "./../../resources/textures/skybox/left.jpg",
-     "./../../resources/textures/skybox/top.jpg",
-     "./../../resources/textures/skybox/bottom.jpg",
-     "./../../resources/textures/skybox/front.jpg",
-     "./../../resources/textures/skybox/back.jpg"},
-    {"./../../resources/textures/cube/Bridge2/px.jpg",
-     "./../../resources/textures/cube/Bridge2/nx.jpg",
-     "./../../resources/textures/cube/Bridge2/py.jpg",
-     "./../../resources/textures/cube/Bridge2/ny.jpg",
-     "./../../resources/textures/cube/Bridge2/pz.jpg",
-     "./../../resources/textures/cube/Bridge2/nz.jpg"},
-    {"./../../resources/textures/cube/MilkyWay/px.jpg",
-     "./../../resources/textures/cube/MilkyWay/nx.jpg",
-     "./../../resources/textures/cube/MilkyWay/py.jpg",
-     "./../../resources/textures/cube/MilkyWay/ny.jpg",
-     "./../../resources/textures/cube/MilkyWay/pz.jpg",
-     "./../../resources/textures/cube/MilkyWay/nz.jpg"},
-    {"./../../resources/textures/cube/pisa/px.png",
-     "./../../resources/textures/cube/pisa/nx.png",
-     "./../../resources/textures/cube/pisa/py.png",
-     "./../../resources/textures/cube/pisa/ny.png",
-     "./../../resources/textures/cube/pisa/pz.png",
-     "./../../resources/textures/cube/pisa/nz.png"}};
+    {"./resources/textures/skybox/right.jpg",
+     "./resources/textures/skybox/left.jpg",
+     "./resources/textures/skybox/top.jpg",
+     "./resources/textures/skybox/bottom.jpg",
+     "./resources/textures/skybox/front.jpg",
+     "./resources/textures/skybox/back.jpg"},
+    {"./resources/textures/cube/Bridge2/px.jpg",
+     "./resources/textures/cube/Bridge2/nx.jpg",
+     "./resources/textures/cube/Bridge2/py.jpg",
+     "./resources/textures/cube/Bridge2/ny.jpg",
+     "./resources/textures/cube/Bridge2/pz.jpg",
+     "./resources/textures/cube/Bridge2/nz.jpg"},
+    {"./resources/textures/cube/MilkyWay/px.jpg",
+     "./resources/textures/cube/MilkyWay/nx.jpg",
+     "./resources/textures/cube/MilkyWay/py.jpg",
+     "./resources/textures/cube/MilkyWay/ny.jpg",
+     "./resources/textures/cube/MilkyWay/pz.jpg",
+     "./resources/textures/cube/MilkyWay/nz.jpg"},
+    {"./resources/textures/cube/pisa/px.png",
+     "./resources/textures/cube/pisa/nx.png",
+     "./resources/textures/cube/pisa/py.png",
+     "./resources/textures/cube/pisa/ny.png",
+     "./resources/textures/cube/pisa/pz.png",
+     "./resources/textures/cube/pisa/nz.png"}};
 
 bool is_skybox_blur = false;
 
@@ -110,18 +110,18 @@ int main()
     //  glfwSetInputMode(g_window.get_handle(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     // build and compile shaders
     // -------------------------
-    glcpp::Shader ourShader("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/1.model_loading.fs");
-    glcpp::Shader pixelateShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/pixelate_framebuffer.fs");
-    glcpp::Shader frameShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/simple_framebuffer.fs");
-    glcpp::Shader blurShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/skybox_blur.fs");
-    glcpp::Shader debugShader("./../../resources/shaders/1.model_loading.vs", "./../../resources/shaders/debug_model.fs");
-    glcpp::Shader alphaframeShader("./../../resources/shaders/simple_framebuffer.vs", "./../../resources/shaders/alpha_model.fs");
+    glcpp::Shader ourShader("./resources/shaders/1.model_loading.vs", "./resources/shaders/1.model_loading.fs");
+    glcpp::Shader pixelateShader("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/pixelate_framebuffer.fs");
+    glcpp::Shader frameShader("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
+    glcpp::Shader blurShader("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/skybox_blur.fs");
+    glcpp::Shader debugShader("./resources/shaders/1.model_loading.vs", "./resources/shaders/debug_model.fs");
+    glcpp::Shader alphaframeShader("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/alpha_model.fs");
 
     // load models
     // -----------
     glcpp::Cubemap skybox(skybox_faces[0],
-                          "./../../resources/shaders/skybox.vs",
-                          "./../../resources/shaders/skybox.fs");
+                          "./resources/shaders/skybox.vs",
+                          "./resources/shaders/skybox.fs");
 
     g_window.set_factor();
 

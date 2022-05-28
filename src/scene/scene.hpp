@@ -29,6 +29,9 @@ public:
     {
         return nullptr;
     }
+    virtual bool to_fbx(const std::string& file_name) {
+        return false;
+    }
 
 protected:
     ui::ImguiOption imgui_option_;

@@ -30,7 +30,9 @@ set(LIBs STB_IMAGE imgui glad nfd jsoncpp_static)
 
 if(MSVC)
   target_compile_options(glcpp PUBLIC  "/utf-8")
-  target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+  if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
+    target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+  endif()
   target_link_libraries(glcpp PUBLIC ${LIBs} glm assimp::assimp)
   target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
 
@@ -63,8 +65,10 @@ add_executable(pixel3D
 
 if(MSVC)
   target_compile_options(pixel3D PUBLIC   "/utf-8")#  target_link_options(pixel3D PUBLIC "/INCREMENTAL")
-    target_link_options(pixel3D PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+  if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
   
+      target_link_options(pixel3D PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+  endif()
   target_link_libraries(pixel3D  glcpp)
 elseif(APPLE)
     target_link_libraries(pixel3D  glcpp)

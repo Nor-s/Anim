@@ -11,7 +11,6 @@
 #include <string>
 #include <set>
 
-#include "bone.hpp"
 #include "../utility.hpp"
 #include "animation.hpp"
 namespace glcpp

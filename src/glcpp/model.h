@@ -77,6 +77,8 @@ namespace glcpp
         int &get_mutable_bone_count();
         const ModelNode *get_root_node() const;
         std::shared_ptr<ModelNode> &get_mutable_root_node();
+        void get_ai_node_for_anim(aiNode* ai_node, ModelNode* model_node, aiNode* parent_ai_node);
+        void get_ai_root_node_for_anim(aiNode* ai_node);
 
     private:
         // heirarchy

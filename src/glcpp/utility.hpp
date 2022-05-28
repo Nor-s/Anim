@@ -19,6 +19,10 @@ namespace glcpp
     {
         return glm::vec3(vec.x, vec.y, vec.z);
     }
+    inline aiVector3D GlmVecToAiVec(const glm::vec3 &vec)
+    {
+        return aiVector3D(vec.x, vec.y, vec.z);
+    }
     inline glm::mat4 AiMatToGlmMat(const aiMatrix4x4 &from)
     {
         glm::mat4 to;
@@ -42,9 +46,36 @@ namespace glcpp
 
         return to;
     }
+    inline aiMatrix4x4 GlmMatToAiMat(const glm::mat4& from)
+    {
+        aiMatrix4x4 to;
+        // the a,b,c,d in assimp is the row ; the 1,2,3,4 is the column
+        to.a1 = from[0][0];
+        to.a2 = from[1][0];
+        to.a3 = from[2][0];
+        to.a4 = from[3][0];
+        to.b1 = from[0][1];
+        to.b2 = from[1][1];
+        to.b3 = from[2][1];
+        to.b4 = from[3][1];
+        to.c1 = from[0][2];
+        to.c2 = from[1][2];
+        to.c3 = from[2][2];
+        to.c4 = from[3][2];
+        to.d1 = from[0][3];
+        to.d2 = from[1][3];
+        to.d3 = from[2][3];
+        to.d4 = from[3][3];
+
+        return to;
+    }
     static inline glm::quat AiQuatToGlmQuat(const aiQuaternion &pOrientation)
     {
         return glm::quat(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
+    }
+    static inline aiQuaternion GlmQuatToAiQuat(const glm::quat& pOrientation)
+    {
+        return aiQuaternion(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
     }
     //return translate, rotattion, scale
     static inline std::tuple<glm::vec3, glm::quat, glm::vec3> DecomposeTransform(const glm::mat4 &transform)

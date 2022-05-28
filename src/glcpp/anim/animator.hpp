@@ -11,10 +11,10 @@
 #include <assimp/Importer.hpp>
 
 #include "../model.h"
-#include "animation.hpp"
+//#include "animation.hpp"
 #include "assimp_animation.hpp"
 #include "json_animation.hpp"
-#include "bone.hpp"
+//#include "bone.hpp"
 #include "utility.hpp"
 
 namespace glcpp

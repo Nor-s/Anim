@@ -38,7 +38,9 @@
 #include <json/json.h>
 #include <fstream>
 #include "animation.hpp"
-#include "bone.hpp"
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <filesystem>
 
 namespace glcpp
 {
@@ -61,6 +63,7 @@ namespace glcpp
       destroy();
       init();
     }
+
 
   private:
     void destroy()

@@ -40,8 +40,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 /** @file FBXCommon.h
-* Some useful constants and enums for dealing with FBX files.
-*/
+ * Some useful constants and enums for dealing with FBX files.
+ */
 #ifndef AI_FBXCOMMON_H_INC
 #define AI_FBXCOMMON_H_INC
 
@@ -56,7 +56,7 @@ const std::string NULL_RECORD = { // 25 null bytes in 64-bit and 13 null bytes i
 }; // who knows why, it looks like two integers 32/64 bit (compressed and uncompressed sizes?) + 1 byte (might be compression type?)
 const std::string SEPARATOR = { '\x00', '\x01' }; // for use inside strings
 const std::string MAGIC_NODE_TAG = "_$AssimpFbx$"; // from import
-const int64_t SECOND = 46186158000; // FBX's kTime unit
+const int64_t SECOND = 46186158000LL; // FBX's kTime unit
 
 // rotation order. We'll probably use EulerXYZ for everything
 enum RotOrder {

@@ -187,13 +187,14 @@ std::string FBXConverter::MakeUniqueNodeName(const Model *const model, const aiN
 
 /// This struct manages nodes which may or may not end up in the node hierarchy.
 /// When a node becomes a child of another node, that node becomes its owner and mOwnership should be released.
-struct FBXConverter::PotentialNode
-{
-    PotentialNode() : mOwnership(new aiNode), mNode(mOwnership.get()) {}
-    PotentialNode(const std::string& name) : mOwnership(new aiNode(name)), mNode(mOwnership.get()) {}
-    aiNode* operator->() { return mNode; }
+struct FBXConverter::PotentialNode {
+    PotentialNode() :
+            mOwnership(new aiNode), mNode(mOwnership.get()) {}
+    PotentialNode(const std::string &name) :
+            mOwnership(new aiNode(name)), mNode(mOwnership.get()) {}
+    aiNode *operator->() { return mNode; }
     std::unique_ptr<aiNode> mOwnership;
-    aiNode* mNode;
+    aiNode *mNode;
 };
 
 /// todo: pre-build node hierarchy
@@ -250,12 +251,12 @@ void FBXConverter::ConvertNodes(uint64_t id, aiNode *parent, aiNode *root_node) 
                 nodes_chain.emplace_back(PotentialNode(node_name));
             }
 
-            //setup metadata on newest node
+            // setup metadata on newest node
             SetupNodeMetadata(*model, *nodes_chain.back().mNode);
 
             // link all nodes in a row
             aiNode *last_parent = parent;
-            for (PotentialNode& child : nodes_chain) {
+            for (PotentialNode &child : nodes_chain) {
                 ai_assert(child.mNode);
 
                 if (last_parent != parent) {
@@ -279,7 +280,7 @@ void FBXConverter::ConvertNodes(uint64_t id, aiNode *parent, aiNode *root_node) 
             // if so, link the geometric transform inverse nodes
             // before we attach any child nodes
             if (child_conns.size()) {
-                for (PotentialNode& postnode : post_nodes_chain) {
+                for (PotentialNode &postnode : post_nodes_chain) {
                     ai_assert(postnode.mNode);
 
                     if (last_parent != parent) {
@@ -318,8 +319,7 @@ void FBXConverter::ConvertNodes(uint64_t id, aiNode *parent, aiNode *root_node) 
         parent->mChildren = new aiNode *[nodes.size()]();
         parent->mNumChildren = static_cast<unsigned int>(nodes.size());
 
-        for (unsigned int i = 0; i < nodes.size(); ++i)
-        {
+        for (unsigned int i = 0; i < nodes.size(); ++i) {
             parent->mChildren[i] = nodes[i].mOwnership.release();
         }
         nodes.clear();
@@ -365,63 +365,63 @@ void FBXConverter::ConvertLight(const Light &light, const std::string &orig_name
 
     out_light->mColorSpecular = out_light->mColorDiffuse;
 
-    //lights are defined along negative y direction
+    // lights are defined along negative y direction
     out_light->mPosition = aiVector3D(0.0f);
     out_light->mDirection = aiVector3D(0.0f, -1.0f, 0.0f);
     out_light->mUp = aiVector3D(0.0f, 0.0f, -1.0f);
 
     switch (light.LightType()) {
-        case Light::Type_Point:
-            out_light->mType = aiLightSource_POINT;
-            break;
+    case Light::Type_Point:
+        out_light->mType = aiLightSource_POINT;
+        break;
 
-        case Light::Type_Directional:
-            out_light->mType = aiLightSource_DIRECTIONAL;
-            break;
+    case Light::Type_Directional:
+        out_light->mType = aiLightSource_DIRECTIONAL;
+        break;
 
-        case Light::Type_Spot:
-            out_light->mType = aiLightSource_SPOT;
-            out_light->mAngleOuterCone = AI_DEG_TO_RAD(light.OuterAngle());
-            out_light->mAngleInnerCone = AI_DEG_TO_RAD(light.InnerAngle());
-            break;
+    case Light::Type_Spot:
+        out_light->mType = aiLightSource_SPOT;
+        out_light->mAngleOuterCone = AI_DEG_TO_RAD(light.OuterAngle());
+        out_light->mAngleInnerCone = AI_DEG_TO_RAD(light.InnerAngle());
+        break;
 
-        case Light::Type_Area:
-            FBXImporter::LogWarn("cannot represent area light, set to UNDEFINED");
-            out_light->mType = aiLightSource_UNDEFINED;
-            break;
+    case Light::Type_Area:
+        FBXImporter::LogWarn("cannot represent area light, set to UNDEFINED");
+        out_light->mType = aiLightSource_UNDEFINED;
+        break;
 
-        case Light::Type_Volume:
-            FBXImporter::LogWarn("cannot represent volume light, set to UNDEFINED");
-            out_light->mType = aiLightSource_UNDEFINED;
-            break;
-        default:
-            ai_assert(false);
+    case Light::Type_Volume:
+        FBXImporter::LogWarn("cannot represent volume light, set to UNDEFINED");
+        out_light->mType = aiLightSource_UNDEFINED;
+        break;
+    default:
+        ai_assert(false);
     }
 
     float decay = light.DecayStart();
     switch (light.DecayType()) {
-        case Light::Decay_None:
-            out_light->mAttenuationConstant = decay;
-            out_light->mAttenuationLinear = 0.0f;
-            out_light->mAttenuationQuadratic = 0.0f;
-            break;
-        case Light::Decay_Linear:
-            out_light->mAttenuationConstant = 0.0f;
-            out_light->mAttenuationLinear = 2.0f / decay;
-            out_light->mAttenuationQuadratic = 0.0f;
-            break;
-        case Light::Decay_Quadratic:
-            out_light->mAttenuationConstant = 0.0f;
-            out_light->mAttenuationLinear = 0.0f;
-            out_light->mAttenuationQuadratic = 2.0f / (decay * decay);
-            break;
-        case Light::Decay_Cubic:
-            FBXImporter::LogWarn("cannot represent cubic attenuation, set to Quadratic");
-            out_light->mAttenuationQuadratic = 1.0f;
-            break;
-        default:
-            ai_assert(false);
-            break;
+    case Light::Decay_None:
+        out_light->mAttenuationConstant = decay;
+        out_light->mAttenuationLinear = 0.0f;
+        out_light->mAttenuationQuadratic = 0.0f;
+        break;
+    case Light::Decay_Linear:
+        out_light->mAttenuationConstant = 0.0f;
+        out_light->mAttenuationLinear = 2.0f / decay;
+        out_light->mAttenuationQuadratic = 0.0f;
+        break;
+    case Light::Decay_Quadratic:
+        out_light->mAttenuationConstant = 0.0f;
+        out_light->mAttenuationLinear = 0.0f;
+        out_light->mAttenuationQuadratic = 2.0f / (decay * decay);
+        break;
+    case Light::Decay_Cubic:
+        FBXImporter::LogWarn("cannot represent cubic attenuation, set to Quadratic");
+        out_light->mAttenuationQuadratic = 1.0f;
+        break;
+    default:
+        ai_assert(false);
+        break;
     }
 }
 
@@ -462,43 +462,43 @@ void FBXConverter::GetUniqueName(const std::string &name, std::string &uniqueNam
 
 const char *FBXConverter::NameTransformationComp(TransformationComp comp) {
     switch (comp) {
-        case TransformationComp_Translation:
-            return "Translation";
-        case TransformationComp_RotationOffset:
-            return "RotationOffset";
-        case TransformationComp_RotationPivot:
-            return "RotationPivot";
-        case TransformationComp_PreRotation:
-            return "PreRotation";
-        case TransformationComp_Rotation:
-            return "Rotation";
-        case TransformationComp_PostRotation:
-            return "PostRotation";
-        case TransformationComp_RotationPivotInverse:
-            return "RotationPivotInverse";
-        case TransformationComp_ScalingOffset:
-            return "ScalingOffset";
-        case TransformationComp_ScalingPivot:
-            return "ScalingPivot";
-        case TransformationComp_Scaling:
-            return "Scaling";
-        case TransformationComp_ScalingPivotInverse:
-            return "ScalingPivotInverse";
-        case TransformationComp_GeometricScaling:
-            return "GeometricScaling";
-        case TransformationComp_GeometricRotation:
-            return "GeometricRotation";
-        case TransformationComp_GeometricTranslation:
-            return "GeometricTranslation";
-        case TransformationComp_GeometricScalingInverse:
-            return "GeometricScalingInverse";
-        case TransformationComp_GeometricRotationInverse:
-            return "GeometricRotationInverse";
-        case TransformationComp_GeometricTranslationInverse:
-            return "GeometricTranslationInverse";
-        case TransformationComp_MAXIMUM: // this is to silence compiler warnings
-        default:
-            break;
+    case TransformationComp_Translation:
+        return "Translation";
+    case TransformationComp_RotationOffset:
+        return "RotationOffset";
+    case TransformationComp_RotationPivot:
+        return "RotationPivot";
+    case TransformationComp_PreRotation:
+        return "PreRotation";
+    case TransformationComp_Rotation:
+        return "Rotation";
+    case TransformationComp_PostRotation:
+        return "PostRotation";
+    case TransformationComp_RotationPivotInverse:
+        return "RotationPivotInverse";
+    case TransformationComp_ScalingOffset:
+        return "ScalingOffset";
+    case TransformationComp_ScalingPivot:
+        return "ScalingPivot";
+    case TransformationComp_Scaling:
+        return "Scaling";
+    case TransformationComp_ScalingPivotInverse:
+        return "ScalingPivotInverse";
+    case TransformationComp_GeometricScaling:
+        return "GeometricScaling";
+    case TransformationComp_GeometricRotation:
+        return "GeometricRotation";
+    case TransformationComp_GeometricTranslation:
+        return "GeometricTranslation";
+    case TransformationComp_GeometricScalingInverse:
+        return "GeometricScalingInverse";
+    case TransformationComp_GeometricRotationInverse:
+        return "GeometricRotationInverse";
+    case TransformationComp_GeometricTranslationInverse:
+        return "GeometricTranslationInverse";
+    case TransformationComp_MAXIMUM: // this is to silence compiler warnings
+    default:
+        break;
     }
 
     ai_assert(false);
@@ -508,42 +508,42 @@ const char *FBXConverter::NameTransformationComp(TransformationComp comp) {
 
 const char *FBXConverter::NameTransformationCompProperty(TransformationComp comp) {
     switch (comp) {
-        case TransformationComp_Translation:
-            return "Lcl Translation";
-        case TransformationComp_RotationOffset:
-            return "RotationOffset";
-        case TransformationComp_RotationPivot:
-            return "RotationPivot";
-        case TransformationComp_PreRotation:
-            return "PreRotation";
-        case TransformationComp_Rotation:
-            return "Lcl Rotation";
-        case TransformationComp_PostRotation:
-            return "PostRotation";
-        case TransformationComp_RotationPivotInverse:
-            return "RotationPivotInverse";
-        case TransformationComp_ScalingOffset:
-            return "ScalingOffset";
-        case TransformationComp_ScalingPivot:
-            return "ScalingPivot";
-        case TransformationComp_Scaling:
-            return "Lcl Scaling";
-        case TransformationComp_ScalingPivotInverse:
-            return "ScalingPivotInverse";
-        case TransformationComp_GeometricScaling:
-            return "GeometricScaling";
-        case TransformationComp_GeometricRotation:
-            return "GeometricRotation";
-        case TransformationComp_GeometricTranslation:
-            return "GeometricTranslation";
-        case TransformationComp_GeometricScalingInverse:
-            return "GeometricScalingInverse";
-        case TransformationComp_GeometricRotationInverse:
-            return "GeometricRotationInverse";
-        case TransformationComp_GeometricTranslationInverse:
-            return "GeometricTranslationInverse";
-        case TransformationComp_MAXIMUM: // this is to silence compiler warnings
-            break;
+    case TransformationComp_Translation:
+        return "Lcl Translation";
+    case TransformationComp_RotationOffset:
+        return "RotationOffset";
+    case TransformationComp_RotationPivot:
+        return "RotationPivot";
+    case TransformationComp_PreRotation:
+        return "PreRotation";
+    case TransformationComp_Rotation:
+        return "Lcl Rotation";
+    case TransformationComp_PostRotation:
+        return "PostRotation";
+    case TransformationComp_RotationPivotInverse:
+        return "RotationPivotInverse";
+    case TransformationComp_ScalingOffset:
+        return "ScalingOffset";
+    case TransformationComp_ScalingPivot:
+        return "ScalingPivot";
+    case TransformationComp_Scaling:
+        return "Lcl Scaling";
+    case TransformationComp_ScalingPivotInverse:
+        return "ScalingPivotInverse";
+    case TransformationComp_GeometricScaling:
+        return "GeometricScaling";
+    case TransformationComp_GeometricRotation:
+        return "GeometricRotation";
+    case TransformationComp_GeometricTranslation:
+        return "GeometricTranslation";
+    case TransformationComp_GeometricScalingInverse:
+        return "GeometricScalingInverse";
+    case TransformationComp_GeometricRotationInverse:
+        return "GeometricRotationInverse";
+    case TransformationComp_GeometricTranslationInverse:
+        return "GeometricTranslationInverse";
+    case TransformationComp_MAXIMUM: // this is to silence compiler warnings
+        break;
     }
 
     ai_assert(false);
@@ -588,45 +588,45 @@ void FBXConverter::GetRotationMatrix(Model::RotOrder mode, const aiVector3D &rot
 
     // note: rotation order is inverted since we're left multiplying as is usual in assimp
     switch (mode) {
-        case Model::RotOrder_EulerXYZ:
-            order[0] = 2;
-            order[1] = 1;
-            order[2] = 0;
-            break;
+    case Model::RotOrder_EulerXYZ:
+        order[0] = 2;
+        order[1] = 1;
+        order[2] = 0;
+        break;
 
-        case Model::RotOrder_EulerXZY:
-            order[0] = 1;
-            order[1] = 2;
-            order[2] = 0;
-            break;
+    case Model::RotOrder_EulerXZY:
+        order[0] = 1;
+        order[1] = 2;
+        order[2] = 0;
+        break;
 
-        case Model::RotOrder_EulerYZX:
-            order[0] = 0;
-            order[1] = 2;
-            order[2] = 1;
-            break;
+    case Model::RotOrder_EulerYZX:
+        order[0] = 0;
+        order[1] = 2;
+        order[2] = 1;
+        break;
 
-        case Model::RotOrder_EulerYXZ:
-            order[0] = 2;
-            order[1] = 0;
-            order[2] = 1;
-            break;
+    case Model::RotOrder_EulerYXZ:
+        order[0] = 2;
+        order[1] = 0;
+        order[2] = 1;
+        break;
 
-        case Model::RotOrder_EulerZXY:
-            order[0] = 1;
-            order[1] = 0;
-            order[2] = 2;
-            break;
+    case Model::RotOrder_EulerZXY:
+        order[0] = 1;
+        order[1] = 0;
+        order[2] = 2;
+        break;
 
-        case Model::RotOrder_EulerZYX:
-            order[0] = 0;
-            order[1] = 1;
-            order[2] = 2;
-            break;
+    case Model::RotOrder_EulerZYX:
+        order[0] = 0;
+        order[1] = 1;
+        order[2] = 2;
+        break;
 
-        default:
-            ai_assert(false);
-            break;
+    default:
+        ai_assert(false);
+        break;
     }
 
     ai_assert(order[0] >= 0);
@@ -659,7 +659,7 @@ bool FBXConverter::NeedsComplexTransformationChain(const Model &model) {
         const TransformationComp comp = static_cast<TransformationComp>(i);
 
         if (comp == TransformationComp_Rotation || comp == TransformationComp_Scaling || comp == TransformationComp_Translation ||
-            comp == TransformationComp_PreRotation || comp == TransformationComp_PostRotation) {
+                comp == TransformationComp_PreRotation || comp == TransformationComp_PostRotation) {
             continue;
         }
 
@@ -857,7 +857,7 @@ bool FBXConverter::GenerateTransformationNodeChain(const Model &model, const std
     // for (const auto &transform : chain) {
     // skip inverse chain for no preservePivots
     for (unsigned int i = TransformationComp_Translation; i < TransformationComp_MAXIMUM; i++) {
-      nd->mTransformation = nd->mTransformation * chain[i];
+        nd->mTransformation = nd->mTransformation * chain[i];
     }
     output_nodes.push_back(std::move(nd));
     return false;
@@ -985,9 +985,9 @@ std::vector<unsigned int> FBXConverter::ConvertLine(const LineGeometry &line, ai
     out_mesh->mVertices = new aiVector3D[out_mesh->mNumVertices];
     std::copy(vertices.begin(), vertices.end(), out_mesh->mVertices);
 
-    //Number of line segments (faces) is "Number of Points - Number of Endpoints"
-    //N.B.: Endpoints in FbxLine are denoted by negative indices.
-    //If such an Index is encountered, add 1 and multiply by -1 to get the real index.
+    // Number of line segments (faces) is "Number of Points - Number of Endpoints"
+    // N.B.: Endpoints in FbxLine are denoted by negative indices.
+    // If such an Index is encountered, add 1 and multiply by -1 to get the real index.
     unsigned int epcount = 0;
     for (unsigned i = 0; i < indices.size(); i++) {
         if (indices[i] < 0) {
@@ -1001,11 +1001,11 @@ std::vector<unsigned int> FBXConverter::ConvertLine(const LineGeometry &line, ai
     for (unsigned int i = 0; i < pcount; ++i) {
         if (indices[i] < 0) continue;
         aiFace &f = *fac++;
-        f.mNumIndices = 2; //2 == aiPrimitiveType_LINE
+        f.mNumIndices = 2; // 2 == aiPrimitiveType_LINE
         f.mIndices = new unsigned int[2];
         f.mIndices[0] = indices[i];
-        int segid = indices[(i + 1 == pcount ? 0 : i + 1)]; //If we have reached he last point, wrap around
-        f.mIndices[1] = (segid < 0 ? (segid + 1) * -1 : segid); //Convert EndPoint Index to normal Index
+        int segid = indices[(i + 1 == pcount ? 0 : i + 1)]; // If we have reached he last point, wrap around
+        f.mIndices[1] = (segid < 0 ? (segid + 1) * -1 : segid); // Convert EndPoint Index to normal Index
     }
     temp.push_back(static_cast<unsigned int>(mMeshes.size() - 1));
     return temp;
@@ -1056,18 +1056,18 @@ unsigned int FBXConverter::ConvertMeshSingleMaterial(const MeshGeometry &mesh, c
         f.mNumIndices = pcount;
         f.mIndices = new unsigned int[pcount];
         switch (pcount) {
-            case 1:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_POINT;
-                break;
-            case 2:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_LINE;
-                break;
-            case 3:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_TRIANGLE;
-                break;
-            default:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_POLYGON;
-                break;
+        case 1:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_POINT;
+            break;
+        case 2:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_LINE;
+            break;
+        case 3:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_TRIANGLE;
+            break;
+        default:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_POLYGON;
+            break;
         }
         for (unsigned int i = 0; i < pcount; ++i) {
             f.mIndices[i] = cursor++;
@@ -1165,7 +1165,7 @@ unsigned int FBXConverter::ConvertMeshSingleMaterial(const MeshGeometry &mesh, c
                 const std::vector<aiVector3D> &curVertices = shapeGeometry->GetVertices();
                 const std::vector<aiVector3D> &curNormals = shapeGeometry->GetNormals();
                 const std::vector<unsigned int> &curIndices = shapeGeometry->GetIndices();
-                //losing channel name if using shapeGeometry->Name()
+                // losing channel name if using shapeGeometry->Name()
                 animMesh->mName.Set(FixAnimMeshName(blendShapeChannel->Name()));
                 for (size_t j = 0; j < curIndices.size(); j++) {
                     const unsigned int curIndex = curIndices.at(j);
@@ -1338,18 +1338,18 @@ unsigned int FBXConverter::ConvertMeshMultiMaterial(const MeshGeometry &mesh, co
         f.mNumIndices = pcount;
         f.mIndices = new unsigned int[pcount];
         switch (pcount) {
-            case 1:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_POINT;
-                break;
-            case 2:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_LINE;
-                break;
-            case 3:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_TRIANGLE;
-                break;
-            default:
-                out_mesh->mPrimitiveTypes |= aiPrimitiveType_POLYGON;
-                break;
+        case 1:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_POINT;
+            break;
+        case 2:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_LINE;
+            break;
+        case 3:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_TRIANGLE;
+            break;
+        default:
+            out_mesh->mPrimitiveTypes |= aiPrimitiveType_POLYGON;
+            break;
         }
         for (unsigned int i = 0; i < pcount; ++i, ++cursor, ++in_cursor) {
             f.mIndices[i] = cursor;
@@ -1531,7 +1531,7 @@ void FBXConverter::ConvertWeights(aiMesh *out, const MeshGeometry &geo,
 
 const aiNode *GetNodeByName(aiNode *current_node) {
     aiNode *iter = current_node;
-    //printf("Child count: %d", iter->mNumChildren);
+    // printf("Child count: %d", iter->mNumChildren);
     return iter;
 }
 
@@ -1719,8 +1719,8 @@ aiString FBXConverter::GetTexturePath(const Texture *tex) {
 
     const Video *media = tex->Media();
     if (media != nullptr) {
-        bool textureReady = false; //tells if our texture is ready (if it was loaded or if it was found)
-        unsigned int index=0;
+        bool textureReady = false; // tells if our texture is ready (if it was loaded or if it was found)
+        unsigned int index = 0;
 
         VideoMap::const_iterator it = textures_converted.find(media);
         if (it != textures_converted.end()) {
@@ -1803,7 +1803,7 @@ void FBXConverter::TrySetTextureProperties(aiMaterial *out_mat, const TextureMap
                         }
 
                         const MatIndexArray &mats = meshGeom->GetMaterialIndices();
-                        MatIndexArray::const_iterator curIt = std::find(mats.begin(), mats.end(), (int) matIndex);
+                        MatIndexArray::const_iterator curIt = std::find(mats.begin(), mats.end(), (int)matIndex);
                         if (curIt == mats.end()) {
                             continue;
                         }
@@ -1828,7 +1828,7 @@ void FBXConverter::TrySetTextureProperties(aiMaterial *out_mat, const TextureMap
                             uvIndex = index;
                         } else {
                             FBXImporter::LogWarn("the UV channel named ", uvSet,
-                                                 " appears at different positions in meshes, results will be wrong");
+                                    " appears at different positions in meshes, results will be wrong");
                         }
                     }
                 } else {
@@ -1923,8 +1923,8 @@ void FBXConverter::TrySetTextureProperties(aiMaterial *out_mat, const LayeredTex
                         }
 
                         const MatIndexArray &mats = meshGeom->GetMaterialIndices();
-                        MatIndexArray::const_iterator curIt = std::find(mats.begin(), mats.end(), (int) matIndex);
-                        if ( curIt == mats.end()) {
+                        MatIndexArray::const_iterator curIt = std::find(mats.begin(), mats.end(), (int)matIndex);
+                        if (curIt == mats.end()) {
                             continue;
                         }
 
@@ -1948,7 +1948,7 @@ void FBXConverter::TrySetTextureProperties(aiMaterial *out_mat, const LayeredTex
                             uvIndex = index;
                         } else {
                             FBXImporter::LogWarn("the UV channel named ", uvSet,
-                                                 " appears at different positions in meshes, results will be wrong");
+                                    " appears at different positions in meshes, results will be wrong");
                         }
                     }
                 } else {
@@ -1998,7 +1998,7 @@ void FBXConverter::SetTextureProperties(aiMaterial *out_mat, const TextureMap &_
     TrySetTextureProperties(out_mat, _textures, "TransparencyFactor", aiTextureType_OPACITY, mesh);
     TrySetTextureProperties(out_mat, _textures, "EmissiveFactor", aiTextureType_EMISSIVE, mesh);
     TrySetTextureProperties(out_mat, _textures, "ReflectionFactor", aiTextureType_METALNESS, mesh);
-    //Maya counterparts
+    // Maya counterparts
     TrySetTextureProperties(out_mat, _textures, "Maya|DiffuseTexture", aiTextureType_DIFFUSE, mesh);
     TrySetTextureProperties(out_mat, _textures, "Maya|NormalTexture", aiTextureType_NORMALS, mesh);
     TrySetTextureProperties(out_mat, _textures, "Maya|SpecularTexture", aiTextureType_SPECULAR, mesh);
@@ -2045,12 +2045,10 @@ void FBXConverter::SetTextureProperties(aiMaterial *out_mat, const TextureMap &_
         if (useGlossiness == 1) {
             TrySetTextureProperties(out_mat, _textures, "3dsMax|main|roughness_map", aiTextureType_SHININESS, mesh);
             TrySetTextureProperties(out_mat, _textures, "3dsMax|main|glossiness_map", aiTextureType_SHININESS, mesh);
-        }
-        else if (useGlossiness == 2) {
+        } else if (useGlossiness == 2) {
             TrySetTextureProperties(out_mat, _textures, "3dsMax|main|roughness_map", aiTextureType_DIFFUSE_ROUGHNESS, mesh);
             TrySetTextureProperties(out_mat, _textures, "3dsMax|main|glossiness_map", aiTextureType_DIFFUSE_ROUGHNESS, mesh);
-        }
-        else {
+        } else {
             FBXImporter::LogWarn("A 3dsMax Pbr Material must have a useGlossiness value to correctly interpret roughness and glossiness textures.");
         }
     }
@@ -2138,7 +2136,7 @@ void FBXConverter::SetShadingPropertiesCommon(aiMaterial *out_mat, const Propert
         if (ok) {
             out_mat->AddProperty(&emissiveColor, 1, AI_MATKEY_COLOR_EMISSIVE);
         }
-     }
+    }
 
     const aiColor3D &Ambient = GetColorPropertyFromMaterial(props, "Ambient", ok);
     if (ok) {
@@ -2423,49 +2421,49 @@ void FBXConverter::SetShadingPropertiesRaw(aiMaterial *out_mat, const PropertyTa
 
 double FBXConverter::FrameRateToDouble(FileGlobalSettings::FrameRate fp, double customFPSVal) {
     switch (fp) {
-        case FileGlobalSettings::FrameRate_DEFAULT:
-            return 1.0;
+    case FileGlobalSettings::FrameRate_DEFAULT:
+        return 1.0;
 
-        case FileGlobalSettings::FrameRate_120:
-            return 120.0;
+    case FileGlobalSettings::FrameRate_120:
+        return 120.0;
 
-        case FileGlobalSettings::FrameRate_100:
-            return 100.0;
+    case FileGlobalSettings::FrameRate_100:
+        return 100.0;
 
-        case FileGlobalSettings::FrameRate_60:
-            return 60.0;
+    case FileGlobalSettings::FrameRate_60:
+        return 60.0;
 
-        case FileGlobalSettings::FrameRate_50:
-            return 50.0;
+    case FileGlobalSettings::FrameRate_50:
+        return 50.0;
 
-        case FileGlobalSettings::FrameRate_48:
-            return 48.0;
+    case FileGlobalSettings::FrameRate_48:
+        return 48.0;
 
-        case FileGlobalSettings::FrameRate_30:
-        case FileGlobalSettings::FrameRate_30_DROP:
-            return 30.0;
+    case FileGlobalSettings::FrameRate_30:
+    case FileGlobalSettings::FrameRate_30_DROP:
+        return 30.0;
 
-        case FileGlobalSettings::FrameRate_NTSC_DROP_FRAME:
-        case FileGlobalSettings::FrameRate_NTSC_FULL_FRAME:
-            return 29.9700262;
+    case FileGlobalSettings::FrameRate_NTSC_DROP_FRAME:
+    case FileGlobalSettings::FrameRate_NTSC_FULL_FRAME:
+        return 29.9700262;
 
-        case FileGlobalSettings::FrameRate_PAL:
-            return 25.0;
+    case FileGlobalSettings::FrameRate_PAL:
+        return 25.0;
 
-        case FileGlobalSettings::FrameRate_CINEMA:
-            return 24.0;
+    case FileGlobalSettings::FrameRate_CINEMA:
+        return 24.0;
 
-        case FileGlobalSettings::FrameRate_1000:
-            return 1000.0;
+    case FileGlobalSettings::FrameRate_1000:
+        return 1000.0;
 
-        case FileGlobalSettings::FrameRate_CINEMA_ND:
-            return 23.976;
+    case FileGlobalSettings::FrameRate_CINEMA_ND:
+        return 23.976;
 
-        case FileGlobalSettings::FrameRate_CUSTOM:
-            return customFPSVal;
+    case FileGlobalSettings::FrameRate_CUSTOM:
+        return customFPSVal;
 
-        case FileGlobalSettings::FrameRate_MAX: // this is to silence compiler warnings
-            break;
+    case FileGlobalSettings::FrameRate_MAX: // this is to silence compiler warnings
+        break;
     }
 
     ai_assert(false);
@@ -2660,7 +2658,7 @@ void FBXConverter::ConvertAnimationStack(const AnimationStack &st) {
         }
     }
 
-    // for some mysterious reason, mDuration is simply the maximum key -- the
+    // for some mysterious reason,  is simply the maximum key -- the
     // validator always assumes animations to start at zero.
     anim->mDuration = stop_time_fps - start_time_fps;
     anim->mTicksPerSecond = anim_fps;
@@ -2828,13 +2826,12 @@ void FBXConverter::GenerateNodeAnimations(std::vector<aiNodeAnim *> &node_anims,
     // be invoked _later_ (animations come first). If this node has only rotation,
     // scaling and translation _and_ there are no animated other components either,
     // we can use a single node and also a single node animation channel.
-    if( !has_complex && !NeedsComplexTransformationChain(target)) {
-        aiNodeAnim* const nd = GenerateSimpleNodeAnim(fixed_name, target, chain,
+    if (!has_complex && !NeedsComplexTransformationChain(target)) {
+        aiNodeAnim *const nd = GenerateSimpleNodeAnim(fixed_name, target, chain,
                 node_property_map.end(),
                 start, stop,
                 max_time,
-                min_time
-        );
+                min_time);
 
         ai_assert(nd);
         if (nd->mNumPositionKeys == 0 && nd->mNumRotationKeys == 0 && nd->mNumScalingKeys == 0) {
@@ -2864,97 +2861,97 @@ void FBXConverter::GenerateNodeAnimations(std::vector<aiNodeAnim *> &node_anims,
 
             aiNodeAnim *na = nullptr;
             switch (comp) {
-                case TransformationComp_Rotation:
-                case TransformationComp_PreRotation:
-                case TransformationComp_PostRotation:
-                case TransformationComp_GeometricRotation:
-                    na = GenerateRotationNodeAnim(chain_name,
+            case TransformationComp_Rotation:
+            case TransformationComp_PreRotation:
+            case TransformationComp_PostRotation:
+            case TransformationComp_GeometricRotation:
+                na = GenerateRotationNodeAnim(chain_name,
+                        target,
+                        (*chain[i]).second,
+                        layer_map,
+                        start, stop,
+                        max_time,
+                        min_time);
+
+                break;
+
+            case TransformationComp_RotationOffset:
+            case TransformationComp_RotationPivot:
+            case TransformationComp_ScalingOffset:
+            case TransformationComp_ScalingPivot:
+            case TransformationComp_Translation:
+            case TransformationComp_GeometricTranslation:
+                na = GenerateTranslationNodeAnim(chain_name,
+                        target,
+                        (*chain[i]).second,
+                        layer_map,
+                        start, stop,
+                        max_time,
+                        min_time);
+
+                // pivoting requires us to generate an implicit inverse channel to undo the pivot translation
+                if (comp == TransformationComp_RotationPivot) {
+                    const std::string &invName = NameTransformationChainNode(fixed_name,
+                            TransformationComp_RotationPivotInverse);
+
+                    aiNodeAnim *const inv = GenerateTranslationNodeAnim(invName,
                             target,
                             (*chain[i]).second,
                             layer_map,
                             start, stop,
                             max_time,
-                            min_time);
+                            min_time,
+                            true);
 
-                    break;
-
-                case TransformationComp_RotationOffset:
-                case TransformationComp_RotationPivot:
-                case TransformationComp_ScalingOffset:
-                case TransformationComp_ScalingPivot:
-                case TransformationComp_Translation:
-                case TransformationComp_GeometricTranslation:
-                    na = GenerateTranslationNodeAnim(chain_name,
-                            target,
-                            (*chain[i]).second,
-                            layer_map,
-                            start, stop,
-                            max_time,
-                            min_time);
-
-                    // pivoting requires us to generate an implicit inverse channel to undo the pivot translation
-                    if (comp == TransformationComp_RotationPivot) {
-                        const std::string &invName = NameTransformationChainNode(fixed_name,
-                                TransformationComp_RotationPivotInverse);
-
-                        aiNodeAnim *const inv = GenerateTranslationNodeAnim(invName,
-                                target,
-                                (*chain[i]).second,
-                                layer_map,
-                                start, stop,
-                                max_time,
-                                min_time,
-                                true);
-
-                        ai_assert(inv);
-                        if (inv->mNumPositionKeys == 0 && inv->mNumRotationKeys == 0 && inv->mNumScalingKeys == 0) {
-                            delete inv;
-                        } else {
-                            node_anims.push_back(inv);
-                        }
-
-                        ai_assert(TransformationComp_RotationPivotInverse > i);
-                        flags |= bit << (TransformationComp_RotationPivotInverse - i);
-                    } else if (comp == TransformationComp_ScalingPivot) {
-                        const std::string &invName = NameTransformationChainNode(fixed_name,
-                                TransformationComp_ScalingPivotInverse);
-
-                        aiNodeAnim *const inv = GenerateTranslationNodeAnim(invName,
-                                target,
-                                (*chain[i]).second,
-                                layer_map,
-                                start, stop,
-                                max_time,
-                                min_time,
-                                true);
-
-                        ai_assert(inv);
-                        if (inv->mNumPositionKeys == 0 && inv->mNumRotationKeys == 0 && inv->mNumScalingKeys == 0) {
-                            delete inv;
-                        } else {
-                            node_anims.push_back(inv);
-                        }
-
-                        ai_assert(TransformationComp_RotationPivotInverse > i);
-                        flags |= bit << (TransformationComp_RotationPivotInverse - i);
+                    ai_assert(inv);
+                    if (inv->mNumPositionKeys == 0 && inv->mNumRotationKeys == 0 && inv->mNumScalingKeys == 0) {
+                        delete inv;
+                    } else {
+                        node_anims.push_back(inv);
                     }
 
-                    break;
+                    ai_assert(TransformationComp_RotationPivotInverse > i);
+                    flags |= bit << (TransformationComp_RotationPivotInverse - i);
+                } else if (comp == TransformationComp_ScalingPivot) {
+                    const std::string &invName = NameTransformationChainNode(fixed_name,
+                            TransformationComp_ScalingPivotInverse);
 
-                case TransformationComp_Scaling:
-                case TransformationComp_GeometricScaling:
-                    na = GenerateScalingNodeAnim(chain_name,
+                    aiNodeAnim *const inv = GenerateTranslationNodeAnim(invName,
                             target,
                             (*chain[i]).second,
                             layer_map,
                             start, stop,
                             max_time,
-                            min_time);
+                            min_time,
+                            true);
 
-                    break;
+                    ai_assert(inv);
+                    if (inv->mNumPositionKeys == 0 && inv->mNumRotationKeys == 0 && inv->mNumScalingKeys == 0) {
+                        delete inv;
+                    } else {
+                        node_anims.push_back(inv);
+                    }
 
-                default:
-                    ai_assert(false);
+                    ai_assert(TransformationComp_RotationPivotInverse > i);
+                    flags |= bit << (TransformationComp_RotationPivotInverse - i);
+                }
+
+                break;
+
+            case TransformationComp_Scaling:
+            case TransformationComp_GeometricScaling:
+                na = GenerateScalingNodeAnim(chain_name,
+                        target,
+                        (*chain[i]).second,
+                        layer_map,
+                        start, stop,
+                        max_time,
+                        min_time);
+
+                break;
+
+            default:
+                ai_assert(false);
             }
 
             ai_assert(na);
@@ -3107,14 +3104,13 @@ aiNodeAnim *FBXConverter::GenerateTranslationNodeAnim(const std::string &name,
     return na.release();
 }
 
-aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
-        const Model& target,
+aiNodeAnim *FBXConverter::GenerateSimpleNodeAnim(const std::string &name,
+        const Model &target,
         NodeMap::const_iterator chain[TransformationComp_MAXIMUM],
         NodeMap::const_iterator iterEnd,
         int64_t start, int64_t stop,
-        double& maxTime,
-        double& minTime)
-{
+        double &maxTime,
+        double &minTime) {
     std::unique_ptr<aiNodeAnim> na(new aiNodeAnim());
     na->mNodeName.Set(name);
 
@@ -3128,15 +3124,14 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
         if (chain[i] == iterEnd)
             continue;
 
-        if (i == TransformationComp_Rotation || i == TransformationComp_PreRotation
-                || i == TransformationComp_PostRotation || i == TransformationComp_GeometricRotation) {
+        if (i == TransformationComp_Rotation || i == TransformationComp_PreRotation || i == TransformationComp_PostRotation || i == TransformationComp_GeometricRotation) {
             keyframeLists[i] = GetRotationKeyframeList((*chain[i]).second, start, stop);
         } else {
             keyframeLists[i] = GetKeyframeList((*chain[i]).second, start, stop);
         }
 
         for (KeyFrameListList::const_iterator it = keyframeLists[i].begin(); it != keyframeLists[i].end(); ++it) {
-            const KeyTimeList& times = *std::get<0>(*it);
+            const KeyTimeList &times = *std::get<0>(*it);
             keytimes.insert(keytimes.end(), times.begin(), times.end());
         }
 
@@ -3155,9 +3150,9 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
     aiVector3D defScale = PropertyGet(props, "Lcl Scaling", aiVector3D(1.f, 1.f, 1.f));
     aiQuaternion defQuat = EulerToQuaternion(defRotation, rotOrder);
 
-    aiVectorKey* outTranslations = new aiVectorKey[keyCount];
-    aiQuatKey* outRotations = new aiQuatKey[keyCount];
-    aiVectorKey* outScales = new aiVectorKey[keyCount];
+    aiVectorKey *outTranslations = new aiVectorKey[keyCount];
+    aiQuatKey *outRotations = new aiQuatKey[keyCount];
+    aiVectorKey *outScales = new aiVectorKey[keyCount];
 
     if (keyframeLists[TransformationComp_Translation].size() > 0) {
         InterpolateKeys(outTranslations, keytimes, keyframeLists[TransformationComp_Translation], defTranslate, maxTime, minTime);
@@ -3187,10 +3182,10 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
     }
 
     bool ok = false;
-    
+
     const float zero_epsilon = ai_epsilon;
 
-    const aiVector3D& preRotation = PropertyGet<aiVector3D>(props, "PreRotation", ok);
+    const aiVector3D &preRotation = PropertyGet<aiVector3D>(props, "PreRotation", ok);
     if (ok && preRotation.SquareLength() > zero_epsilon) {
         const aiQuaternion preQuat = EulerToQuaternion(preRotation, Model::RotOrder_EulerXYZ);
         for (size_t i = 0; i < keyCount; ++i) {
@@ -3198,7 +3193,7 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
         }
     }
 
-    const aiVector3D& postRotation = PropertyGet<aiVector3D>(props, "PostRotation", ok);
+    const aiVector3D &postRotation = PropertyGet<aiVector3D>(props, "PostRotation", ok);
     if (ok && postRotation.SquareLength() > zero_epsilon) {
         const aiQuaternion postQuat = EulerToQuaternion(postRotation, Model::RotOrder_EulerXYZ);
         for (size_t i = 0; i < keyCount; ++i) {
@@ -3208,9 +3203,9 @@ aiNodeAnim* FBXConverter::GenerateSimpleNodeAnim(const std::string& name,
 
     // convert TRS to SRT
     for (size_t i = 0; i < keyCount; ++i) {
-        aiQuaternion& r = outRotations[i].mValue;
-        aiVector3D& s = outScales[i].mValue;
-        aiVector3D& t = outTranslations[i].mValue;
+        aiQuaternion &r = outRotations[i].mValue;
+        aiVector3D &s = outScales[i].mValue;
+        aiVector3D &t = outTranslations[i].mValue;
 
         aiMatrix4x4 mat, temp;
         aiMatrix4x4::Translation(t, mat);
@@ -3235,7 +3230,7 @@ FBXConverter::KeyFrameListList FBXConverter::GetKeyframeList(const std::vector<c
     KeyFrameListList inputs;
     inputs.reserve(nodes.size() * 3);
 
-    //give some breathing room for rounding errors
+    // give some breathing room for rounding errors
     int64_t adj_start = start - 10000;
     int64_t adj_stop = stop + 10000;
 
@@ -3261,7 +3256,7 @@ FBXConverter::KeyFrameListList FBXConverter::GetKeyframeList(const std::vector<c
             ai_assert(curve->GetKeys().size() == curve->GetValues().size());
             ai_assert(curve->GetKeys().size());
 
-            //get values within the start/stop time window
+            // get values within the start/stop time window
             std::shared_ptr<KeyTimeList> Keys(new KeyTimeList());
             std::shared_ptr<KeyValueList> Values(new KeyValueList());
             const size_t count = curve->GetKeys().size();
@@ -3282,11 +3277,11 @@ FBXConverter::KeyFrameListList FBXConverter::GetKeyframeList(const std::vector<c
 }
 
 FBXConverter::KeyFrameListList FBXConverter::GetRotationKeyframeList(const std::vector<const AnimationCurveNode *> &nodes,
-                                                                     int64_t start, int64_t stop) {
+        int64_t start, int64_t stop) {
     KeyFrameListList inputs;
     inputs.reserve(nodes.size() * 3);
 
-    //give some breathing room for rounding errors
+    // give some breathing room for rounding errors
     const int64_t adj_start = start - 10000;
     const int64_t adj_stop = stop + 10000;
 
@@ -3312,7 +3307,7 @@ FBXConverter::KeyFrameListList FBXConverter::GetRotationKeyframeList(const std::
             ai_assert(curve->GetKeys().size() == curve->GetValues().size());
             ai_assert(curve->GetKeys().size());
 
-            //get values within the start/stop time window
+            // get values within the start/stop time window
             std::shared_ptr<KeyTimeList> Keys(new KeyTimeList());
             std::shared_ptr<KeyValueList> Values(new KeyValueList());
             const size_t count = curve->GetKeys().size();
@@ -3326,9 +3321,11 @@ FBXConverter::KeyFrameListList FBXConverter::GetRotationKeyframeList(const std::
                 float vc = curve->GetValues().at(1);
                 for (size_t n = 1; n < count; n++) {
                     while (std::abs(vc - vp) >= 180.0f) {
-                        float step = std::floor(float(tc - tp) / (vc - vp) * 179.0f);
+                        // float step = std::floor(float(tc - tp) / (vc - vp) * 179.0f);
+                        double step = std::floor(double(tc - tp) / std::abs(vc - vp) * 179.0f);
                         int64_t tnew = tp + int64_t(step);
-                        float vnew = vp + (vc - vp) * step / float(tc - tp);
+                        // float vnew = vp + (vc - vp) * step / float(tc - tp);
+                        float vnew = vp + (vc - vp) * float(step / (tc - tp));
                         if (tnew >= adj_start && tnew <= adj_stop) {
                             Keys->push_back(tnew);
                             Values->push_back(vnew);
@@ -3570,7 +3567,7 @@ void FBXConverter::ConvertGlobalSettings() {
     mSceneOut->mMetaData->Set(5, "CoordAxisSign", doc.GlobalSettings().CoordAxisSign());
     mSceneOut->mMetaData->Set(6, "OriginalUpAxis", doc.GlobalSettings().OriginalUpAxis());
     mSceneOut->mMetaData->Set(7, "OriginalUpAxisSign", doc.GlobalSettings().OriginalUpAxisSign());
-    //const double unitScaleFactor = (double)doc.GlobalSettings().UnitScaleFactor();
+    // const double unitScaleFactor = (double)doc.GlobalSettings().UnitScaleFactor();
     mSceneOut->mMetaData->Set(8, "UnitScaleFactor", doc.GlobalSettings().UnitScaleFactor());
     mSceneOut->mMetaData->Set(9, "OriginalUnitScaleFactor", doc.GlobalSettings().OriginalUnitScaleFactor());
     mSceneOut->mMetaData->Set(10, "AmbientColor", doc.GlobalSettings().AmbientColor());

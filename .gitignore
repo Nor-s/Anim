@@ -9,6 +9,3 @@ doxy2/
 tmp/
 
 .vs/
-
-external/
-external/assimp

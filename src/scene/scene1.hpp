@@ -50,6 +50,10 @@ public:
     virtual void add_model(const char *file_name) override
     {
         models_.emplace_back(std::make_shared<glcpp::Model>(file_name));
+        if (models_.back()->get_root_node() == nullptr) {
+            models_.pop_back();
+            return;
+        }
         if (std::filesystem::path(std::filesystem::u8path(file_name)).extension() != ".obj")
         {
             animator_->add_animation(file_name);
@@ -162,7 +166,7 @@ public:
         scene->mNumAnimations = 1;
         animator_->get_mutable_current_animation()->get_ai_animation(scene->mAnimations[0], scene->mRootNode);
         
-        if (AI_SUCCESS == exporter.Export(scene, "fbx", file_name.c_str())){
+        if (AI_SUCCESS == exporter.Export(scene, "gltf2", file_name.c_str())){
             return true;
         }
 

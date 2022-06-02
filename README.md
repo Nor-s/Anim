@@ -1,16 +1,9 @@
-# **Pixel3D**
+# **Pixel3D v0.0.4**
 
-3D Model to Pixel Art
+3D Model to Pixel Art with mediapipe
 
 ![](/screenshot/2022-05-01-1.05.03.png)
 
-## TODO
-
--   GUI 작업 (4)
-
--   object 셀렉트 (1)
-
--   그리드 평면 (1)
 
 ## external
 
@@ -97,9 +90,15 @@
 
 ### 5/28
 
--   add mediapipe open button
+-   Add mediapipe open button
 
     ![](/screenshot/animation22.gif)
+
+### 6/02
+
+- Add export button: glft2
+- Below is an screenshot in Blender.
+    ![](/screenshot/screenshot.gif)
 
 ## build
 
@@ -115,19 +114,13 @@ pacman -S cmake
 pacman -S mingw-w64-x86_64-cmake
 
 pacman -S mingw-w64-x86_64-ninja
-
-pacman -S mingw-w64-x86_64-glfw
-
-pacman -S mingw-w64-x86_64-glm
-
-pacman -S mingw-w64-x86_64-assimp
 ```
 
 -   MSYS2 환경변수 설정
 -   VSCODE에서 C++ 확장자 팩을 다운받고, CMAKE TOOL 세팅에서 GENERATOR 를 NINJA 선택.
--   `glt clone https://github.com/Nor-s/n-glcpp.git` 명령어로 레포를 받고
--   vscode 에서 n-glcpp 폴더를 열고, cmake 설정을하고 (gcc)
--   vscode 하단에 build 버튼 누르면 빌드된다.
+-   `glt clone  --recursive https://github.com/Nor-s/n-glcpp.git` 명령어로 레포를 받고
+-   vscode 에서 n-glcpp 폴더를 열고, cmake 설정 (gcc)
+-   vscode 하단에 build 버튼 눌러서 빌드.
 
 ## references
 

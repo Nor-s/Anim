@@ -47,7 +47,11 @@ namespace glcpp
         // aiProcess_MakeLeftHanded;
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
+            root_node_ = nullptr;
+
+#ifndef NDEBUG
             std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
+#endif
             return;
         }
         directory_ = std::filesystem::u8path(path);
@@ -83,7 +87,8 @@ namespace glcpp
         ai_node->mParent = parent_ai_node;
         ai_node->mNumChildren = model_node->childrens.size();
         ai_node->mChildren = new aiNode *[ai_node->mNumChildren];
-        for (int i = 0; i < ai_node->mNumChildren; i++)
+
+        for (unsigned int i = 0; i < ai_node->mNumChildren; i++)
         {
             ai_node->mChildren[i] = new aiNode();
             get_ai_node_for_anim(ai_node->mChildren[i], model_node->childrens[i].get(), ai_node);

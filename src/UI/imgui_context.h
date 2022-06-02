@@ -305,7 +305,7 @@ namespace ui
                 {
                     is_load_animation = true;
                     nfdchar_t *outPath;
-                    nfdfilteritem_t filterItem[1] = {{"model file", "dae,fbx,json,md5anim"}};
+                    nfdfilteritem_t filterItem[1] = {{"file", "dae,fbx,json,md5anim,collada,gltf"}};
                     nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
 
                     if (result == NFD_OKAY)
@@ -374,7 +374,33 @@ namespace ui
                 {
                     execute_process("./mp_gui/demo_gui", scene);
                 }
+                ImGui::SameLine();
 
+                if (ImGui::Button("export: gltf"))
+                {
+                    nfdchar_t* out_path;
+                    nfdfilteritem_t filter_item[1] = { {"anim", "gltf"} };
+                    nfdresult_t result = NFD_SaveDialog(&out_path, filter_item, 1, NULL, "anim.gltf");
+
+                    if (result == NFD_OKAY)
+                    {
+#ifdef NDEBUG
+                        puts("Success!");
+                        puts(out_path);
+#endif                    
+                        scene->to_fbx(out_path);
+                        NFD_FreePath(out_path);
+                    }
+                    else if (result != NFD_CANCEL)
+                    {
+#ifdef NDEBUG
+
+                        printf("Error: %s\n", NFD_GetError());
+#endif                    
+                    }
+
+                    NFD_Quit();
+                }
                 if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
                 {
                     // Timeline code here
@@ -520,7 +546,7 @@ namespace ui
                 if (ImGui::Button("load"))
                 {
                     nfdchar_t *out_path;
-                    nfdfilteritem_t filter_item[1] = {{"model file", "obj,dae,pmx,fbx,md5mesh"}};
+                    nfdfilteritem_t filter_item[1] = {{"model file", "obj,dae,pmx,fbx,md5mesh,gltf"}};
                     nfdresult_t result = NFD_OpenDialog(&out_path, filter_item, 1, NULL);
 
                     if (result == NFD_OKAY)

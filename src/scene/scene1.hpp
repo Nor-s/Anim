@@ -19,6 +19,8 @@
 #include <memory>
 #include <filesystem>
 
+#include <assimp/Exporter.hpp>
+
 namespace fs = std::filesystem;
 
 class Scene1 : public Scene
@@ -48,6 +50,10 @@ public:
     virtual void add_model(const char *file_name) override
     {
         models_.emplace_back(std::make_shared<glcpp::Model>(file_name));
+        if (models_.back()->get_root_node() == nullptr) {
+            models_.pop_back();
+            return;
+        }
         if (std::filesystem::path(std::filesystem::u8path(file_name)).extension() != ".obj")
         {
             animator_->add_animation(file_name);
@@ -150,7 +156,23 @@ public:
     {
         delta_time_ = dt;
     }
+    virtual bool to_fbx(const std::string& file_name) override {
+        Assimp::Exporter exporter;
+        aiScene* scene = new aiScene();
+        scene->mRootNode = new aiNode();
+        models_.back()->get_ai_root_node_for_anim(scene->mRootNode);
+        scene->mAnimations = new aiAnimation * [1];
+        scene->mAnimations[0] = new aiAnimation();
+        scene->mNumAnimations = 1;
+        animator_->get_mutable_current_animation()->get_ai_animation(scene->mAnimations[0], scene->mRootNode);
+        
+        if (AI_SUCCESS == exporter.Export(scene, "gltf2", file_name.c_str())){
+            return true;
+        }
 
+        std::cerr << exporter.GetErrorString() << std::endl;
+        return false;
+    }
 private:
     void init_option()
     {

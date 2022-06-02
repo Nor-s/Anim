@@ -4,9 +4,10 @@
 #include <string>
 #include <map>
 #include <memory>
+#include "bone.hpp"
+
 namespace glcpp
 {
-    class Bone;
     enum AnimationType
     {
         None,
@@ -51,7 +52,34 @@ namespace glcpp
         virtual void reload()
         {
         }
-
+        void get_ai_animation(aiAnimation* ai_anim, const aiNode* ai_root_node) {
+            std::filesystem::path p = std::filesystem::u8path(name_.c_str());
+            std::string anim_name = p.filename().string();
+            ai_anim->mName = aiString(anim_name);
+            ai_anim->mDuration = static_cast<double>(duration_);
+            ai_anim->mTicksPerSecond = static_cast<double>(ticks_per_second_);
+            unsigned int size = name_bone_map_.size();
+            aiNodeAnim** tmp_anim  = new aiNodeAnim * [size];
+            
+            int idx = 0;
+            for (auto& name_bone : name_bone_map_) {
+                const aiNode* node = ai_root_node->FindNode(name_bone.first.c_str());
+                if (node) {
+                      tmp_anim[idx] = new aiNodeAnim();
+                    auto channel = tmp_anim[idx++];
+                    name_bone.second->get_ai_node_anim(channel, node->mTransformation);
+                }
+            }
+          
+            ai_anim->mNumChannels = idx;
+            ai_anim->mChannels = new aiNodeAnim * [idx];
+            for (int i = 0; i < idx; i++) {
+                ai_anim->mChannels[i] = new aiNodeAnim();
+                ai_anim->mChannels[i] = tmp_anim[i];
+            }
+            delete[] tmp_anim;
+    
+        }
     protected:
         float duration_;
         int ticks_per_second_;

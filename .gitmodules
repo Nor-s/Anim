@@ -7,3 +7,6 @@
 [submodule "external/jsoncpp"]
 	path = external/jsoncpp
 	url = https://github.com/open-source-parsers/jsoncpp.git
+[submodule "external/assimp"]
+	path = external/assimp
+	url = https://github.com/Nor-s/assimp.git

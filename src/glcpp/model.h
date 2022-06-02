@@ -18,8 +18,8 @@ namespace glcpp
 {
     class Shader;
     // can't load "../"
-    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory);
-
+    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, const aiScene *scene);
+    void LoadMemory(const aiTexture *texture, unsigned int *id);
     struct BoneInfo
     {
         /*id is index in finalBoneMatrices*/
@@ -77,6 +77,8 @@ namespace glcpp
         int &get_mutable_bone_count();
         const ModelNode *get_root_node() const;
         std::shared_ptr<ModelNode> &get_mutable_root_node();
+        void get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node);
+        void get_ai_root_node_for_anim(aiNode *ai_node);
 
     private:
         // heirarchy
@@ -119,7 +121,7 @@ namespace glcpp
          */
         void process_bone(aiMesh *mesh, const aiScene *scene, std::vector<Vertex> &vertices);
 
-        std::vector<Texture> load_material_textures(aiMaterial *mat, aiTextureType type,
+        std::vector<Texture> load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                     std::string typeName);
     };
 };

@@ -47,7 +47,11 @@ namespace glcpp
         // aiProcess_MakeLeftHanded;
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
         {
+            root_node_ = nullptr;
+
+#ifndef NDEBUG
             std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
+#endif
             return;
         }
         directory_ = std::filesystem::u8path(path);
@@ -75,6 +79,24 @@ namespace glcpp
         {
             process_node(model_node->childrens[i], ai_node->mChildren[i], scene);
         }
+    }
+    void Model::get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node)
+    {
+        ai_node->mName = aiString(model_node->name.c_str());
+        ai_node->mTransformation = GlmMatToAiMat(model_node->initial_transformation);
+        ai_node->mParent = parent_ai_node;
+        ai_node->mNumChildren = model_node->childrens.size();
+        ai_node->mChildren = new aiNode *[ai_node->mNumChildren];
+
+        for (unsigned int i = 0; i < ai_node->mNumChildren; i++)
+        {
+            ai_node->mChildren[i] = new aiNode();
+            get_ai_node_for_anim(ai_node->mChildren[i], model_node->childrens[i].get(), ai_node);
+        }
+    }
+    void Model::get_ai_root_node_for_anim(aiNode *ai_root_node)
+    {
+        get_ai_node_for_anim(ai_root_node, root_node_.get(), NULL);
     }
 
     Mesh Model::process_mesh(aiMesh *mesh, const aiScene *scene)
@@ -116,16 +138,16 @@ namespace glcpp
         // process material
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
 
-        std::vector<Texture> diffuseMaps = load_material_textures(material, aiTextureType_DIFFUSE, "texture_diffuse");
+        std::vector<Texture> diffuseMaps = load_material_textures(material, scene, aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
 
-        std::vector<Texture> specularMaps = load_material_textures(material, aiTextureType_SPECULAR, "texture_specular");
+        std::vector<Texture> specularMaps = load_material_textures(material, scene, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 
-        std::vector<Texture> normalMaps = load_material_textures(material, aiTextureType_HEIGHT, "texture_normal");
+        std::vector<Texture> normalMaps = load_material_textures(material, scene, aiTextureType_HEIGHT, "texture_normal");
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
 
-        std::vector<Texture> heightMaps = load_material_textures(material, aiTextureType_AMBIENT, "texture_height");
+        std::vector<Texture> heightMaps = load_material_textures(material, scene, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
         return Mesh(vertices, indices, textures);
@@ -171,7 +193,7 @@ namespace glcpp
         }
     }
 
-    std::vector<Texture> Model::load_material_textures(aiMaterial *mat, aiTextureType type,
+    std::vector<Texture> Model::load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                        std::string typeName)
     {
         std::vector<Texture> textures;
@@ -192,7 +214,7 @@ namespace glcpp
             if (!skip)
             { // if texture hasn't been loaded already, load it
                 Texture texture;
-                texture.id = TextureFromFile(str.C_Str(), directory_);
+                texture.id = TextureFromFile(str.C_Str(), directory_, scene);
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture);
@@ -202,7 +224,7 @@ namespace glcpp
         return textures;
     }
 
-    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory)
+    unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, const aiScene *scene)
     {
         std::string filename(path);
         size_t idx = filename.find_first_of("/\\");
@@ -237,17 +259,70 @@ namespace glcpp
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-
-            stbi_image_free(data);
         }
         else
         {
-            std::cout << "Texture failed to load at path: "
-                      << ":" << path << "\n";
-            stbi_image_free(data);
+            if (auto texture = scene->GetEmbeddedTexture(path))
+            {
+                LoadMemory(texture, &textureID);
+            }
+            else
+            {
+#ifndef NDEBUG
+                std::cout << "Texture failed to load at path: "
+                          << ":" << path << "\n";
+#endif
+            }
         }
+        stbi_image_free(data);
 
         return textureID;
+    }
+    void LoadMemory(const aiTexture *texture, unsigned int *id)
+    {
+        if (!*id)
+            glGenTextures(1, id);
+        glBindTexture(GL_TEXTURE_2D, *id);
+
+        unsigned char *image_data = nullptr;
+        int width = 0, height = 0, components_per_pixel;
+        if (texture->mHeight == 0)
+        {
+            image_data = stbi_load_from_memory(reinterpret_cast<unsigned char *>(texture->pcData),
+                                               texture->mWidth,
+                                               &width,
+                                               &height,
+                                               &components_per_pixel,
+                                               0);
+        }
+        else
+        {
+            image_data = stbi_load_from_memory(reinterpret_cast<unsigned char *>(texture->pcData),
+                                               texture->mWidth * texture->mHeight,
+                                               &width,
+                                               &height,
+                                               &components_per_pixel, 0);
+        }
+
+        if (components_per_pixel == 3)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image_data);
+        }
+        else if (components_per_pixel == 4)
+        {
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+        }
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+        stbi_image_free(image_data);
     }
 }
 namespace glcpp

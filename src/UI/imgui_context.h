@@ -28,20 +28,60 @@
 #include "scene/scene.hpp"
 #include "imgui_json.h"
 #include "glcpp/utility.hpp"
+
+#ifdef _WIN32
+#include <windows.h>
+#include <stdio.h>
+#include <tchar.h>
+#endif 
+
 struct GLFWwindow;
 
 static void executeProcess(const char *process_name, std::string arg, bool *is_exit)
 {
     std::filesystem::path process = std::filesystem::u8path(process_name);
     std::string abs_process = std::filesystem::absolute(process).string();
-#ifdef _WIN32
-    abs_process += ".exe " + arg;
+#ifdef _WIN32    
+    abs_process += ".exe";
+
+    STARTUPINFOA si;
+    PROCESS_INFORMATION pi;
+    ZeroMemory(&si, sizeof(si));
+    si.cb = sizeof(si);
+    ZeroMemory(&pi, sizeof(pi));
+    LPDWORD ret_val = NULL;
+    LPTSTR szcmdline = _tcsdup(std::string(abs_process + " " + arg).c_str());
+
+    std::cout << abs_process << "\n";
+    if (!CreateProcess(abs_process.c_str(),   // No module name (use command line)
+        szcmdline,        // Command line
+        NULL,           // Process handle not inheritable
+        NULL,           // Thread handle not inheritable
+        FALSE,          // Set handle inheritance to FALSE
+        CREATE_NO_WINDOW,              // No creation flags
+        NULL,           // Use parent's environment block
+        NULL,           // Use parent's starting directory 
+        &si,            // Pointer to STARTUPINFO structure
+        &pi)           // Pointer to PROCESS_INFORMATION structure
+        ) {
+        printf("CreateProcess failed (%d).\n", GetLastError());
+        *is_exit = true;
+
+        return;
+    }
+    WaitForSingleObject(pi.hProcess, INFINITE);
+    CloseHandle(pi.hProcess);
+    CloseHandle(pi.hThread);
+
 #else
-    abs_process += " " + arg;
-#endif
+    abs_process += " " + arg;    
     system(abs_process.c_str());
+
+#endif
     *is_exit = true;
 }
+
+
 namespace ui
 {
 

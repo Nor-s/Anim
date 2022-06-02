@@ -29,7 +29,7 @@ add_library(glcpp STATIC ${GLCPP_SRC})
 set(LIBs STB_IMAGE imgui glad nfd jsoncpp_static)
 
 if(MSVC)
-  target_compile_options(glcpp PUBLIC  "/utf-8")
+   target_compile_options(glcpp PUBLIC  "/utf-8")
   if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
     target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
   endif()

@@ -108,7 +108,9 @@ public:
         auto error = glGetError();
         if (error != GL_NO_ERROR)
         {
-            std::cout << error << "\n";
+#ifndef NDEBUG
+            std::cout << error << std::endl;
+#endif
         }
     }
     virtual void draw() override

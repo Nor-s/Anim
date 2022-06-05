@@ -51,6 +51,9 @@ namespace glcpp
         }
         virtual void reload()
         {
+#ifndef NDEBUG
+            std::cout << "reload:anim"<<std::endl;
+#endif
         }
         void get_ai_animation(aiAnimation* ai_anim, const aiNode* ai_root_node) {
             std::filesystem::path p = std::filesystem::u8path(name_.c_str());

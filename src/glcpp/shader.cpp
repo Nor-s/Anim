@@ -43,7 +43,9 @@ namespace glcpp
         }
         catch (std::ifstream::failure &e)
         {
+#ifndef NDEBUG
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << "\n";
+#endif
         }
         const char *vShaderCode = vertexCode.c_str();
         const char *fShaderCode = fragmentCode.c_str();
@@ -164,8 +166,10 @@ namespace glcpp
             if (!success)
             {
                 glGetShaderInfoLog(shader, 1024, NULL, infoLog);
+#ifndef NDEBUG
                 std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
                           << infoLog << "\n -- --------------------------------------------------- -- " << "\n";
+#endif
             }
         }
         else
@@ -174,8 +178,10 @@ namespace glcpp
             if (!success)
             {
                 glGetProgramInfoLog(shader, 1024, NULL, infoLog);
+#ifndef NDEBUG
                 std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
                           << infoLog << "\n -- --------------------------------------------------- -- " << "\n";
+#endif
             }
         }
     }

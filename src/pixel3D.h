@@ -8,7 +8,6 @@
 #include <vector>
 #include "UI/imgui_context.h"
 #include "scene/scene1.hpp"
-#include "scene/scene2.hpp"
 
 #include <filesystem>
 #include "glcpp/application.hpp"
@@ -134,43 +133,43 @@ public:
     static void mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
     {
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-        if (app->is_pressed)
+        if (app->is_pressed_)
         {
-            app->scene_->get_camera()->ProcessMouseMovement((static_cast<float>(yposIn) - app->prev_mouse.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse.x) / 3.6f);
-            app->prev_mouse.x = xposIn;
-            app->prev_mouse.y = yposIn;
+            app->scene_->get_camera()->ProcessMouseMovement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
+            app->prev_mouse_.x = xposIn;
+            app->prev_mouse_.y = yposIn;
         }
-        if (app->is_pressed_scroll)
+        if (app->is_pressed_scroll_)
         {
-            app->scene_->get_camera()->ProcessMouseScrollPress((static_cast<float>(yposIn) - app->prev_mouse.y), (static_cast<float>(xposIn) - app->prev_mouse.x), app->delta_frame_);
-            app->prev_mouse.x = xposIn;
-            app->prev_mouse.y = yposIn;
+            app->scene_->get_camera()->ProcessMouseScrollPress((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
+            app->prev_mouse_.x = xposIn;
+            app->prev_mouse_.y = yposIn;
         }
-        app->cur_mouse.x = xposIn;
-        app->cur_mouse.y = yposIn;
+        app->cur_mouse_.x = xposIn;
+        app->cur_mouse_.y = yposIn;
     }
     static void mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
     {
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
         if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene"))
         {
-            app->prev_mouse.x = app->cur_mouse.x;
-            app->prev_mouse.y = app->cur_mouse.y;
-            app->is_pressed = true;
+            app->prev_mouse_.x = app->cur_mouse_.x;
+            app->prev_mouse_.y = app->cur_mouse_.y;
+            app->is_pressed_ = true;
         }
         else
         {
-            app->is_pressed = false;
+            app->is_pressed_ = false;
         }
         if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene"))
         {
-            app->prev_mouse.x = app->cur_mouse.x;
-            app->prev_mouse.y = app->cur_mouse.y;
-            app->is_pressed_scroll = true;
+            app->prev_mouse_.x = app->cur_mouse_.x;
+            app->prev_mouse_.y = app->cur_mouse_.y;
+            app->is_pressed_scroll_ = true;
         }
         else
         {
-            app->is_pressed_scroll = false;
+            app->is_pressed_scroll_ = false;
         }
     }
 
@@ -188,9 +187,9 @@ private:
     float fps_ = 0.0f;
     int frames_ = 0;
     // mouse event
-    bool is_pressed = false;
-    bool is_pressed_scroll = false;
-    glm::vec2 prev_mouse{-1.0f, -1.0f}, cur_mouse{-1.0f, -1.0f};
+    bool is_pressed_ = false;
+    bool is_pressed_scroll_ = false;
+    glm::vec2 prev_mouse_{-1.0f, -1.0f}, cur_mouse_{-1.0f, -1.0f};
     std::unique_ptr<ui::ImGuiContext> imgui_;
     std::unique_ptr<Scene1> scene_;
 };

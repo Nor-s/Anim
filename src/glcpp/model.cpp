@@ -110,7 +110,9 @@ namespace glcpp
         {
             Vertex vertex;
             vertex.set_position(AiVecToGlmVec(mesh->mVertices[i]));
-            vertex.set_normal(AiVecToGlmVec(mesh->mNormals[i]));
+            if (mesh->mNormals) {
+                vertex.set_normal(AiVecToGlmVec(mesh->mNormals[i]));
+            }
             if (mesh->mTextureCoords[0])
             {
                 vertex.set_texture_coords(glm::vec2{mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y});

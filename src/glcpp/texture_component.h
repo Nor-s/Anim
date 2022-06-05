@@ -70,7 +70,6 @@ namespace glcpp
 
                 return true;
             }
-            printf("Can't load texture from '%s' - %s\n", file_name_.c_str(), stbi_failure_reason());
             return false;
         }
 

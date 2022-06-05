@@ -34,7 +34,9 @@ namespace glcpp
 
             if (!scene || !scene->mRootNode || !scene->HasAnimations())
             {
-                std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << "\n";
+#ifndef NDEBUG
+                std::cout << "ERROR::ASSIMP::" << importer.GetErrorString() << std::endl;
+#endif
             }
             else
             {

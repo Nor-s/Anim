@@ -60,6 +60,9 @@ namespace glcpp
 
     void reload() override
     {
+#ifndef NDEBUG
+        std::cout << "relaod: json" << std::endl;
+#endif
       destroy();
       init();
     }
@@ -76,6 +79,9 @@ namespace glcpp
       {
         type = AnimationType::Json;
         Json::Value root;
+#ifndef NDEBUG
+        std::cout << "init json: " << name_ << std::endl;
+#endif
         std::ifstream anim_stream(std::filesystem::u8path((name_).c_str()), std::ifstream::in | std::ifstream::binary);
         anim_stream >> root;
         if (anim_stream.is_open())
@@ -92,9 +98,10 @@ namespace glcpp
       }
       catch (std::exception &e)
       {
-        std::cout << e.what() << std::endl;
 
-#ifndef NDEBUG
+#ifndef NDEBUG        
+          std::cout << e.what() << std::endl;
+
 #endif
       }
     }

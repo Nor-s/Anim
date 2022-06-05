@@ -36,8 +36,12 @@ namespace glcpp
             }
             else
             {
+#ifndef NDEBUG
+
                 std::cout << "Cubemap tex failed to load at path: " << faces_[i] << std::endl;
+#endif
             }
+
             stbi_image_free(data);
         }
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

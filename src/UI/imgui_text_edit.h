@@ -135,18 +135,14 @@ public: // Load Fonts
 
                         if (result == NFD_OKAY)
                         {
-                            puts("Success!");
-                            puts(outPath);
                             open(outPath);
                             NFD_FreePath(outPath);
                         }
                         else if (result == NFD_CANCEL)
                         {
-                            puts("User pressed cancel.");
                         }
                         else
                         {
-                            printf("Error: %s\n", NFD_GetError());
                         }
 
                         NFD_Quit();

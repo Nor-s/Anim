@@ -29,56 +29,36 @@
 #include "imgui_json.h"
 #include "glcpp/utility.hpp"
 
-#ifdef _WIN32
-#include <windows.h>
-#include <stdio.h>
-#include <tchar.h>
-#endif 
+#include <atomic>
 
 struct GLFWwindow;
 
-static void executeProcess(const char *process_name, std::string arg, bool *is_exit)
+static void executeProcess(const char *process_name, std::string arg, std::atomic<bool>& done)
 {
+#ifndef NDEBUG    
+    std::cout << "begin: executeProcess-----------------\n";
+#endif
     std::filesystem::path process = std::filesystem::u8path(process_name);
     std::string abs_process = std::filesystem::absolute(process).string();
 #ifdef _WIN32    
     abs_process += ".exe";
-
-    STARTUPINFOA si;
-    PROCESS_INFORMATION pi;
-    ZeroMemory(&si, sizeof(si));
-    si.cb = sizeof(si);
-    ZeroMemory(&pi, sizeof(pi));
-    LPDWORD ret_val = NULL;
-    LPTSTR szcmdline = _tcsdup(std::string(abs_process + " " + arg).c_str());
-
-    std::cout << abs_process << "\n";
-    if (!CreateProcess(abs_process.c_str(),   // No module name (use command line)
-        szcmdline,        // Command line
-        NULL,           // Process handle not inheritable
-        NULL,           // Thread handle not inheritable
-        FALSE,          // Set handle inheritance to FALSE
-        CREATE_NO_WINDOW,              // No creation flags
-        NULL,           // Use parent's environment block
-        NULL,           // Use parent's starting directory 
-        &si,            // Pointer to STARTUPINFO structure
-        &pi)           // Pointer to PROCESS_INFORMATION structure
-        ) {
-        printf("CreateProcess failed (%d).\n", GetLastError());
-        *is_exit = true;
-
-        return;
-    }
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hProcess);
-    CloseHandle(pi.hThread);
-
-#else
-    abs_process += " " + arg;    
-    system(abs_process.c_str());
-
+#endif   
+    abs_process += " " + arg;   
+    try {
+        system(abs_process.c_str());
+#ifndef NDEBUG    
+        std::cout << "end: executeProcess-----------------" << std::endl;
 #endif
-    *is_exit = true;
+        done = true;
+    }
+    catch (std::exception& e) {
+#ifndef NDEBUG    
+
+        std::cout << e.what()<<std::endl;
+#endif
+
+        done = true;
+    }
 }
 
 
@@ -107,9 +87,9 @@ namespace ui
         }
         void shutdown()
         {
-            if (thread_for_process_open.joinable())
+            if (thread_for_process_open_.joinable())
             {
-                thread_for_process_open.detach();
+                thread_for_process_open_.detach();
             }
             ImGui_ImplOpenGL3_Shutdown();
             ImGui_ImplGlfw_Shutdown();
@@ -350,18 +330,14 @@ namespace ui
 
                     if (result == NFD_OKAY)
                     {
-                        puts("Success!");
-                        puts(outPath);
                         animator->add_animation(outPath);
                         NFD_FreePath(outPath);
                     }
                     else if (result == NFD_CANCEL)
                     {
-                        puts("User pressed cancel.");
                     }
                     else
                     {
-                        printf("Error: %s\n", NFD_GetError());
                     }
 
                     NFD_Quit();
@@ -424,19 +400,11 @@ namespace ui
 
                     if (result == NFD_OKAY)
                     {
-#ifdef NDEBUG
-                        puts("Success!");
-                        puts(out_path);
-#endif                    
                         scene->to_fbx(out_path);
                         NFD_FreePath(out_path);
                     }
                     else if (result != NFD_CANCEL)
                     {
-#ifdef NDEBUG
-
-                        printf("Error: %s\n", NFD_GetError());
-#endif                    
                     }
 
                     NFD_Quit();
@@ -591,17 +559,12 @@ namespace ui
 
                     if (result == NFD_OKAY)
                     {
-#ifdef NDEBUG
-                        puts("Success!");
-                        puts(out_path);
-#endif
                         scene->add_model(out_path);
                         ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
                         NFD_FreePath(out_path);
                     }
                     else if (result != NFD_CANCEL)
                     {
-                        printf("Error: %s\n", NFD_GetError());
                     }
 
                     NFD_Quit();
@@ -846,24 +809,37 @@ namespace ui
 
         bool execute_process(const char *process_name, Scene *scene)
         {
-            static bool is_exit = true;
-            if (is_exit)
-            {
-                is_exit = false;
+#ifndef NDEBUG
+            std::cout << "click btn\n";
+#endif
+            if (atomic_for_process_open_)
+            {  
+                atomic_for_process_open_ = false;
+                if (thread_for_process_open_.joinable()) {
+#ifndef NDEBUG
+                    std::cout << "begin: thread.join\n";
+#endif
+                    thread_for_process_open_.join();
+#ifndef NDEBUG
+                    std::cout << "end: thread.join\n";
+#endif
+                }
                 ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
 
-                if (thread_for_process_open.joinable())
-                {
-                    thread_for_process_open.join();
-                }
                 std::filesystem::path path_default_model = std::filesystem::u8path("model.json");
                 std::filesystem::path path_default_anim = std::filesystem::u8path( "anim.json");
                 std::string arg = "--arg1 " + std::filesystem::absolute(path_default_model).string() + " --arg2 " +
                                   std::filesystem::absolute(path_default_anim).string();
-
-                thread_for_process_open = std::thread(executeProcess, process_name, arg, &is_exit);
+               
+                thread_for_process_open_ = std::thread(executeProcess, process_name, arg, std::ref(atomic_for_process_open_));
 
                 return true;
+            }
+            else {
+#ifndef NDEBUG
+
+                std::cout << "The process is running.\n";
+#endif
             }
             return false;
         }
@@ -871,7 +847,8 @@ namespace ui
     private:
         std::map<std::string, std::unique_ptr<ImguiSceneWindow>> scene_map_;
         ImGuiTextEditor text_editor_;
-        std::thread thread_for_process_open;
+        std::thread thread_for_process_open_;
+        std::atomic<bool> atomic_for_process_open_{true};
     };
 }
 

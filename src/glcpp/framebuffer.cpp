@@ -16,8 +16,11 @@ namespace glcpp
         attach_color_attachment_texture();
         attach_depth24_stencil8_RBO();
         set_quad_VAO();
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+#ifndef NDEBUG
             std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+#endif
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 

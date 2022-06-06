@@ -11,7 +11,7 @@ endif()
 project(
   n-glcpp
   LANGUAGES CXX
-  VERSION 0.0.3)
+  VERSION 0.0.5)
 set(CMAKE_CXX_STANDARD 17)
 
 if(APPLE)
@@ -46,7 +46,7 @@ file(COPY resources DESTINATION ${CMAKE_BINARY_DIR}/bin)
 if (APPLE)
   # file(COPY gui DESTINATION ${CMAKE_BINARY_DIR}/bin)
 else()
-  file(COPY mp_gui DESTINATION ${CMAKE_BINARY_DIR}/bin)
+  file(COPY mp2mm DESTINATION ${CMAKE_BINARY_DIR}/bin)
 endif()
 
 message(STATUS "Compiler")

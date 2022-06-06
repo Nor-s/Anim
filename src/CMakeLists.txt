@@ -28,11 +28,12 @@ add_library(glcpp STATIC ${GLCPP_SRC})
 
 set(LIBs STB_IMAGE imgui glad nfd jsoncpp_static)
 
+
 if(MSVC)
    target_compile_options(glcpp PUBLIC  "/utf-8")
-#  if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
-    # target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
- # endif()
+  if (CMAKE_BUILD_TYPE MATCHES Release)
+    target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+ endif()
   target_link_libraries(glcpp PUBLIC ${LIBs} glm assimp::assimp)
   target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
 
@@ -62,14 +63,13 @@ add_executable(pixel3D
 ./scene/scene.hpp
 ./scene/scene1.hpp
 )
-
 if(MSVC)
   message("------------------MSVC")
   target_compile_options(pixel3D PUBLIC   "/utf-8")#  target_link_options(pixel3D PUBLIC "/INCREMENTAL")
-  #if (CMAKE_BUILD_TYPE EQUAL "RELEASE")
-   #   message("--------------release")
-      # target_link_options(pixel3D PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
- # endif()
+  if (CMAKE_BUILD_TYPE  MATCHES Release)
+     message("--------------release")
+      target_link_options(pixel3D PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+  endif()
   target_link_libraries(pixel3D  glcpp)
 elseif(APPLE)
   message("------------------APPLE")

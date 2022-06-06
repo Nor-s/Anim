@@ -388,7 +388,7 @@ namespace ui
                 ImGui::SameLine();
                 if (ImGui::Button("Mediapipe Open"))
                 {
-                    execute_process("./mp_gui/demo_gui", scene);
+                    execute_process("./mp2mm/mp2mm", scene);
                 }
                 ImGui::SameLine();
 

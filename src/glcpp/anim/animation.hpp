@@ -5,6 +5,7 @@
 #include <map>
 #include <memory>
 #include "bone.hpp"
+#include <filesystem>
 
 namespace glcpp
 {

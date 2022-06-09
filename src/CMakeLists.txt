@@ -38,16 +38,16 @@ if(MSVC)
   target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
 
 
-elseif(APPLE)
+elseif(WIN32)
+    target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -static)
+
+    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
+    target_link_libraries(glcpp PUBLIC ${LIBs} assimp::assimp glm -lpthread -lgdi32 -lopengl32 -static)
+else()
     target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
     target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
     target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm::glm -ldl -lpthread)
-else()
-    target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -static)
-
-    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
-    target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm -lpthread -lgdi32 -lopengl32 -static)
 endif()
 
 
@@ -71,14 +71,14 @@ if(MSVC)
       target_link_options(pixel3D PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
   endif()
   target_link_libraries(pixel3D  glcpp)
-elseif(APPLE)
-  message("------------------APPLE")
-    target_link_libraries(pixel3D  glcpp)
-else()
+elseif(WIN32)
     message("------------------GCC or...")
     target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17 -static)
     target_link_libraries(pixel3D  glcpp)
     target_include_directories(pixel3D  PUBLIC ./)
+else()
+   message("------------------APPLE")
+    target_link_libraries(pixel3D  glcpp)
 endif()
 
 

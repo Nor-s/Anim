@@ -104,7 +104,7 @@
 
 ### windows10, 11
 
--   MSYS2를 설치하고 아래 패키지 다운
+-   install MSYS2, git, vscode
 
 ```
 pacman -S mingw-w64-x86_64-gcc
@@ -114,13 +114,14 @@ pacman -S cmake
 pacman -S mingw-w64-x86_64-cmake
 
 pacman -S mingw-w64-x86_64-ninja
+
+pacman -S mingw-w64-x86_64-assimp
 ```
 
--   MSYS2 환경변수 설정
--   VSCODE에서 C++ 확장자 팩을 다운받고, CMAKE TOOL 세팅에서 GENERATOR 를 NINJA 선택.
--   `glt clone  --recursive https://github.com/Nor-s/n-glcpp.git` 명령어로 레포를 받고
--   vscode 에서 n-glcpp 폴더를 열고, cmake 설정 (gcc)
--   vscode 하단에 build 버튼 눌러서 빌드.
+-   MSYS2 Environment variable setting
+-   VSCODE: C++ extension pack, CMAKE TOOL setting>GENERATOR>Ninja
+-   `glt clone  --recursive https://github.com/Nor-s/Pixel3D.git`
+
 
 ## references
 

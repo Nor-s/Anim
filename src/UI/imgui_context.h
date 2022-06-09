@@ -384,7 +384,9 @@ namespace ui
                     }
                 }
                 ImGui::SameLine();
-                ImGui::InputFloat("fps", &fps);
+                float input_fps = fps;
+                ImGui::InputFloat("fps", &input_fps);
+                fps = input_fps;
                 ImGui::SameLine();
                 if (ImGui::Button("Mediapipe Open"))
                 {

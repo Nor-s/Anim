@@ -13,7 +13,9 @@ project(
   LANGUAGES CXX
   VERSION 0.0.5)
 set(CMAKE_CXX_STANDARD 17)
-
+if (UNIX AND NOT APPLE)
+    set(CMAKE_MAKE_PROGRAM /usr/bin/ninja CACHE FILEPATH "")
+endif()
 if(APPLE)
   get_property(RULE_LAUNCH_COMPILE GLOBAL PROPERTY RULE_LAUNCH_COMPILE)
   if(RULE_LAUNCH_COMPILE AND CMAKE_GENERATOR STREQUAL "Xcode")
@@ -81,10 +83,8 @@ if(WIN32)
   if(MSVC) 
     message("find assimp")
     add_subdirectory(external/assimp/)
-
-    
-    # find_package(assimp CONFIG REQUIRED)
   else()          
+    # find_package(assimp CONFIG REQUIRED)
     message("ASSIMP")
     add_subdirectory(external/assimp/)
   endif()

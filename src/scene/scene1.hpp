@@ -38,11 +38,13 @@ public:
     }
     virtual ~Scene1() = default;
 
+
     virtual void init_framebuffer(uint32_t width, uint32_t height) override
     {
         set_size(width, height);
         framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
         skybox_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
+        grid_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
         init_pixelate_framebuffer(width_, height_);
     }
 
@@ -91,18 +93,31 @@ public:
         pixelate_framebuffer_->pre_draw(models_.back(), *model_shader_, view_, projection_);
 
         glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
+       
+        grid_shader_->setMat4("view", view_);
+        grid_shader_->setMat4("projection", projection_);
+        grid_framebuffer_->draw(*grid_shader_);
+ 
+      
         // TODO: glClearColor를 먼저 호출해야 framebuffer_에 적용되는 이유?
         framebuffer_->bind();
         {
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    
+
+            grid_shader_->setMat4("view", view_);
+            grid_shader_->setMat4("projection", projection_);
+            grid_framebuffer_->draw(*grid_shader_); 
             if (imgui_option_.get_flag(skyblur_flag_idx_))
             {
-                skybox_framebuffer_->draw(*framebuffer_blur_shader_);
+               skybox_framebuffer_->draw(*framebuffer_blur_shader_);
                 // skybox_->draw(view_, projection_);
             }
-            pixelate_framebuffer_->draw();
+      
+
+            pixelate_framebuffer_->draw();            
+
         }
         framebuffer_->unbind();
         auto error = glGetError();
@@ -179,7 +194,7 @@ private:
     void init_option()
     {
         outline_flag_idx_ = imgui_option_.push_flag("outline", true);
-        skyblur_flag_idx_ = imgui_option_.push_flag("skybox blur", true);
+        skyblur_flag_idx_ = imgui_option_.push_flag("skybox blur", false);
         pixelate_value_idx_ = imgui_option_.push_int_property("pixelate", 1, 1, 64);
         outline_color_idx_ = imgui_option_.push_color3_property("outline", {0.0f, 0.0f, 0.0f});
     }
@@ -204,6 +219,7 @@ private:
         framebuffer_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
         framebuffer_blur_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/skybox_blur.fs");
         outline_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/outline_framebuffer.vs", "./resources/shaders/outline_framebuffer.fs");
+        grid_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/grid.vs", "./resources/shaders/grid.fs");
     }
     void init_model()
     {
@@ -227,7 +243,7 @@ private:
     }
     void set_view_and_projection()
     {
-        projection_ = glm::perspective(glm::radians(camera_->Zoom), framebuffer_->get_aspect(), 0.1f, 10000.0f);
+        projection_ = glm::perspective(glm::radians(camera_->Zoom), framebuffer_->get_aspect(), 0.01f, 10000.0f);
         view_ = camera_->GetViewMatrix();
     }
     // TODO: !safe
@@ -282,9 +298,11 @@ private:
     std::shared_ptr<glcpp::Shader> outline_shader_;
     std::shared_ptr<glcpp::Shader> framebuffer_shader_;
     std::shared_ptr<glcpp::Shader> framebuffer_blur_shader_;
+    std::shared_ptr<glcpp::Shader> grid_shader_;
     std::shared_ptr<glcpp::Camera> camera_;
     std::shared_ptr<glcpp::Framebuffer> framebuffer_;
     std::shared_ptr<glcpp::Framebuffer> skybox_framebuffer_;
+    std::shared_ptr<glcpp::Framebuffer> grid_framebuffer_;
     std::shared_ptr<PixelateFramebuffer> pixelate_framebuffer_;
     glm::mat4 projection_ = glm::mat4(1.0f);
     glm::mat4 view_ = glm::mat4(1.0f);

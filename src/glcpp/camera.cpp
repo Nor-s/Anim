@@ -54,9 +54,9 @@ namespace glcpp
     void Camera::ProcessMouseScroll(float yoffset)
     {
         if (yoffset > 0)
-            Position += Front * MovementSpeed;
+            Position += Front * MovementSpeed *0.5f;
         if (yoffset < 0)
-            Position -= Front * MovementSpeed;
+            Position -= Front * MovementSpeed * 0.5f;
     }
     void Camera::ProcessMouseScrollPress(float yoffset, float xoffset, float deltaTime)
     {

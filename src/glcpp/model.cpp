@@ -30,7 +30,6 @@ namespace glcpp
     {
         Assimp::Importer import;
         unsigned int assimp_read_flag = aiProcess_Triangulate |
-                                        aiProcess_SortByPType |
                                         aiProcess_GenUVCoords |
                                         aiProcess_OptimizeMeshes |
                                         aiProcess_ValidateDataStructure |

@@ -83,6 +83,8 @@ namespace glcpp
             stbi_write_png(file_name.c_str(), width_, height_, 4, pixels, 0);
         else if (format == GL_RGB)
             stbi_write_png(file_name.c_str(), width_, height_, 3, pixels, 0);
+
+        free(pixels);
     }
 
     void Framebuffer::create_framebuffer()

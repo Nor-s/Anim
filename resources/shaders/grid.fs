@@ -1,4 +1,4 @@
-#version 330
+#version 430 core
 
 out vec4 color;
 
@@ -41,18 +41,16 @@ void main() {
 
     gl_FragDepth = computeDepth(R);
     float linearDepth = computeLinearDepth(R);
-    float fading = max(0, (0.5 - linearDepth));
-
+    float fading = max(0, (0.7 - linearDepth));
+	
 	float c =
-		checkerboard(R.xz, 1) * 0.3 +
-		checkerboard(R.xz, 10) * 0.2 +
-		checkerboard(R.xz, 100) * 0.1 +
+		checkerboard(R.xz, 10) * 0.3 +
+		checkerboard(R.xz, 100) * 0.2 +
+		checkerboard(R.xz, 1000) * 0.1 +
 		0.1;
 	//c = c * float(t > 0);
 
-//	float spotlight = min(1.0, 1.5 - 0.02*length(R.xz));
-
-	color = vec4(vec3(c), 1);
+	color = vec4(vec3(c), 0.7);
     color.a *= fading;
 
     if (t<0) {

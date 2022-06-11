@@ -40,6 +40,7 @@ namespace glcpp
         assimp_read_flag |= aiProcess_LimitBoneWeights;
         assimp_read_flag |= aiProcess_JoinIdenticalVertices;
         assimp_read_flag |= aiProcess_FlipWindingOrder;
+
         import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
         const aiScene *scene = import.ReadFile(path, assimp_read_flag);
 
@@ -62,9 +63,14 @@ namespace glcpp
     {
         node_count_++;
         std::string model_name = std::string(ai_node->mName.C_Str());
+        model_name = model_name.substr(model_name.find_last_of(':') + 1);
+        auto find_mixamorig = model_name.find("mixamorig");
+        if (find_mixamorig != std::string::npos) {
+            model_name = model_name.substr(find_mixamorig + 9);
+        }
         model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
                                        TransformComponent(),
-                                       model_name.substr(model_name.find_last_of(':') + 1),
+                                       model_name,
                                        ai_node->mNumChildren));
 
         // process all the node's meshes (if any)
@@ -164,9 +170,14 @@ namespace glcpp
             int bone_id = -1;
             std::string bone_name = mesh->mBones[bone_idx]->mName.C_Str();
             bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
+            auto find_mixamorig = bone_name.find("mixamorig");
+            if (find_mixamorig != std::string::npos) 
+            {
+                    bone_name = bone_name.substr(find_mixamorig +  9);
+            }
             if (bone_info_map.find(bone_name) == bone_info_map.end())
             {
-                BoneInfo new_bone_info;
+                BoneInfo new_bone_info{};
                 new_bone_info.id = bone_count;
                 new_bone_info.offset = AiMatToGlmMat(mesh->mBones[bone_idx]->mOffsetMatrix);
                 bone_info_map[bone_name] = new_bone_info;

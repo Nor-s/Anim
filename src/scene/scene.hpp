@@ -32,7 +32,7 @@ public:
     virtual bool to_fbx(const std::string& file_name) {
         return false;
     }
-
+    virtual void set_delta_time(float dt) = 0;
 protected:
     ui::ImguiOption imgui_option_;
 };

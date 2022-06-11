@@ -27,8 +27,8 @@ private:
 
 public:
     virtual ~Pixel3D()
-    {
-        scene_.reset();
+    {       
+        scenes_.clear();
         imgui_.reset();
     }
     virtual void init(int width, int height, const std::string &title) override
@@ -36,7 +36,9 @@ public:
         stbi_set_flip_vertically_on_load(true);
         init_window(width, height, title);
         init_ui();
-        scene_.reset(new Scene1(width, height));
+        for (int i = 0; i < 2; i++) {
+            scenes_.emplace_back(new Scene1(width, height));
+        }
     }
     void init_window(int width, int height, const std::string &title)
     {
@@ -75,7 +77,9 @@ public:
             //  std::cout<<"\n"; // or //std::endl or // std::cout<<" "; fflush(stdout)
             delta_frame_ = current_time - last_frame_;
             last_frame_ = current_time;
-            scene_->set_delta_time(delta_frame_);
+            for (auto& scene : scenes_) {
+                scene->set_delta_time(delta_frame_);
+            }
 
             processInput(window_->get_handle());
 
@@ -83,12 +87,22 @@ public:
             {
                 imgui_->begin();
                 imgui_->draw_dock();
+                int idx = 1;
+                for (auto& scene : scenes_) {
+                    scene->pre_draw();   
+                    imgui_->draw_scene("scene" + std::to_string(idx), scene.get());
+                    idx++;
+                }
+                
+                for (size_t i = 0; scenes_.size() > i; i++) {
+                    if (imgui_->is_window_hovered("scene" + std::to_string(i + 1))) {
+                        current_scene_idx_ = i;
+                    }                        
+                }
 
-                scene_->pre_draw();
-                imgui_->draw_property(scene_.get());
-
-                imgui_->draw_scene("scene", scene_.get());
-                imgui_->ShowStatus(fps_);
+                imgui_->draw_property(scenes_[current_scene_idx_].get());         
+                imgui_->draw_animation_bar(scenes_, scenes_[current_scene_idx_].get());
+                imgui_->show_status(fps_);
 
                 imgui_->end();
             }
@@ -99,8 +113,9 @@ public:
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, window_->get_width(), window_->get_height());
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);        
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
     }
     void post_draw()
     {
@@ -114,13 +129,13 @@ public:
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
         if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::FORWARD, delta_frame_);
+            scenes_[current_scene_idx_]->get_camera()->ProcessKeyboard(glcpp::FORWARD, delta_frame_);
         if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::BACKWARD, delta_frame_);
+            scenes_[current_scene_idx_]->get_camera()->ProcessKeyboard(glcpp::BACKWARD, delta_frame_);
         if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::LEFT, delta_frame_);
+            scenes_[current_scene_idx_]->get_camera()->ProcessKeyboard(glcpp::LEFT, delta_frame_);
         if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            scene_->get_camera()->ProcessKeyboard(glcpp::RIGHT, delta_frame_);
+            scenes_[current_scene_idx_]->get_camera()->ProcessKeyboard(glcpp::RIGHT, delta_frame_);
     }
 
     static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -135,13 +150,13 @@ public:
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
         if (app->is_pressed_)
         {
-            app->scene_->get_camera()->ProcessMouseMovement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
+            app->scenes_[app->current_scene_idx_]->get_camera()->ProcessMouseMovement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
             app->prev_mouse_.x = xposIn;
             app->prev_mouse_.y = yposIn;
         }
         if (app->is_pressed_scroll_)
         {
-            app->scene_->get_camera()->ProcessMouseScrollPress((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
+            app->scenes_[app->current_scene_idx_]->get_camera()->ProcessMouseScrollPress((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
             app->prev_mouse_.x = xposIn;
             app->prev_mouse_.y = yposIn;
         }
@@ -151,7 +166,7 @@ public:
     static void mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
     {
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene"))
+        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
         {
             app->prev_mouse_.x = app->cur_mouse_.x;
             app->prev_mouse_.y = app->cur_mouse_.y;
@@ -161,7 +176,7 @@ public:
         {
             app->is_pressed_ = false;
         }
-        if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene"))
+        if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
         {
             app->prev_mouse_.x = app->cur_mouse_.x;
             app->prev_mouse_.y = app->cur_mouse_.y;
@@ -176,8 +191,8 @@ public:
     static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
     {
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-        if (app->scene_ && app->imgui_ && app->imgui_->is_window_hovered("scene"))
-            app->scene_->get_camera()->ProcessMouseScroll(yoffset);
+        if (app->scenes_[app->current_scene_idx_] && app->imgui_ && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+            app->scenes_[app->current_scene_idx_]->get_camera()->ProcessMouseScroll(yoffset);
     }
 
 private:
@@ -191,7 +206,8 @@ private:
     bool is_pressed_scroll_ = false;
     glm::vec2 prev_mouse_{-1.0f, -1.0f}, cur_mouse_{-1.0f, -1.0f};
     std::unique_ptr<ui::ImGuiContext> imgui_;
-    std::unique_ptr<Scene1> scene_;
+    std::vector<std::shared_ptr<Scene>> scenes_;
+    int current_scene_idx_ = 0;
 };
 
 #endif

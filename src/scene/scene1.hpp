@@ -90,34 +90,25 @@ public:
                 model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
         }
 
-        pixelate_framebuffer_->pre_draw(models_.back(), *model_shader_, view_, projection_);
-
-        glClearColor(0.3f, 0.3f, 0.3f, 1.0f);
-       
-        grid_shader_->setMat4("view", view_);
-        grid_shader_->setMat4("projection", projection_);
-        grid_framebuffer_->draw(*grid_shader_);
+        pixelate_framebuffer_->pre_draw(models_.back(), *model_shader_, view_, projection_);            
+        glDisable(GL_DEPTH_TEST);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   
+        framebuffer_->bind_with_depth({0.4f, 0.4f, 0.4f, 1.0f});
+        {      
  
-      
-        // TODO: glClearColor를 먼저 호출해야 framebuffer_에 적용되는 이유?
-        framebuffer_->bind();
-        {
-            glDisable(GL_DEPTH_TEST);
-            glEnable(GL_BLEND);
-            glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);    
-
-            grid_shader_->setMat4("view", view_);
-            grid_shader_->setMat4("projection", projection_);
-            grid_framebuffer_->draw(*grid_shader_); 
             if (imgui_option_.get_flag(skyblur_flag_idx_))
             {
                skybox_framebuffer_->draw(*framebuffer_blur_shader_);
                 // skybox_->draw(view_, projection_);
+            }    
+            else {
+                grid_shader_->use();
+                grid_shader_->setMat4("view", view_);
+                grid_shader_->setMat4("projection", projection_);               
+                grid_framebuffer_->draw(*grid_shader_);
             }
-      
-
-            pixelate_framebuffer_->draw();            
-
+            pixelate_framebuffer_->draw();
         }
         framebuffer_->unbind();
         auto error = glGetError();
@@ -169,7 +160,7 @@ public:
     {
         return *pixelate_framebuffer_;
     }
-    void set_delta_time(float dt)
+    void set_delta_time(float dt) override
     {
         delta_time_ = dt;
     }
@@ -240,6 +231,7 @@ private:
         skybox_framebuffer_->bind_with_depth();
         skybox_->draw(view_, projection_);
         skybox_framebuffer_->unbind();
+        
     }
     void set_view_and_projection()
     {

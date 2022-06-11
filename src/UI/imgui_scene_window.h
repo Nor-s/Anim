@@ -18,7 +18,8 @@ namespace ui
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             width_ = viewportPanelSize.x;
             height_ = viewportPanelSize.y;
-            is_hovered_ = (ImGui::IsWindowHovered()) ? true : false;
+            
+            is_hovered_ = (ImGui::IsWindowFocused() && ImGui::IsWindowHovered()) ? true : false;
             before_height_ = height_;
             before_width_ = width_;
             // add rendered texture to ImGUI scene window

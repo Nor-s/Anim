@@ -63,7 +63,10 @@ namespace glcpp
                 auto channel = animation->mChannels[i];
                 std::string bone_name = channel->mNodeName.C_Str();
                 bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
-
+                auto find_mixamorig = bone_name.find("mixamorig");
+                if (find_mixamorig != std::string::npos) {
+                    bone_name = bone_name.substr(find_mixamorig +  9);
+                }
                 const aiNode *node = root_node->FindNode(channel->mNodeName);
                 if (node)
                 {

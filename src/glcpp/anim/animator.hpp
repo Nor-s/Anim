@@ -36,8 +36,14 @@ namespace glcpp
             {
                 if (!is_stop_)
                 {
-                    current_time_ += get_mutable_custom_tick_per_second() * dt;
-                    current_time_ = fmod(current_time_, get_custom_duration());
+                    current_time_ += fps_ * dt;
+                    if (current_time_ > get_custom_duration() && !is_loop_) {
+                        current_time_ =  get_custom_duration() -0.01f;
+                        is_stop_ = true;
+                    }
+                    else {
+                        current_time_ = fmod(current_time_, get_custom_duration());
+                    }
                 }
                 calculate_bone_transform(model, model->get_root_node(), glm::mat4(1.0f));
             }
@@ -82,10 +88,6 @@ namespace glcpp
         // TODO: How to implement retargeting (anim_binding * trs => anim_binding-1 * anim_binding * trs => trs, model_binding*trs)
         void play_animation(uint32_t animation_id)
         {
-            if (animation_id == current_animation_idx_)
-            {
-                return;
-            }
             if (animation_id < animations_.size())
             {
                 current_animation_idx_ = animation_id;
@@ -99,6 +101,7 @@ namespace glcpp
                 }
             }
             current_time_ = 0.0f;
+            fps_ = custom_tick_per_second_;
         }
 
         void calculate_bone_transform(const Model *model, const ModelNode *node, glm::mat4 parentTransform)
@@ -137,6 +140,9 @@ namespace glcpp
         {
             return is_stop_;
         }
+        float& get_mutable_fps() {
+            return fps_;
+        }
 
         float &get_mutable_custom_tick_per_second()
         {
@@ -163,6 +169,9 @@ namespace glcpp
         {
             current_time_ = static_cast<float>(frame);
         }
+        bool* get_mutable_pointer_is_loop() {
+            return &is_loop_;
+        }
         float get_origin_current_time(float time)
         {
             auto origin_tick_per_second = animations_[current_animation_idx_]->get_ticks_per_second();
@@ -177,6 +186,12 @@ namespace glcpp
             }
             return ret;
         }
+        void reload() {
+            if (current_animation_idx_ >= 0) {
+                animations_[current_animation_idx_]->reload();
+                play_animation(current_animation_idx_);
+            }
+        }
 
     private:
         std::vector<glm::mat4> final_bone_matrices_;
@@ -184,7 +199,9 @@ namespace glcpp
         uint32_t current_animation_idx_ = -1;
         float current_time_;
         bool is_stop_ = false;
+        bool is_loop_ = false;
         float custom_tick_per_second_ = 24.0f;
+        float fps_ = 24.0f;
     };
 }
 

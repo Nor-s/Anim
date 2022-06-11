@@ -98,7 +98,7 @@ namespace ui
         void init(GLFWwindow *window)
         {
             NFD_Init();
-            const char *glsl_version = "#version 330";
+            const char *glsl_version = "#version 430";
 
             IMGUI_CHECKVERSION();
             ImGui::CreateContext();
@@ -280,25 +280,25 @@ namespace ui
             }
             ImGui::End();
         }
-        void draw_animation_bar(Scene *scene)
+        void draw_animation_bar(std::vector<std::shared_ptr<Scene>> & scenes, Scene *scene)
         {
             static bool is_hovered_animation_zoom_slider = false;
             static bool m_pTransformOpen = true;
-            static std::string play_stop_button = "stop";
             static const char *current_item = nullptr;
             static float clicked_time = -1.0f;
             static uint32_t clicked_frame = 0;
             static glcpp::Bone *clicked_bone = nullptr;
             static bool is_load_animation = false;
             glcpp::Animator *animator = scene->get_mutable_animator();
-            bool &play = animator->get_mutable_is_stop();
+            bool &is_stop= animator->get_mutable_is_stop();
             std::vector<const char *> animation_items = animator->get_animation_name_list();
             bool is_json = (animator->get_mutable_current_animation()->get_type() == glcpp::AnimationType::Json);
             uint32_t currentFrame = animator->get_current_frame_num();
             uint32_t beforeFrame = currentFrame;
             uint32_t startFrame = 0;
             uint32_t endFrame = animator->get_custom_duration();
-            float &fps = animator->get_mutable_custom_tick_per_second();
+            float& fps = animator->get_mutable_fps();
+            float &tick_per_second = animator->get_mutable_custom_tick_per_second();
             std::vector<uint32_t> keys = {0, 0, 10, 24};
             ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
             if (is_hovered_animation_zoom_slider)
@@ -307,19 +307,31 @@ namespace ui
             }
             try
             {
-                ImGui::Begin("Animation bar", NULL, window_flags);
-                if (ImGui::Button(play_stop_button.c_str()))
-                {
-                    play = !play;
-                    if (play_stop_button == "play")
-                    {
-                        play_stop_button = "stop";
-                    }
-                    else
-                    {
-                        play_stop_button = "play";
+                ImGui::Begin("Animation bar", NULL, window_flags);                
+                if (ImGui::Button("All play")) {
+                    for (auto& scene : scenes) {
+                        scene->get_mutable_animator()->get_mutable_is_stop() = false;
+
+                        scene->get_mutable_animator()->set_current_frame_num_to_time(0);
                     }
                 }
+                ImGui::SameLine();
+                if (ImGui::Button("play"))
+                {
+                    is_stop= false;
+                    currentFrame = 0;
+                }
+                ImGui::SameLine();
+
+                if (ImGui::Button("stop"))
+                {
+                    is_stop= true;
+                }
+                ImGui::SameLine();
+                bool *p_is_loop = animator->get_mutable_pointer_is_loop();
+                ImGui::Checkbox("loop", p_is_loop);
+                
+
                 ImGui::SameLine();
                 if (ImGui::Button("load animation") && !is_load_animation)
                 {
@@ -344,50 +356,6 @@ namespace ui
                     is_load_animation = false;
                 }
                 ImGui::SameLine();
-                if (ImGui::BeginCombo("animations", current_item))
-                {
-                    for (size_t i = 0; i < animation_items.size(); i++)
-                    {
-
-                        bool is_selected = false;
-                        if (current_item != nullptr)
-                        {
-                            is_selected = (strcmp(current_item, animation_items[i]) == 0);
-                        }
-                        if (ImGui::Selectable(animation_items[i], is_selected))
-                        {
-                            current_item = animation_items[i];
-                            animator->play_animation(i);
-                        }
-                        if (is_selected)
-                        {
-                            ImGui::SetItemDefaultFocus();
-                        }
-                    }
-                    ImGui::EndCombo();
-                }
-                if (is_json)
-                {
-                    ImGui::SameLine();
-                    static bool edit_open = false;
-                    if (ImGui::Button("edit"))
-                    {
-                        text_editor_.open(animator->get_mutable_current_animation()->get_name());
-                        edit_open = true;
-                    }
-                    text_editor_.draw(&edit_open);
-
-                    ImGui::SameLine();
-                    if (ImGui::Button("reload"))
-                    {
-                        animator->get_mutable_current_animation()->reload();
-                    }
-                }
-                ImGui::SameLine();
-                float input_fps = fps;
-                ImGui::InputFloat("fps", &input_fps);
-                fps = input_fps;
-                ImGui::SameLine();
                 if (ImGui::Button("Mediapipe Open"))
                 {
                     execute_process("./mp2mm/mp2mm", scene);
@@ -411,6 +379,55 @@ namespace ui
 
                     NFD_Quit();
                 }
+                if (is_json)
+                {
+                    ImGui::SameLine();
+                    static bool edit_open = false;
+                    if (ImGui::Button("edit"))
+                    {
+                        text_editor_.open(animator->get_mutable_current_animation()->get_name());
+                        edit_open = true;
+                    }
+                    text_editor_.draw(&edit_open);
+
+                    ImGui::SameLine();
+                    if (ImGui::Button("reload"))
+                    {
+                        animator->reload();
+                    }
+                }
+                if (ImGui::BeginCombo("animations", current_item))
+                {
+                    for (size_t i = 0; i < animation_items.size(); i++)
+                    {
+
+                        bool is_selected = false;
+                        if (current_item != nullptr)
+                        {
+                            is_selected = (strcmp(current_item, animation_items[i]) == 0);
+                        }
+                        if (ImGui::Selectable(animation_items[i], is_selected))
+                        {
+                            current_item = animation_items[i];
+                            animator->play_animation(i);
+                        }
+                        if (is_selected)
+                        {
+                            ImGui::SetItemDefaultFocus();
+                        }
+                    }
+                    ImGui::EndCombo();
+                }
+                ImGui::SameLine();
+                float input_fps = fps;
+                ImGui::InputFloat("fps", &input_fps);
+                fps = input_fps;
+
+                ImGui::SameLine();
+                float input_tick_per_second = tick_per_second;
+                ImGui::InputFloat("scale", &input_tick_per_second);
+                tick_per_second = input_tick_per_second;
+
                 if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
                 {
                     // Timeline code here
@@ -448,8 +465,7 @@ namespace ui
                             ImVec2 vMin{0, 0};
                             ImVec2 vMax{0, 0};
                             currentFrame = clicked_frame;
-                            play = true;
-                            play_stop_button = "play";
+                            is_stop = true;
                             ImGui::OpenPopup("my_select_popup");
                             ImGui::SameLine();
                             if (ImGui::BeginPopup("my_select_popup"))
@@ -527,18 +543,7 @@ namespace ui
         void draw_property(Scene *scene)
         {
             static int count = 0;
-            ImGui::Begin("Debug");
-            {
-                if (ImGui::Button("get binding pose json"))
-                {
-                    ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
-                }
-                if (ImGui::Button("get animation to json"))
-                {
-                    ImguiJson::AnimationToJson("animation.json", scene->get_mutable_animator()->get_mutable_current_animation().get());
-                }
-            }
-            ImGui::End();
+
 
             // render your GUI
             ImGui::Begin("Model Property");
@@ -571,12 +576,21 @@ namespace ui
 
                     NFD_Quit();
                 }
+
+                if (ImGui::Button("get binding pose json"))
+                {
+                    ImguiJson::ModelBindingPoseToJson("model.json", scene->get_model().get());
+                }
+                if (ImGui::Button("get animation to json"))
+                {
+                    ImguiJson::AnimationToJson("animation.json", scene->get_mutable_animator()->get_mutable_current_animation().get());
+                }
             }
             ImGui::End();
 
             draw_model_hierarchy(scene->get_model()->get_mutable_root_node(), scene->get_mutable_animator());
-            draw_animation_bar(scene);
         }
+
         void process_option(ImguiOption &imgui_options)
         {
             auto &flags = imgui_options.get_flags();
@@ -608,9 +622,28 @@ namespace ui
             }
         }
         // Demonstrate creating a window covering the entire screen/viewport
-        void ShowStatus(float fps)
+        void show_status(float fps)
         {
-            static ImGuiWindowFlags flags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration;
+            static int corner = 0;
+
+            ImGuiWindowFlags flags = ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
+            if (corner != -1)
+            {
+                const float PAD = 0.0f;
+                const float PADX = 120.0f;
+                const ImGuiViewport* viewport = ImGui::GetMainViewport();
+                ImVec2 work_pos = viewport->WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
+                ImVec2 work_size = viewport->WorkSize;
+                ImVec2 window_pos, window_pos_pivot;
+                window_pos.x = (corner & 1) ? (work_pos.x + work_size.x - PADX) : (work_pos.x + PADX);
+                window_pos.y = (corner & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
+                window_pos_pivot.x = (corner & 1) ? 1.0f : 0.0f;
+                window_pos_pivot.y = (corner & 2) ? 1.0f : 0.0f;
+                ImGui::SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
+                ImGui::SetNextWindowViewport(viewport->ID);
+                flags |= ImGuiWindowFlags_NoMove;
+            }
+        //    ImGui::SetNextWindowBgAlpha(0.0f); // Transparent background
 
             // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
             // Based on your use case you may want one of the other.
@@ -757,8 +790,6 @@ namespace ui
                     }
                     ImGui::Separator();
 
-                    if (ImGui::MenuItem("Close", NULL, false, p_open != NULL))
-                        *p_open = false;
                     ImGui::EndMenu();
                 }
                 HelpMarker(

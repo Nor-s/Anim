@@ -138,19 +138,25 @@ namespace glcpp
         glViewport(0, 0, width_, height_);
     }
 
-    void Framebuffer::bind()
+    void Framebuffer::bind(const glm::vec4& color)
     {
         bind_without_clear();
+        glClearColor(color.x, color.y, color.z, color.a);
+
         glClear(GL_COLOR_BUFFER_BIT);
     }
-    void Framebuffer::bind_with_depth()
+    void Framebuffer::bind_with_depth(const glm::vec4& color)
     {
         bind_without_clear();
+        glClearColor(color.x, color.y, color.z, color.a);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
-    void Framebuffer::bind_with_depth_and_stencil()
+    void Framebuffer::bind_with_depth_and_stencil(const glm::vec4& color)
     {
         bind_without_clear();
+        glClearColor(color.x, color.y, color.z, color.a);
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
     }
     void Framebuffer::unbind()

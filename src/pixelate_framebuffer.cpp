@@ -27,8 +27,9 @@ PixelateFramebuffer::~PixelateFramebuffer()
 void PixelateFramebuffer::pre_draw(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
 {
     capture_rgba(model, shader, view, projection);
-    if (is_outline_)
+    if (is_outline_) {
         capture_outline();
+    }
 }
 void PixelateFramebuffer::draw()
 {
@@ -54,28 +55,24 @@ void PixelateFramebuffer::print_to_png(const std::string &file_name)
 }
 
 void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
-{
-    glBindFramebuffer(GL_FRAMEBUFFER, pixelate_framebuffer_->get_fbo());
-    {
-        glEnable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-        glViewport(0, 0, pixelate_framebuffer_->get_width(), pixelate_framebuffer_->get_height());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+{        
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    pixelate_framebuffer_->bind_with_depth({0.0f, 0.0f ,0.0f ,0.0f});
 
-        model->draw(shader, view, projection);
-    }
+    glViewport(0, 0, pixelate_framebuffer_->get_width(), pixelate_framebuffer_->get_height());
+    model->draw(shader, view, projection);
+    
     pixelate_framebuffer_->unbind();
+    glDisable(GL_DEPTH_TEST);
 }
 
 void PixelateFramebuffer::capture_outline()
-{
-    outline_framebuffer_->bind();
+{    
     glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    outline_framebuffer_->bind_with_depth({0.0f, 0.0f, 0.0f ,0.0f});
     outline_shader_->use();
     outline_shader_->setVec3("outline_color", outline_color_);
     pixelate_framebuffer_->draw(*outline_shader_);

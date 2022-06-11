@@ -2,7 +2,7 @@
 #define GLCPP_FRAMEBUFFER_H
 
 #include <glad/glad.h>
-
+#include <glm/glm.hpp>
 #include <string>
 
 namespace glcpp
@@ -22,9 +22,9 @@ namespace glcpp
         void draw(Shader &shader);
         void print_color_texture(const std::string &file_name, GLenum format = GL_RED);
         void bind_without_clear();
-        void bind();
-        void bind_with_depth();
-        void bind_with_depth_and_stencil();
+        void bind(const glm::vec4 &color = glm::vec4(0.2f,0.2f,0.2f,1.0f));
+        void bind_with_depth(const glm::vec4& color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+        void bind_with_depth_and_stencil(const glm::vec4& color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
         void unbind();
 
     private:

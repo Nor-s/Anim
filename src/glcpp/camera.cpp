@@ -22,6 +22,10 @@ namespace glcpp
         Pitch = pitch;
         updateCameraVectors();
     }
+    glm::vec3 Camera::GetCurrentPos() {
+        glm::mat4 mat = glm::inverse(GetViewMatrix());
+        return mat*glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
 
     // returns the view matrix calculated using Euler Angles and the LookAt Matrix
     glm::mat4 Camera::GetViewMatrix() const

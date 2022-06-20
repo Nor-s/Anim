@@ -8,3 +8,4 @@ doxy2/
 tmp/
 
 .vs/
+dist/

@@ -48,7 +48,9 @@ file(COPY resources DESTINATION ${CMAKE_BINARY_DIR}/bin)
 if (APPLE)
   # file(COPY gui DESTINATION ${CMAKE_BINARY_DIR}/bin)
 else()
-  file(COPY mp2mm DESTINATION ${CMAKE_BINARY_DIR}/bin)
+execute_process(COMMAND cmd /C python_build.bat
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+file(COPY ${CMAKE_CURRENT_LIST_DIR}/dist/mp2mm DESTINATION ${CMAKE_BINARY_DIR}/bin)
 endif()
 
 message(STATUS "Compiler")

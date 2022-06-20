@@ -1,7 +1,7 @@
 #ifndef SRC_SCENE_SCENE_H
 #define SRC_SCENE_SCENE_H
 
-#include "glcpp/transform_component.h"
+#include "glcpp/component/transform_component.h"
 #include "glcpp/model.h"
 #include "glcpp/framebuffer.h"
 #include "glcpp/camera.h"

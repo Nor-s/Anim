@@ -77,9 +77,9 @@ namespace glcpp
     };
     struct Texture
     {
-        unsigned int id;
-        std::string type;
-        std::string path;
+        unsigned int id{0};
+        std::string type{""};
+        std::string path{""};
     };
 
     class Mesh

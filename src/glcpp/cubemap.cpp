@@ -1,15 +1,16 @@
 #include "cubemap.h"
+#include "shader.h"
 #include <stb/stb_image.h>
 #include <stb/stb_image_write.h>
 
 namespace glcpp
 {
     Cubemap::Cubemap(std::vector<std::string> faces, std::string const &vert_path, std::string const &frag_path)
-        : faces_(faces), shader_(Shader(vert_path.c_str(), frag_path.c_str()))
+        : faces_(faces), shader_(new Shader(vert_path.c_str(), frag_path.c_str()))
     {
         load_cubemap();
-        shader_.use();
-        shader_.setInt("skybox", 0);
+        shader_->use();
+        shader_->set_int("skybox", 0);
         set_VAO();
     }
     Cubemap::~Cubemap()
@@ -55,10 +56,10 @@ namespace glcpp
     {
         // draw skybox as last
         glDepthFunc(GL_LEQUAL); // change depth function so depth test passes when values are equal to depth buffer's content
-        shader_.use();
+        shader_->use();
         // remove translation from the view matrix
-        shader_.setMat4("view", glm::mat4(glm::mat3(view)));
-        shader_.setMat4("projection", projection);
+        shader_->set_mat4("view", glm::mat4(glm::mat3(view)));
+        shader_->set_mat4("projection", projection);
         // skybox cube
         glBindVertexArray(VAO_);
         glActiveTexture(GL_TEXTURE0);

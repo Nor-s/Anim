@@ -77,7 +77,7 @@ namespace glcpp
     {
         return aiQuaternion(pOrientation.w, pOrientation.x, pOrientation.y, pOrientation.z);
     }
-    //return translate, rotattion, scale
+    //return translate, rotate, scale
     static inline std::tuple<glm::vec3, glm::quat, glm::vec3> DecomposeTransform(const glm::mat4 &transform)
     {
         glm::vec3 scale;
@@ -87,18 +87,6 @@ namespace glcpp
         glm::vec4 perspective;
         glm::decompose(transform, scale, rotation, translation, skew, perspective);
         return {translation, rotation, scale};
-    }
-    static inline std::wstring ConvertStringToWString(const std::string &s)
-    {
-        std::wstring ret;
-        ret.assign(s.begin(), s.end());
-        return ret;
-    }
-    static inline std::string ConvertWStringToString(const std::wstring &ws)
-    {
-        std::string ret;
-        ret.assign(ws.begin(), ws.end());
-        return ret;
     }
 }
 

@@ -15,7 +15,9 @@ set(GLCPP_SRC
     glcpp/framebuffer.cpp
     glcpp/framebuffer.h
     glcpp/application.hpp
-    glcpp/transform_component.h
+    "glcpp/component/transform_component.h"
+    "glcpp/component/transform_component.cpp"
+
     glcpp/utility.hpp
     glcpp/anim/bone.hpp
     glcpp/anim/animation.hpp

@@ -11,7 +11,7 @@
 #include <filesystem>
 #include <map>
 
-#include "transform_component.h"
+#include "component/transform_component.h"
 
 #include "mesh.h"
 namespace glcpp

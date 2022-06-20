@@ -13,7 +13,6 @@ namespace glcpp
     public:
         Framebuffer(uint32_t width, uint32_t height, GLenum format = GL_RGB);
         virtual ~Framebuffer();
-        void set_pixelate_factor(int factor);
         uint32_t get_fbo() const;
         uint32_t get_color_texture() const;
         uint32_t get_width() const;

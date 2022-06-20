@@ -2,16 +2,16 @@
 #define GLCPP_CUBEMAP_H
 
 #include <glad/glad.h>
-
-#include "shader.h"
+#include <glm/glm.hpp>
 
 #include <iostream>
 #include <vector>
 #include <string>
-#include <array>
+#include <memory>
 
 namespace glcpp
 {
+    class Shader;
     // TODO: shader 와 분리
     class Cubemap
     {
@@ -30,7 +30,7 @@ namespace glcpp
         uint32_t texture_id_;
         uint32_t VAO_;
         uint32_t VBO_;
-        Shader shader_;
+        std::unique_ptr<Shader> shader_;
         float vertices_[18 * 6] = {
             // positions
             -1.0f, 1.0f, -1.0f,

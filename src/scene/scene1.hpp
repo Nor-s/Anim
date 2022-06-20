@@ -9,7 +9,7 @@
 #include "glcpp/model.h"
 #include "glcpp/camera.h"
 #include "glcpp/framebuffer.h"
-#include "glcpp/transform_component.h"
+#include "glcpp/component/transform_component.h"
 #include "scene.hpp"
 #include "pixelate_framebuffer.h"
 #include "glcpp/anim/animator.hpp"
@@ -87,7 +87,7 @@ public:
             auto &transforms = animator_->get_final_bone_matrices();
             int size = static_cast<int>(transforms.size());
             for (int i = 0; i < size; ++i)
-                model_shader_->setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+                model_shader_->set_mat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
         }
 
         pixelate_framebuffer_->pre_draw(models_.back(), *model_shader_, view_, projection_);            
@@ -104,8 +104,8 @@ public:
             }    
             else {
                 grid_shader_->use();
-                grid_shader_->setMat4("view", view_);
-                grid_shader_->setMat4("projection", projection_);               
+                grid_shader_->set_mat4("view", view_);
+                grid_shader_->set_mat4("projection", projection_);               
                 grid_framebuffer_->draw(*grid_shader_);
             }
             pixelate_framebuffer_->draw();
@@ -235,8 +235,8 @@ private:
     }
     void set_view_and_projection()
     {
-        projection_ = glm::perspective(glm::radians(camera_->Zoom), framebuffer_->get_aspect(), 0.01f, 10000.0f);
-        view_ = camera_->GetViewMatrix();
+        projection_ = glm::perspective(glm::radians(camera_->zoom_), framebuffer_->get_aspect(), 0.01f, 10000.0f);
+        view_ = camera_->get_view_matrix();
     }
     // TODO: !safe
     virtual glcpp::Animator *get_mutable_animator() override

@@ -33,13 +33,10 @@ namespace glcpp
                                         aiProcess_GenUVCoords |
                                         aiProcess_OptimizeMeshes |
                                         aiProcess_ValidateDataStructure |
-                                        //  aiProcess_ConvertToLeftHanded |
-                                        // aiProcess_FlipUVs |
                                         aiProcess_GenNormals |
                                         aiProcess_CalcTangentSpace;
         assimp_read_flag |= aiProcess_LimitBoneWeights;
         assimp_read_flag |= aiProcess_JoinIdenticalVertices;
-        assimp_read_flag |= aiProcess_FlipWindingOrder;
 
         import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
         const aiScene *scene = import.ReadFile(path, assimp_read_flag);
@@ -342,9 +339,9 @@ namespace glcpp
     void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection)
     {
         shader.use();
-        shader.setMat4("projection", projection);
-        shader.setMat4("view", view);
-        shader.setMat4("model", transform_->get_mat4());
+        shader.set_mat4("projection", projection);
+        shader.set_mat4("view", view);
+        shader.set_mat4("model", transform_->get_mat4());
         for (unsigned int i = 0; i < meshes_.size(); i++)
             meshes_[i].draw(shader);
     }

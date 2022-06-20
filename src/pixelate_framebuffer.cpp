@@ -74,7 +74,7 @@ void PixelateFramebuffer::capture_outline()
 
     outline_framebuffer_->bind_with_depth({0.0f, 0.0f, 0.0f ,0.0f});
     outline_shader_->use();
-    outline_shader_->setVec3("outline_color", outline_color_);
+    outline_shader_->set_vec3("outline_color", outline_color_);
     pixelate_framebuffer_->draw(*outline_shader_);
     outline_framebuffer_->unbind();
 }

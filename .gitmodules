@@ -10,3 +10,6 @@
 [submodule "external/assimp"]
 	path = external/assimp
 	url = https://github.com/Nor-s/assimp.git
+[submodule "mediapipe-to-mixamo"]
+	path = mediapipe-to-mixamo
+	url = https://github.com/Nor-s/mediapipe-to-mixamo.git

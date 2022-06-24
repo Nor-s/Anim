@@ -3,7 +3,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -14,6 +13,7 @@
 #include "component/transform_component.h"
 
 #include "mesh.h"
+
 namespace glcpp
 {
     class Shader;
@@ -65,6 +65,7 @@ namespace glcpp
     {
     public:
         Model(const char *path);
+        Model(const char *path, const aiScene *scene);
         ~Model();
 
         void draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection);
@@ -93,10 +94,8 @@ namespace glcpp
         int bone_count_ = 0;
         int node_count_ = 0;
 
-        // bool gamma_correction;
-        // int bone_count_;
-
         void load_model(const char *path);
+        void load_model(const char *path, const aiScene *scene);
         /**
          * @brief 루트노드를 처음에 입력받아, 자식노드들을 순회하면서 메쉬들을 찾음
          *

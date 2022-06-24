@@ -1,5 +1,5 @@
-#ifndef SRC_SCENE_RESOURCES_H
-#define SRC_SCENE_RESOURCES_H
+#ifndef SRC_SCENE_SHARED_RESOURCES_H
+#define SRC_SCENE_SHARED_RESOURCES_H
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -7,62 +7,60 @@
 #include "glcpp/cubemap.h"
 #include "glcpp/shader.h"
 #include "glcpp/model.h"
-#include "glcpp/transform_component.h"
+#include "glcpp/component/transform_component.h"
 #include "glcpp/anim/animator.hpp"
 #include "glcpp/utility.hpp"
+#include "glcpp/importer.h"
 #include <tuple>
 #include <map>
 #include <memory>
 #include <filesystem>
 
-class Resources {
+namespace fs = std::filesystem;
+
+class SharedResources
+{
 
 public:
-	Resources() {
-		init_skybox();
-		init_shader();
-		init_anim();
-		init_model();
-	}
-    virtual ~Resources() = default;
-    // TODO: !safe
-    virtual glcpp::Animator* get_mutable_animator()
+    SharedResources()
     {
-        return animator_.get();
+        init_skybox();
+        init_shader();
+        init_anim();
+        init_model();
     }
-    glcpp::Cubemap* get_mutable_skybox() {
+    virtual ~Resources() = default;
+    glcpp::Cubemap *get_mutable_skybox()
+    {
         return skybox_.get();
     }
-    std::shared_ptr<glcpp::Model>& get_model(int idx)
+    std::shared_ptr<glcpp::Model> &get_model(int idx)
     {
         return models_[idx];
     }
-    std::vector<std::shared_ptr<glcpp::Model>> get_models() {
-        return models_;
-    }
-    // TODO: error with model_shader when model draw. maybe add_model logic to update framebuffer
-    void add_model(const char* file_name)
+    void add_model_and_animation(const char *path)
     {
-        models_.emplace_back(std::make_shared<glcpp::Model>(file_name));
-        if (models_.back()->get_root_node() == nullptr) {
-            models_.pop_back();
-            return;
-        }
-        if (std::filesystem::path(std::filesystem::u8path(file_name)).extension() != ".obj")
+        glcpp::Importer importer;
+        auto [sp_model, sp_animations] = importer.read_file(path);
+        if (sp_model)
         {
-            animator_->add_animation(file_name);
+            models_.push_back(sp_model);
+        }
+        if (sp_animations.size() > 0)
+        {
+            animations_.insert(animations_.end(), sp_animations.begin(), sp_animations.end());
         }
     }
     void init_skybox()
     {
         skybox_ = std::make_unique<glcpp::Cubemap>(skybox_faces_[0],
-            "./resources/shaders/skybox.vs",
-            "./resources/shaders/skybox.fs");
+                                                   "./resources/shaders/skybox.vs",
+                                                   "./resources/shaders/skybox.fs");
     }
     void init_shader()
     {
-        anim_model_shader_.reset(new glcpp::Shader{ "./resources/shaders/animation_loading.vs", "./resources/shaders/1.model_loading.fs" });
-        obj_model_shader_.reset(new glcpp::Shader{ "./resources/shaders/1.model_loading.vs", "./resources/shaders/1.model_loading.fs" });
+        anim_model_shader_.reset(new glcpp::Shader{"./resources/shaders/animation_loading.vs", "./resources/shaders/1.model_loading.fs"});
+        obj_model_shader_.reset(new glcpp::Shader{"./resources/shaders/1.model_loading.vs", "./resources/shaders/1.model_loading.fs"});
         framebuffer_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
         framebuffer_blur_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/skybox_blur.fs");
         outline_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/outline_framebuffer.vs", "./resources/shaders/outline_framebuffer.fs");
@@ -71,11 +69,10 @@ public:
     void init_model()
     {
         add_model(fs::canonical(fs::path("./resources/models2/vampire/zom.fbx")).string().c_str());
-        models_.back()->get_mutable_transform().set_translation(glm::vec3{ 0.0f, 0.0f, 0.0f }).set_rotation(glm::vec3{ 0.0f, 0.0f, 0.0f }).set_scale(glm::vec3{ 1.0f, 1.0f, 1.0f });
+        models_.back()->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
     }
     void init_anim()
     {
-        animator_.reset(new glcpp::Animator{});
     }
 
 private:
@@ -116,11 +113,11 @@ private:
          "./resources/textures/cube/Tantolunden2/py.jpg",
          "./resources/textures/cube/Tantolunden2/ny.jpg",
          "./resources/textures/cube/Tantolunden2/pz.jpg",
-         "./resources/textures/cube/Tantolunden2/nz.jpg"} };
+         "./resources/textures/cube/Tantolunden2/nz.jpg"}};
 
-    std::shared_ptr<glcpp::Animator> animator_;
     std::unique_ptr<glcpp::Cubemap> skybox_;
     std::vector<std::shared_ptr<glcpp::Model>> models_;
+    std::vector<std::shared_ptr<glcpp::Animation>> animations_;
 
     std::shared_ptr<glcpp::Shader> obj_model_shader_;
     std::shared_ptr<glcpp::Shader> anim_model_shader_;
@@ -128,7 +125,6 @@ private:
     std::shared_ptr<glcpp::Shader> framebuffer_shader_;
     std::shared_ptr<glcpp::Shader> framebuffer_blur_shader_;
     std::shared_ptr<glcpp::Shader> grid_shader_;
-
 };
 
 #endif

@@ -1,11 +1,9 @@
 @ECHO OFF
-echo start---------------------------------------------------
+echo start bat---------------------------------------------------
 call conda activate mp_gui_build
-pyinstaller %cd%/mp2mm.spec  --noconfirm
-echo end---------------------------------------------------
-
-@REM if exist exsample.bat (
-@REM     echo exsample.bat가 현재 디렉토리에 존재한다
-@REM ) else (
-@REM     echo exsample.bat가 현재 디렉토리에 존재하지 않는다
-@REM )
+if exist %cd%\dist\mp2mm\mp2mm.exe (
+    echo exist mp2mm
+) else (
+    pyinstaller %cd%\mp2mm.spec  --noconfirm
+)
+echo end bat---------------------------------------------------

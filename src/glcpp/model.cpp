@@ -1,6 +1,7 @@
 #include "model.h"
 
 #include <glad/glad.h>
+#include <stb/stb_image.h>
 
 #include <string>
 #include <fstream>
@@ -10,13 +11,15 @@
 #include <vector>
 #include <filesystem>
 
-#include <stb/stb_image.h>
-
 #include "shader.h"
 #include "utility.hpp"
 
 namespace glcpp
 {
+    Model::Model(const char *path, const aiScene *scene)
+    {
+        load_model(path, scene);
+    }
     Model::Model(const char *path)
     {
         load_model(path);
@@ -51,8 +54,11 @@ namespace glcpp
 #endif
             return;
         }
+        load_model(path, scene);
+    }
+    void Model::load_model(const char *path, const aiScene *scene)
+    {
         directory_ = std::filesystem::u8path(path);
-
         process_node(root_node_, scene->mRootNode, scene);
         transform_ = &(root_node_->relative_transformation);
     }
@@ -62,7 +68,8 @@ namespace glcpp
         std::string model_name = std::string(ai_node->mName.C_Str());
         model_name = model_name.substr(model_name.find_last_of(':') + 1);
         auto find_mixamorig = model_name.find("mixamorig");
-        if (find_mixamorig != std::string::npos) {
+        if (find_mixamorig != std::string::npos)
+        {
             model_name = model_name.substr(find_mixamorig + 9);
         }
         model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
@@ -112,7 +119,8 @@ namespace glcpp
         {
             Vertex vertex;
             vertex.set_position(AiVecToGlmVec(mesh->mVertices[i]));
-            if (mesh->mNormals) {
+            if (mesh->mNormals)
+            {
                 vertex.set_normal(AiVecToGlmVec(mesh->mNormals[i]));
             }
             if (mesh->mTextureCoords[0])
@@ -168,9 +176,9 @@ namespace glcpp
             std::string bone_name = mesh->mBones[bone_idx]->mName.C_Str();
             bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
             auto find_mixamorig = bone_name.find("mixamorig");
-            if (find_mixamorig != std::string::npos) 
+            if (find_mixamorig != std::string::npos)
             {
-                    bone_name = bone_name.substr(find_mixamorig +  9);
+                bone_name = bone_name.substr(find_mixamorig + 9);
             }
             if (bone_info_map.find(bone_name) == bone_info_map.end())
             {

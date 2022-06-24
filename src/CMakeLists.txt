@@ -15,6 +15,8 @@ set(GLCPP_SRC
     glcpp/framebuffer.cpp
     glcpp/framebuffer.h
     glcpp/application.hpp
+    glcpp/importer.h
+    glcpp/importer.cpp
     "glcpp/component/transform_component.h"
     "glcpp/component/transform_component.cpp"
 
@@ -57,13 +59,16 @@ endif()
 add_executable(pixel3D 
 ./main.cpp 
 ./pixelate_framebuffer.cpp 
-./UI/imgui_context.h 
+ 
 ./UI/imgui_scene_window.h
 ./UI/imgui_text_edit.h
 ./UI/imgui_json.h
 ./pixel3D.h 
 ./scene/scene.hpp
-./scene/scene1.hpp
+./scene/shared_resources.h
+./scene/shared_resources.cpp
+./scene/main_scene.h
+./scene/main_scene.cpp
 )
 if(MSVC)
   message("------------------MSVC")

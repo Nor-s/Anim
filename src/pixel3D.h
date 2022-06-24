@@ -6,13 +6,12 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "UI/imgui_context.h"
-#include "scene/scene1.hpp"
-
 #include <filesystem>
 #include "glcpp/application.hpp"
 #include <stb/stb_image.h>
 #include "glcpp/camera.h"
+#include "glcpp/window.h"
+#include "scene/scene.hpp"
 namespace fs = std::filesystem;
 
 class Pixel3D : public glcpp::Application<Pixel3D>
@@ -27,18 +26,14 @@ private:
 
 public:
     virtual ~Pixel3D()
-    {       
+    {
         scenes_.clear();
-        imgui_.reset();
     }
     virtual void init(int width, int height, const std::string &title) override
     {
         stbi_set_flip_vertically_on_load(true);
         init_window(width, height, title);
         init_ui();
-        for (int i = 0; i < 2; i++) {
-            scenes_.emplace_back(new Scene1(width, height));
-        }
     }
     void init_window(int width, int height, const std::string &title)
     {
@@ -56,8 +51,6 @@ public:
     }
     void init_ui()
     {
-        imgui_ = std::make_unique<ui::ImGuiContext>();
-        imgui_->init(window_->get_handle());
     }
     virtual void loop() override
     {
@@ -74,37 +67,13 @@ public:
                 frames_ = 0;
                 last_time = current_time;
             }
-            //  std::cout<<"\n"; // or //std::endl or // std::cout<<" "; fflush(stdout)
             delta_frame_ = current_time - last_frame_;
             last_frame_ = current_time;
-            for (auto& scene : scenes_) {
-                scene->set_delta_time(delta_frame_);
-            }
 
             processInput(window_->get_handle());
 
             pre_draw();
             {
-                imgui_->begin();
-                imgui_->draw_dock();
-                int idx = 1;
-                for (auto& scene : scenes_) {
-                    scene->pre_draw();   
-                    imgui_->draw_scene("scene" + std::to_string(idx), scene.get());
-                    idx++;
-                }
-                
-                for (size_t i = 0; scenes_.size() > i; i++) {
-                    if (imgui_->is_window_hovered("scene" + std::to_string(i + 1))) {
-                        current_scene_idx_ = i;
-                    }                        
-                }
-
-                imgui_->draw_property(scenes_[current_scene_idx_].get());         
-                imgui_->draw_animation_bar(scenes_, scenes_[current_scene_idx_].get());
-                imgui_->show_status(fps_);
-
-                imgui_->end();
             }
             post_draw();
         }
@@ -113,9 +82,8 @@ public:
     {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, window_->get_width(), window_->get_height());
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);        
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     }
     void post_draw()
     {
@@ -165,34 +133,34 @@ public:
     }
     static void mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
     {
-        auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-        if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
-        {
-            app->prev_mouse_.x = app->cur_mouse_.x;
-            app->prev_mouse_.y = app->cur_mouse_.y;
-            app->is_pressed_ = true;
-        }
-        else
-        {
-            app->is_pressed_ = false;
-        }
-        if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
-        {
-            app->prev_mouse_.x = app->cur_mouse_.x;
-            app->prev_mouse_.y = app->cur_mouse_.y;
-            app->is_pressed_scroll_ = true;
-        }
-        else
-        {
-            app->is_pressed_scroll_ = false;
-        }
+        // auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+        // if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+        // {
+        //     app->prev_mouse_.x = app->cur_mouse_.x;
+        //     app->prev_mouse_.y = app->cur_mouse_.y;
+        //     app->is_pressed_ = true;
+        // }
+        // else
+        // {
+        //     app->is_pressed_ = false;
+        // }
+        // if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+        // {
+        //     app->prev_mouse_.x = app->cur_mouse_.x;
+        //     app->prev_mouse_.y = app->cur_mouse_.y;
+        //     app->is_pressed_scroll_ = true;
+        // }
+        // else
+        // {
+        //     app->is_pressed_scroll_ = false;
+        // }
     }
 
     static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
     {
-        auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-        if (app->scenes_[app->current_scene_idx_] && app->imgui_ && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
-            app->scenes_[app->current_scene_idx_]->get_camera()->process_mouse_scroll(yoffset);
+        // auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+        // if (app->scenes_[app->current_scene_idx_] && app->imgui_ && app->imgui_->is_window_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+        //     app->scenes_[app->current_scene_idx_]->get_camera()->process_mouse_scroll(yoffset);
     }
 
 private:
@@ -205,7 +173,6 @@ private:
     bool is_pressed_ = false;
     bool is_pressed_scroll_ = false;
     glm::vec2 prev_mouse_{-1.0f, -1.0f}, cur_mouse_{-1.0f, -1.0f};
-    std::unique_ptr<ui::ImGuiContext> imgui_;
     std::vector<std::shared_ptr<Scene>> scenes_;
     int current_scene_idx_ = 0;
 };

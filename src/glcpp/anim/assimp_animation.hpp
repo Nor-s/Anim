@@ -41,11 +41,12 @@ namespace glcpp
             else
             {
                 auto animation = scene->mAnimations[0];
-                name_ = animation_path;
-                duration_ = animation->mDuration;
-                ticks_per_second_ = animation->mTicksPerSecond;
-                process_bones(animation, scene->mRootNode);
+                init_animation(animation, scene);
             }
+        }
+        AssimpAnimation(const aiAnimation *animation, const aiScene *scene)
+        {
+            init_animation(animation, scene);
         }
 
         virtual ~AssimpAnimation()
@@ -53,6 +54,13 @@ namespace glcpp
         }
 
     private:
+        void init_animation(const aiAnimation *animation, const aiScene *scene)
+        {
+            name_ = animation->mName.C_Str();
+            duration_ = animation->mDuration;
+            ticks_per_second_ = animation->mTicksPerSecond;
+            process_bones(animation, scene->mRootNode);
+        }
         void process_bones(const aiAnimation *animation, const aiNode *root_node)
         {
             int size = animation->mNumChannels;
@@ -64,8 +72,9 @@ namespace glcpp
                 std::string bone_name = channel->mNodeName.C_Str();
                 bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
                 auto find_mixamorig = bone_name.find("mixamorig");
-                if (find_mixamorig != std::string::npos) {
-                    bone_name = bone_name.substr(find_mixamorig +  9);
+                if (find_mixamorig != std::string::npos)
+                {
+                    bone_name = bone_name.substr(find_mixamorig + 9);
                 }
                 const aiNode *node = root_node->FindNode(channel->mNodeName);
                 if (node)

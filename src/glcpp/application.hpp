@@ -3,15 +3,10 @@
 
 #include <memory>
 #include <vector>
+#include "window.h"
 
 namespace glcpp
 {
-    class Shader;
-    class Window;
-    class Cubemap;
-    class Camera;
-    class Framebuffer;
-    class Model;
     template <typename T>
     class Application
     {

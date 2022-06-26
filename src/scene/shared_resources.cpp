@@ -1,3 +1,1 @@
-class SharedResources
-{
-}
+#include "shared_resources.h"

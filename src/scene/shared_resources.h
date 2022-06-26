@@ -29,7 +29,7 @@ public:
         init_anim();
         init_model();
     }
-    virtual ~Resources() = default;
+    virtual ~SharedResources() = default;
     glcpp::Cubemap *get_mutable_skybox()
     {
         return skybox_.get();
@@ -68,7 +68,7 @@ public:
     }
     void init_model()
     {
-        add_model(fs::canonical(fs::path("./resources/models2/vampire/zom.fbx")).string().c_str());
+        // add_model(fs::canonical(fs::path("./resources/models2/vampire/zom.fbx")).string().c_str());
         models_.back()->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
     }
     void init_anim()

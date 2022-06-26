@@ -96,14 +96,14 @@ public:
     {
         if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
             glfwSetWindowShouldClose(window, true);
-        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-            scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::FORWARD, delta_frame_);
-        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-            scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::BACKWARD, delta_frame_);
-        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-            scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::LEFT, delta_frame_);
-        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-            scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
+        // if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        // scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::FORWARD, delta_frame_);
+        // if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        // scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::BACKWARD, delta_frame_);
+        // if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        // scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::LEFT, delta_frame_);
+        // if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        // scenes_[current_scene_idx_]->get_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
     }
 
     static void framebuffer_size_callback(GLFWwindow *window, int width, int height)
@@ -118,13 +118,13 @@ public:
         auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
         if (app->is_pressed_)
         {
-            app->scenes_[app->current_scene_idx_]->get_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
+            // app->scenes_[app->current_scene_idx_]->get_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
             app->prev_mouse_.x = xposIn;
             app->prev_mouse_.y = yposIn;
         }
         if (app->is_pressed_scroll_)
         {
-            app->scenes_[app->current_scene_idx_]->get_camera()->process_mouse_scroll_press((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
+            // app->scenes_[app->current_scene_idx_]->get_camera()->process_mouse_scroll_press((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
             app->prev_mouse_.x = xposIn;
             app->prev_mouse_.y = yposIn;
         }

@@ -1,9 +1,6 @@
 #include "framebuffer.h"
 
 #include <iostream>
-#include <stb/stb_image.h>
-#include <stb/stb_image_write.h>
-
 #include "shader.h"
 
 namespace glcpp
@@ -16,7 +13,8 @@ namespace glcpp
         attach_color_attachment_texture();
         attach_depth24_stencil8_RBO();
         set_quad_VAO();
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
 #ifndef NDEBUG
             std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 #endif
@@ -49,6 +47,9 @@ namespace glcpp
     {
         return height_;
     }
+    GLenum Framebuffer::get_format() const {
+        return format_;
+    }
     float Framebuffer::get_aspect() const
     {
         return static_cast<float>(width_) / static_cast<float>(height_);
@@ -62,26 +63,6 @@ namespace glcpp
         glBindVertexArray(quad_VAO_);
         glBindTexture(GL_TEXTURE_2D, color_texture_id_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-    }
-    void Framebuffer::print_color_texture(std::string const &file_name, GLenum format)
-    {
-        if (format == GL_RED)
-        {
-            format = format_;
-        }
-        stbi_flip_vertically_on_write(true);
-        glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
-        glViewport(0, 0, width_, height_);
-        size_t size = static_cast<size_t>(width_ * height_);
-        GLubyte *pixels = (GLubyte *)malloc(size * sizeof(GLubyte) * 4u);
-        glReadPixels(0, 0, width_, height_, format, GL_UNSIGNED_BYTE, pixels);
-
-        if (format == GL_RGBA)
-            stbi_write_png(file_name.c_str(), width_, height_, 4, pixels, 0);
-        else if (format == GL_RGB)
-            stbi_write_png(file_name.c_str(), width_, height_, 3, pixels, 0);
-
-        free(pixels);
     }
 
     void Framebuffer::create_framebuffer()
@@ -135,21 +116,21 @@ namespace glcpp
         glViewport(0, 0, width_, height_);
     }
 
-    void Framebuffer::bind(const glm::vec4& color)
+    void Framebuffer::bind(const glm::vec4 &color)
     {
         bind_without_clear();
         glClearColor(color.x, color.y, color.z, color.a);
 
         glClear(GL_COLOR_BUFFER_BIT);
     }
-    void Framebuffer::bind_with_depth(const glm::vec4& color)
+    void Framebuffer::bind_with_depth(const glm::vec4 &color)
     {
         bind_without_clear();
         glClearColor(color.x, color.y, color.z, color.a);
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
-    void Framebuffer::bind_with_depth_and_stencil(const glm::vec4& color)
+    void Framebuffer::bind_with_depth_and_stencil(const glm::vec4 &color)
     {
         bind_without_clear();
         glClearColor(color.x, color.y, color.z, color.a);

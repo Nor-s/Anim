@@ -17,9 +17,10 @@ set(GLCPP_SRC
     glcpp/application.hpp
     glcpp/importer.h
     glcpp/importer.cpp
+    glcpp/exporter.h
+    glcpp/exporter.cpp
     "glcpp/component/transform_component.h"
     "glcpp/component/transform_component.cpp"
-
     glcpp/utility.hpp
     glcpp/anim/bone.hpp
     glcpp/anim/animation.hpp
@@ -60,15 +61,19 @@ add_executable(pixel3D
 ./main.cpp 
 ./pixelate_framebuffer.cpp 
  
-./UI/imgui_scene_window.h
-./UI/imgui_text_edit.h
-./UI/imgui_json.h
+./UI/hierarchy_layer.cpp
+./UI/model_property_layer.cpp
+./UI/scene_layer.cpp
+./UI/text_edit_layer.cpp
+./UI/timeline_layer.cpp
+./UI/main_layer.cpp
+./UI/imgui_helper.hpp
+
+
 ./pixel3D.h 
 ./scene/scene.hpp
-./scene/shared_resources.h
-./scene/shared_resources.cpp
-./scene/main_scene.h
 ./scene/main_scene.cpp
+./scene/shared_resources.cpp
 )
 if(MSVC)
   message("------------------MSVC")

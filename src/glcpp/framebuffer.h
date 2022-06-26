@@ -17,13 +17,13 @@ namespace glcpp
         uint32_t get_color_texture() const;
         uint32_t get_width() const;
         uint32_t get_height() const;
+        GLenum get_format() const;
         float get_aspect() const;
         void draw(Shader &shader);
-        void print_color_texture(const std::string &file_name, GLenum format = GL_RED);
         void bind_without_clear();
-        void bind(const glm::vec4 &color = glm::vec4(0.2f,0.2f,0.2f,1.0f));
-        void bind_with_depth(const glm::vec4& color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
-        void bind_with_depth_and_stencil(const glm::vec4& color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+        void bind(const glm::vec4 &color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+        void bind_with_depth(const glm::vec4 &color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
+        void bind_with_depth_and_stencil(const glm::vec4 &color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
         void unbind();
 
     private:

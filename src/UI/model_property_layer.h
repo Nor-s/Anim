@@ -12,6 +12,8 @@ namespace ui
     class ModelPropertyLayer
     {
     public:
+        ModelPropertyLayer();
+        ~ModelPropertyLayer();
         void draw(glcpp::Model *model);
 
     private:

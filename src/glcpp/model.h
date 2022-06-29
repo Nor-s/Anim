@@ -1,5 +1,5 @@
-#ifndef MODEL_H
-#define MODEL_H
+#ifndef GLCPP_MESHES_H
+#define GLCPP_MESHES_H
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -16,6 +16,8 @@
 
 namespace glcpp
 {
+    class Animation;
+    class AnimationComponent;
     class Shader;
     // can't load "../"
     unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, const aiScene *scene);
@@ -72,7 +74,8 @@ namespace glcpp
         void draw(Shader &shader);
 
         TransformComponent &get_mutable_transform();
-
+        AnimationComponent *get_mutable_pointer_animation_component();
+        const AnimationComponent *get_pointer_animation_component() const;
         const std::map<std::string, BoneInfo> &get_bone_info_map() const;
         std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
@@ -81,14 +84,18 @@ namespace glcpp
         void get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node);
         void get_ai_root_node_for_anim(aiNode *ai_node);
 
+        void set_animation_component(std::shared_ptr<Animation> animation);
+
+        bool has_animation_component();
+
     private:
         // heirarchy
         std::shared_ptr<ModelNode> root_node_;
         // model data
         std::vector<Mesh> meshes_;
         std::filesystem::path directory_;
-        std::vector<Texture> textures_loaded_;
         TransformComponent *transform_;
+        std::shared_ptr<AnimationComponent> animation_;
         // bone data
         std::map<std::string, BoneInfo> bone_info_map_;
         int bone_count_ = 0;

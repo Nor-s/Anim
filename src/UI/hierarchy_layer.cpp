@@ -1,36 +1,50 @@
 #include "hierarchy_layer.h"
 
 #include "glcpp/model.h"
+#include "glcpp/anim/animation.hpp"
 #include "glcpp/anim/bone.hpp"
-#include "glcpp/anim/animator.hpp"
+#include "glcpp/component/animation_component.h"
 
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 
 namespace ui
 {
-    void HierarchyLayer::draw(const glcpp::ModelNode *root_node, glcpp::Animator *animator)
+    HierarchyLayer::HierarchyLayer() = default;
+    HierarchyLayer::~HierarchyLayer() = default;
+    void HierarchyLayer::draw(glcpp::Model *model)
     {
-        const char *selected_node_name = nullptr;
+        static const char *selected_node_name = nullptr;
         ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
         int node_count = 0;
         ImGui::Begin("Hierarchy");
-        auto node_name = dfs(root_node, node_flags, node_count);
-        if (node_name)
         {
-            selected_node_name = node_name;
-        }
-        if (selected_node_name && animator)
-        {
-            draw_selected_node(selected_node_name, animator);
+            if (model)
+            {
+                auto root_node = model->get_root_node();
+                auto animation = model->get_mutable_pointer_animation_component();
+                auto node_name = dfs(root_node, node_flags, node_count);
+                if (node_name)
+                {
+                    selected_node_name = node_name;
+                }
+                if (selected_node_name && animation)
+                {
+                    draw_selected_node(selected_node_name, animation->get_mutable_animation());
+                }
+            }
+            else
+            {
+                ImGui::Text("No model selected");
+            }
         }
         ImGui::End();
     }
-    void HierarchyLayer::draw_selected_node(const char *node_name, glcpp::Animator *animator)
+    void HierarchyLayer::draw_selected_node(const char *node_name, glcpp::Animation *animation)
     {
         ImGui::BeginChild("Bone property", {0, 100}, true);
         ImGui::Text("%s", node_name);
-        glcpp::Bone *bone = animator->get_mutable_current_animation()->FindBone(node_name);
+        glcpp::Bone *bone = animation->FindBone(node_name);
         if (bone)
         {
             glm::vec3 *p_pos = bone->get_mutable_pointer_recently_used_position();

@@ -5,11 +5,12 @@
 
 namespace ui
 {
-
     class SceneLayer
     {
     public:
-        void draw(const char *title, Scene *scene, bool is_static = false);
+        SceneLayer() = default;
+        ~SceneLayer() = default;
+        void draw(const char *title, Scene *scene);
         float get_width();
         float get_height();
         float get_aspect();

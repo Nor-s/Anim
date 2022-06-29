@@ -13,6 +13,7 @@
 
 #include "shader.h"
 #include "utility.hpp"
+#include "component/animation_component.h"
 
 namespace glcpp
 {
@@ -219,11 +220,11 @@ namespace glcpp
             aiString str;
             mat->GetTexture(type, i, &str);
             bool skip = false;
-            for (unsigned int j = 0; j < textures_loaded_.size(); j++)
+            for (unsigned int j = 0; j < textures.size(); j++)
             {
-                if (std::strcmp(textures_loaded_[j].path.data(), str.C_Str()) == 0)
+                if (std::strcmp(textures[j].path.data(), str.C_Str()) == 0)
                 {
-                    textures.push_back(textures_loaded_[j]);
+                    textures.push_back(textures[j]);
                     skip = true;
                     break;
                 }
@@ -235,7 +236,6 @@ namespace glcpp
                 texture.type = typeName;
                 texture.path = str.C_Str();
                 textures.push_back(texture);
-                textures_loaded_.push_back(texture); // add to loaded textures
             }
         }
         return textures;
@@ -364,7 +364,14 @@ namespace glcpp
     {
         return *transform_;
     }
-
+    AnimationComponent *Model::get_mutable_pointer_animation_component()
+    {
+        return animation_.get();
+    }
+    const AnimationComponent *Model::get_pointer_animation_component() const
+    {
+        return animation_.get();
+    }
     std::map<std::string, BoneInfo> &Model::get_mutable_bone_info_map()
     {
         return bone_info_map_;
@@ -388,4 +395,22 @@ namespace glcpp
     {
         return root_node_;
     }
+
+    void Model::set_animation_component(std::shared_ptr<Animation> animation)
+    {
+        if (animation_)
+        {
+            animation_->set_animation(animation);
+        }
+        else
+        {
+            animation_ = std::make_shared<AnimationComponent>(animation);
+        }
+    }
+
+    bool Model::has_animation_component()
+    {
+        return animation_ != nullptr;
+    }
+
 }

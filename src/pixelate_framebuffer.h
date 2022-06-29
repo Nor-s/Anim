@@ -19,7 +19,6 @@ public:
     void pre_draw(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
     void draw();
     void to_png(const char *save_path);
-    void set_RGB_shader(std::shared_ptr<glcpp::Shader> &shader);
     void set_pixelate_shader(std::shared_ptr<glcpp::Shader> &shader);
     void set_tmp_shader(std::shared_ptr<glcpp::Shader> &shader);
     void set_outline_shader(std::shared_ptr<glcpp::Shader> &shader);
@@ -31,21 +30,17 @@ public:
     int get_factor();
     void set_factor(int factor);
     glcpp::Framebuffer &get_framebuffer();
-    glcpp::Framebuffer &get_rgb_framebuffer();
     glcpp::Framebuffer &get_outline_framebuffer();
     glm::vec3 &get_outline_color();
 
 private:
-    void capture_rgb(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
     void capture_rgba(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
     void capture_outline();
 
 private:
-    std::shared_ptr<glcpp::Shader> RGB_shader_;
     std::shared_ptr<glcpp::Shader> pixelate_shader_;
     std::shared_ptr<glcpp::Shader> outline_shader_;
     std::shared_ptr<glcpp::Shader> tmp_shader_;
-    std::unique_ptr<glcpp::Framebuffer> RGB_framebuffer_;      // pass 0
     std::unique_ptr<glcpp::Framebuffer> pixelate_framebuffer_; // pass 1
     std::unique_ptr<glcpp::Framebuffer> outline_framebuffer_;  // pass 2
     int width_;

@@ -17,7 +17,9 @@ namespace glcpp
     public:
         Importer();
         ~Importer() = default;
+        std::pair<std::shared_ptr<glcpp::Model>, std::vector<std::shared_ptr<glcpp::Animation>>> import(const char *path = nullptr);
         std::pair<std::shared_ptr<glcpp::Model>, std::vector<std::shared_ptr<glcpp::Animation>>> read_file(const char *path);
+        std::string get_path_by_NFD();
 
     private:
         void init_assimp_flag();

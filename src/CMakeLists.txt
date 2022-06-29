@@ -1,32 +1,23 @@
 # opengl library wrapper
 set(GLCPP_SRC
     glcpp/window.cpp
-    glcpp/window.h
-    glcpp/shader.h
     glcpp/shader.cpp
     glcpp/mesh.cpp
-    glcpp/mesh.h
     glcpp/model.cpp
-    glcpp/model.h
     glcpp/camera.cpp
-    glcpp/camera.h
     glcpp/cubemap.cpp
-    glcpp/cubemap.h
     glcpp/framebuffer.cpp
-    glcpp/framebuffer.h
     glcpp/application.hpp
-    glcpp/importer.h
     glcpp/importer.cpp
-    glcpp/exporter.h
     glcpp/exporter.cpp
-    "glcpp/component/transform_component.h"
-    "glcpp/component/transform_component.cpp"
+    glcpp/component/transform_component.cpp
+    glcpp/component/animation_component.cpp
     glcpp/utility.hpp
     glcpp/anim/bone.hpp
     glcpp/anim/animation.hpp
     glcpp/anim/assimp_animation.hpp
     glcpp/anim/json_animation.hpp
-    glcpp/anim/animator.hpp
+    glcpp/animator.cpp
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
@@ -70,7 +61,7 @@ add_executable(pixel3D
 ./UI/imgui_helper.hpp
 
 
-./pixel3D.h 
+./pixel3D.cpp
 ./scene/scene.hpp
 ./scene/main_scene.cpp
 ./scene/shared_resources.cpp

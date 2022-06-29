@@ -6,8 +6,9 @@
 
 namespace glcpp
 {
+    class Model;
+    class Animation;
     struct ModelNode;
-    class Animator;
 }
 
 namespace ui
@@ -15,10 +16,12 @@ namespace ui
     class HierarchyLayer
     {
     public:
-        void draw(const glcpp::ModelNode *root_node, glcpp::Animator *animator);
+        HierarchyLayer();
+        ~HierarchyLayer();
+        void draw(glcpp::Model *model);
 
     private:
-        void draw_selected_node(const char *node_name, glcpp::Animator *animator);
+        void draw_selected_node(const char *node_name, glcpp::Animation *animation);
         const char *dfs(const glcpp::ModelNode *anim_node, const ImGuiTreeNodeFlags &node_flags, int &count);
     };
 

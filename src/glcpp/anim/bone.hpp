@@ -10,6 +10,7 @@
 #include <glm/gtx/matrix_decompose.hpp>
 
 #include <set>
+#include <iterator>
 
 #include "../utility.hpp"
 
@@ -102,7 +103,7 @@ namespace glcpp
                 auto it_rotate = time_rotations_map_.find(time);
                 glm::vec3 v_scale = (it_scale != time_scales_map_.end()) ? scales_[it_scale->second].scale : glm::vec3(1.0f, 1.0f, 1.0f);
                 glm::vec3 v_pose = (it_pose != time_positions_map_.end()) ? positions_[it_pose->second].position : glm::vec3(0.0f, 0.0f, 0.0f);
-                glm::quat v_rotate = (it_rotate != time_rotations_map_.end()) ? rotations_[it_rotate->second].orientation : glm::quat(1.0f ,0.0f, 0.0f, 0.0f);
+                glm::quat v_rotate = (it_rotate != time_rotations_map_.end()) ? rotations_[it_rotate->second].orientation : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
                 glm::mat4 transformation = glm::translate(glm::mat4(1.0f), v_pose) * glm::toMat4(glm::normalize(v_rotate)) * glm::scale(glm::mat4(1.0f), v_scale);
                 transformation = inverse_binding_pose * transformation;
 
@@ -297,7 +298,7 @@ namespace glcpp
                 time_list_.push_back(time);
             }
         }
-        void get_ai_node_anim(aiNodeAnim* channel, const aiMatrix4x4 &binding_pose_transform) 
+        void get_ai_node_anim(aiNodeAnim *channel, const aiMatrix4x4 &binding_pose_transform)
         {
             channel->mNodeName = aiString(name_);
             channel->mNumPositionKeys = positions_.size();
@@ -308,7 +309,6 @@ namespace glcpp
             channel->mRotationKeys = new aiQuatKey[channel->mNumRotationKeys];
             channel->mScalingKeys = new aiVectorKey[channel->mNumScalingKeys];
 
-
             unsigned int pos_idx = 0, rot_idx = 0, scale_idx = 0;
 
             for (auto time : time_list_)
@@ -318,16 +318,15 @@ namespace glcpp
                 auto it_rotate = time_rotations_map_.find(time);
                 glm::vec3 v_scale = (it_scale != time_scales_map_.end()) ? scales_[it_scale->second].scale : glm::vec3(1.0f, 1.0f, 1.0f);
                 glm::vec3 v_pose = (it_pose != time_positions_map_.end()) ? positions_[it_pose->second].position : glm::vec3(0.0f, 0.0f, 0.0f);
-                glm::quat v_rotate = (it_rotate != time_rotations_map_.end()) ? rotations_[it_rotate->second].orientation : glm::quat(1.0f ,0.0f, 0.0f, 0.0f);
+                glm::quat v_rotate = (it_rotate != time_rotations_map_.end()) ? rotations_[it_rotate->second].orientation : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
                 glm::mat4 transformation = glm::translate(glm::mat4(1.0f), v_pose) * glm::toMat4(glm::normalize(v_rotate)) * glm::scale(glm::mat4(1.0f), v_scale);
-                transformation = AiMatToGlmMat( binding_pose_transform) * transformation;
+                transformation = AiMatToGlmMat(binding_pose_transform) * transformation;
 
-     
                 auto [t, r, s] = DecomposeTransform(transformation);
-   
+
                 if (it_pose != time_positions_map_.end())
                 {
-                    channel->mPositionKeys[pos_idx].mValue =GlmVecToAiVec(t);
+                    channel->mPositionKeys[pos_idx].mValue = GlmVecToAiVec(t);
                     channel->mPositionKeys[pos_idx].mTime = time;
                     pos_idx++;
                 }
@@ -344,7 +343,6 @@ namespace glcpp
                     scale_idx++;
                 }
             }
-        
         }
 
     private:

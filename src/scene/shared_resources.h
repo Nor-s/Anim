@@ -4,78 +4,40 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include "glcpp/cubemap.h"
-#include "glcpp/shader.h"
-#include "glcpp/model.h"
-#include "glcpp/component/transform_component.h"
-#include "glcpp/anim/animator.hpp"
-#include "glcpp/utility.hpp"
-#include "glcpp/importer.h"
+
 #include <tuple>
 #include <map>
 #include <memory>
 #include <filesystem>
 
-namespace fs = std::filesystem;
+namespace glcpp
+{
+    class Cubemap;
+    class Model;
+    class Animation;
+    class Shader;
+    class Animator;
+}
 
 class SharedResources
 {
 
 public:
-    SharedResources()
-    {
-        init_skybox();
-        init_shader();
-        init_anim();
-        init_model();
-    }
-    virtual ~SharedResources() = default;
-    glcpp::Cubemap *get_mutable_skybox()
-    {
-        return skybox_.get();
-    }
-    std::shared_ptr<glcpp::Model> &get_model(int idx)
-    {
-        return models_[idx];
-    }
-    void add_model_and_animation(const char *path)
-    {
-        glcpp::Importer importer;
-        auto [sp_model, sp_animations] = importer.read_file(path);
-        if (sp_model)
-        {
-            models_.push_back(sp_model);
-        }
-        if (sp_animations.size() > 0)
-        {
-            animations_.insert(animations_.end(), sp_animations.begin(), sp_animations.end());
-        }
-    }
-    void init_skybox()
-    {
-        skybox_ = std::make_unique<glcpp::Cubemap>(skybox_faces_[0],
-                                                   "./resources/shaders/skybox.vs",
-                                                   "./resources/shaders/skybox.fs");
-    }
-    void init_shader()
-    {
-        anim_model_shader_.reset(new glcpp::Shader{"./resources/shaders/animation_loading.vs", "./resources/shaders/1.model_loading.fs"});
-        obj_model_shader_.reset(new glcpp::Shader{"./resources/shaders/1.model_loading.vs", "./resources/shaders/1.model_loading.fs"});
-        framebuffer_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
-        framebuffer_blur_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/simple_framebuffer.vs", "./resources/shaders/skybox_blur.fs");
-        outline_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/outline_framebuffer.vs", "./resources/shaders/outline_framebuffer.fs");
-        grid_shader_ = std::make_unique<glcpp::Shader>("./resources/shaders/grid.vs", "./resources/shaders/grid.fs");
-    }
-    void init_model()
-    {
-        // add_model(fs::canonical(fs::path("./resources/models2/vampire/zom.fbx")).string().c_str());
-        models_.back()->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
-    }
-    void init_anim()
-    {
-    }
+    SharedResources();
+    virtual ~SharedResources();
+    glcpp::Cubemap *get_mutable_skybox();
+    glcpp::Animator *get_mutable_animator();
+    std::shared_ptr<glcpp::Model> get_mutable_model(uint32_t idx);
+    std::shared_ptr<glcpp::Animation> get_mutable_animation(uint32_t idx);
+    std::shared_ptr<glcpp::Shader> get_mutable_shader(const std::string &name);
+    int get_models_size() const;
+    int get_animations_size() const;
+    std::pair<bool, bool> add_model_or_animation_by_path(const char *path);
+    void add_shader(const std::string &name, const char *vs_path, const char *fs_path);
 
 private:
+    void init_skybox();
+    void init_animator();
     // skybox
     std::vector<std::string> skybox_faces_[6]{
         {"./resources/textures/skybox/right.jpg",
@@ -116,15 +78,10 @@ private:
          "./resources/textures/cube/Tantolunden2/nz.jpg"}};
 
     std::unique_ptr<glcpp::Cubemap> skybox_;
+    std::unique_ptr<glcpp::Animator> animator_;
     std::vector<std::shared_ptr<glcpp::Model>> models_;
     std::vector<std::shared_ptr<glcpp::Animation>> animations_;
-
-    std::shared_ptr<glcpp::Shader> obj_model_shader_;
-    std::shared_ptr<glcpp::Shader> anim_model_shader_;
-    std::shared_ptr<glcpp::Shader> outline_shader_;
-    std::shared_ptr<glcpp::Shader> framebuffer_shader_;
-    std::shared_ptr<glcpp::Shader> framebuffer_blur_shader_;
-    std::shared_ptr<glcpp::Shader> grid_shader_;
+    std::map<std::string, std::shared_ptr<glcpp::Shader>> shaders_;
 };
 
 #endif

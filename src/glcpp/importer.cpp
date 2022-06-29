@@ -6,6 +6,7 @@
 #include "model.h"
 #include "anim/json_animation.hpp"
 #include "anim/assimp_animation.hpp"
+#include <nfd.h>
 
 namespace fs = std::filesystem;
 
@@ -14,6 +15,17 @@ namespace glcpp
     Importer::Importer()
     {
         init_assimp_flag();
+    }
+    std::pair<std::shared_ptr<glcpp::Model>, std::vector<std::shared_ptr<glcpp::Animation>>> Importer::import(const char *path)
+    {
+        if (path)
+        {
+            return read_file(path);
+        }
+        else
+        {
+            return read_file(get_path_by_NFD().c_str());
+        }
     }
 
     std::pair<std::shared_ptr<glcpp::Model>, std::vector<std::shared_ptr<glcpp::Animation>>> Importer::read_file(const char *path)
@@ -41,6 +53,7 @@ namespace glcpp
                 std::cout << "ERROR::IMPORTER: " << importer.GetErrorString() << std::endl;
 #endif
             }
+            importer.FreeScene();
         }
         catch (std::exception &e)
         {
@@ -49,6 +62,22 @@ namespace glcpp
 #endif
         }
         return std::make_pair(sp_model, sp_animations);
+    }
+    std::string Importer::get_path_by_NFD()
+    {
+        std::string ret = "";
+        nfdchar_t *out_path;
+        nfdfilteritem_t filter_item[1] = {{"file", "obj,dae,pmx,fbx,md5mesh,gltf,json"}};
+        nfdresult_t result = NFD_OpenDialog(&out_path, filter_item, 1, NULL);
+
+        if (result == NFD_OKAY)
+        {
+            ret = std::string(out_path);
+            NFD_FreePath(out_path);
+        }
+        NFD_Quit();
+
+        return ret;
     }
     void Importer::init_assimp_flag()
     {
@@ -59,7 +88,9 @@ namespace glcpp
                        aiProcess_GenNormals |
                        aiProcess_CalcTangentSpace |
                        aiProcess_LimitBoneWeights |
-                       aiProcess_JoinIdenticalVertices;
+                       aiProcess_JoinIdenticalVertices |
+                       aiProcess_FlipWindingOrder |
+                       aiProcess_SortByPType;
     }
     std::shared_ptr<glcpp::Model> Importer::import_model(const aiScene *scene)
     {

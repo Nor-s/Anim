@@ -12,11 +12,9 @@ PixelateFramebuffer::PixelateFramebuffer(int width, int height)
 }
 PixelateFramebuffer::~PixelateFramebuffer()
 {
-    RGB_shader_.reset();
     pixelate_shader_.reset();
     outline_shader_.reset();
     tmp_shader_.reset();
-    RGB_framebuffer_.reset();
     pixelate_framebuffer_.reset();
     outline_framebuffer_.reset();
 }
@@ -61,7 +59,10 @@ void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glc
     pixelate_framebuffer_->bind_with_depth({0.0f, 0.0f, 0.0f, 0.0f});
 
     glViewport(0, 0, pixelate_framebuffer_->get_width(), pixelate_framebuffer_->get_height());
-    model->draw(shader, view, projection);
+    if (model)
+    {
+        model->draw(shader, view, projection);
+    }
 
     pixelate_framebuffer_->unbind();
     glDisable(GL_DEPTH_TEST);
@@ -77,10 +78,7 @@ void PixelateFramebuffer::capture_outline()
     pixelate_framebuffer_->draw(*outline_shader_);
     outline_framebuffer_->unbind();
 }
-void PixelateFramebuffer::set_RGB_shader(std::shared_ptr<glcpp::Shader> &shader)
-{
-    RGB_shader_ = shader;
-}
+
 void PixelateFramebuffer::set_pixelate_shader(std::shared_ptr<glcpp::Shader> &shader)
 {
     pixelate_shader_ = shader;
@@ -106,7 +104,6 @@ void PixelateFramebuffer::set_size(int width, int height)
     width_ = width;
     height_ = height;
     pixelate_framebuffer_ = std::make_unique<glcpp::Framebuffer>(width_, height_, GL_RGBA);
-    RGB_framebuffer_ = std::make_unique<glcpp::Framebuffer>(width_, height_, GL_RGB);
     outline_framebuffer_ = std::make_unique<glcpp::Framebuffer>(width_, height_, GL_RGBA);
 }
 
@@ -129,10 +126,6 @@ void PixelateFramebuffer::set_factor(int factor)
 glcpp::Framebuffer &PixelateFramebuffer::get_framebuffer()
 {
     return *pixelate_framebuffer_;
-}
-glcpp::Framebuffer &PixelateFramebuffer::get_rgb_framebuffer()
-{
-    return *RGB_framebuffer_;
 }
 glcpp::Framebuffer &PixelateFramebuffer::get_outline_framebuffer()
 {

@@ -4,6 +4,7 @@
 #include "scene_layer.h"
 #include "model_property_layer.h"
 #include "timeline_layer.h"
+#include "text_edit_layer.h"
 
 #include <glcpp/window.h>
 
@@ -15,6 +16,8 @@
 
 namespace ui
 {
+    MainLayer::MainLayer() = default;
+    MainLayer::~MainLayer() = default;
     void MainLayer::init(GLFWwindow *window)
     {
         NFD_Init();
@@ -32,9 +35,12 @@ namespace ui
 
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            style.WindowRounding = 0.0f;
-            style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         }
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
+        style.WindowPadding.x = 3.0f;
+        style.WindowPadding.y = 3.0f;
+        style.FramePadding.y = 1.0f;
         io.Fonts->AddFontFromFileTTF("./resources/font/D2Coding.ttf", 16.0f, NULL, io.Fonts->GetGlyphRangesKorean());
 
         // Setup Platform/Renderer backends
@@ -42,12 +48,14 @@ namespace ui
         ImGui_ImplOpenGL3_Init(glsl_version);
         init_layer();
     }
+
     void MainLayer::init_layer()
     {
-        hierarchy_layer_.reset(new HierarchyLayer());
-        property_layer_.reset(new ModelPropertyLayer());
-        timeline_layer_.reset(new TimelineLayer());
+        hierarchy_layer_ = std::make_unique<HierarchyLayer>();
+        property_layer_ = std::make_unique<ModelPropertyLayer>();
+        timeline_layer_ = std::make_unique<TimelineLayer>();
     }
+
     void MainLayer::shutdown()
     {
         ImGui_ImplOpenGL3_Shutdown();
@@ -60,6 +68,7 @@ namespace ui
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
+        context_ = UiContext{};
     }
     void MainLayer::end()
     {
@@ -76,58 +85,29 @@ namespace ui
         }
     }
 
-    // scenes, current focus scene idx
-    // Model, Model Node, animator
-    void MainLayer::draw()
+    void MainLayer::draw_dock()
     {
-        draw_dock(NULL);
-        // scene name, scene
-        // draw_scene();
-        // modelNode, animator
-        //  hierarchy_layer_->draw_model_node();
-        // Model
-        //  property_layer_->draw();
-        // scenes, scene, animator
-        //  timeline_layer_->draw();
-    }
-
-    void MainLayer::draw_dock(bool *p_open)
-    {
-        static bool opt_fullscreen = true;
-        static bool opt_padding = false;
         static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
-        // We are using the ImGuiWindowFlags_NoDocking flag to make the parent window not dockable into,
-        // because it would be confusing to have two docking targets within each others.
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
-        if (opt_fullscreen)
-        {
-            const ImGuiViewport *viewport = ImGui::GetMainViewport();
-            ImGui::SetNextWindowPos(viewport->WorkPos);
-            ImGui::SetNextWindowSize(viewport->WorkSize);
-            ImGui::SetNextWindowViewport(viewport->ID);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-            window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-            window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
-        }
-        else
-        {
-            dockspace_flags &= ~ImGuiDockNodeFlags_PassthruCentralNode;
-        }
+        const ImGuiViewport *viewport = ImGui::GetMainViewport();
+        ImGui::SetNextWindowPos(viewport->WorkPos);
+        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImGui::SetNextWindowViewport(viewport->ID);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
+        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             window_flags |= ImGuiWindowFlags_NoBackground;
 
-        if (!opt_padding)
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 
-        ImGui::Begin("DockSpace Demo", p_open, window_flags);
-        if (!opt_padding)
-            ImGui::PopStyleVar();
+        ImGui::Begin("DockSpace Demo", NULL, window_flags);
+        ImGui::PopStyleVar();
 
-        if (opt_fullscreen)
-            ImGui::PopStyleVar(2);
+        ImGui::PopStyleVar(2);
 
         // Submit the DockSpace
         ImGuiIO &io = ImGui::GetIO();
@@ -136,65 +116,34 @@ namespace ui
             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
         }
-        else
-        {
-            // ShowDockingDisabledMessage();
-        }
-
+        draw_menu_bar();
+        ImGui::End();
+    }
+    void MainLayer::draw_menu_bar()
+    {
         if (ImGui::BeginMenuBar())
         {
-            if (ImGui::BeginMenu("Options"))
+            if (ImGui::BeginMenu("File"))
             {
-                // Disabling fullscreen would allow the window to be moved to the front of other windows,
-                // which we can't undo at the moment without finer window depth/z control.
-                ImGui::MenuItem("Fullscreen", NULL, &opt_fullscreen);
-                ImGui::MenuItem("Padding", NULL, &opt_padding);
-                ImGui::Separator();
-                if (ImGui::MenuItem("Flag: NoSplit", "", (dockspace_flags & ImGuiDockNodeFlags_NoSplit) != 0))
+                if (ImGui::MenuItem("Import:model", NULL, nullptr))
                 {
-                    dockspace_flags ^= ImGuiDockNodeFlags_NoSplit;
-                }
-                if (ImGui::MenuItem("Flag: NoResize", "", (dockspace_flags & ImGuiDockNodeFlags_NoResize) != 0))
-                {
-                    dockspace_flags ^= ImGuiDockNodeFlags_NoResize;
-                }
-                if (ImGui::MenuItem("Flag: NoDockingInCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_NoDockingInCentralNode) != 0))
-                {
-                    dockspace_flags ^= ImGuiDockNodeFlags_NoDockingInCentralNode;
-                }
-                if (ImGui::MenuItem("Flag: AutoHideTabBar", "", (dockspace_flags & ImGuiDockNodeFlags_AutoHideTabBar) != 0))
-                {
-                    dockspace_flags ^= ImGuiDockNodeFlags_AutoHideTabBar;
-                }
-                if (ImGui::MenuItem("Flag: PassthruCentralNode", "", (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode) != 0, opt_fullscreen))
-                {
-                    dockspace_flags ^= ImGuiDockNodeFlags_PassthruCentralNode;
+                    context_.menu_context.clicked_import_model = true;
                 }
                 ImGui::Separator();
+                if (ImGui::MenuItem("Export:animation", NULL, nullptr))
+                {
+                    context_.menu_context.clicked_export_animation = true;
+                }
 
                 ImGui::EndMenu();
             }
             HelpMarker(
-                "When docking is enabled, you can ALWAYS dock MOST window into another! Try it now!"
+                "Import: fbx, glft2, obj ..."
                 "\n"
-                "- Drag from window title bar or their tab to dock/undock."
-                "\n"
-                "- Drag from window menu button (upper-left button) to undock an entire node (all windows)."
-                "\n"
-                "- Hold SHIFT to disable docking (if io.ConfigDockingWithShift == false, default)"
-                "\n"
-                "- Hold SHIFT to enable docking (if io.ConfigDockingWithShift == true)"
-                "\n"
-                "This demo app has nothing to do with enabling docking!"
-                "\n\n"
-                "This demo app only demonstrate the use of ImGui::DockSpace() which allows you to manually create a docking node _within_ another window."
-                "\n\n"
-                "Read comments in ShowExampleAppDockSpace() for more details.");
+                "Export: {animation glft2}");
 
             ImGui::EndMenuBar();
         }
-
-        ImGui::End();
     }
     void MainLayer::draw_scene(const std::string &title, Scene *scene)
     {
@@ -203,5 +152,28 @@ namespace ui
             scene_layer_map_[title] = std::make_unique<SceneLayer>();
         }
         scene_layer_map_[title]->draw(title.c_str(), scene);
+    }
+
+    void MainLayer::draw_model_properties(glcpp::Model *model)
+    {
+        property_layer_->draw(model);
+    }
+
+    void MainLayer::draw_hierarchy_layer(glcpp::Model *model)
+    {
+        hierarchy_layer_->draw(model);
+    }
+
+    bool MainLayer::is_scene_layer_hovered(const std::string &title)
+    {
+        if (scene_layer_map_.find(title) == scene_layer_map_.end())
+        {
+            return false;
+        }
+        return scene_layer_map_[title]->get_is_hovered();
+    }
+    const UiContext &MainLayer::get_context() const
+    {
+        return context_;
     }
 }

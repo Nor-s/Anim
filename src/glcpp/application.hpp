@@ -49,7 +49,7 @@ namespace glcpp
         virtual void loop()
         {
         }
-        virtual void init(int width, int height, const std::string &title)
+        virtual void init(uint32_t width, uint32_t height, const std::string &title)
         {
             window_.reset(new Window(width, height, title));
         }

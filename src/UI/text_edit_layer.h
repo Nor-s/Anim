@@ -11,6 +11,8 @@ namespace ui
     class TextEditLayer
     {
     public:
+        TextEditLayer() = default;
+        ~TextEditLayer() = default;
         void init();
         void open(const char *file_path);
         void quick_save(const std::string &str);

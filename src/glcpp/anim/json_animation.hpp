@@ -61,12 +61,11 @@ namespace glcpp
     void reload() override
     {
 #ifndef NDEBUG
-        std::cout << "relaod: json" << std::endl;
+      std::cout << "relaod: json" << std::endl;
 #endif
       destroy();
       init();
     }
-
 
   private:
     void destroy()
@@ -98,10 +97,8 @@ namespace glcpp
       }
       catch (std::exception &e)
       {
-
-#ifndef NDEBUG        
-          std::cout << e.what() << std::endl;
-
+#ifndef NDEBUG
+        std::cout << e.what() << std::endl;
 #endif
       }
     }

@@ -7,13 +7,27 @@
 
 namespace ui
 {
+    ModelPropertyLayer::ModelPropertyLayer() = default;
+    ModelPropertyLayer::~ModelPropertyLayer() = default;
     void ModelPropertyLayer::draw(glcpp::Model *model)
     {
         ImGui::Begin("Model Property");
         {
-            draw_transform_slider(model->get_mutable_transform());
+            if (ImGui::CollapsingHeader("Transform"))
+            {
+                if (model)
+                {
+                    draw_transform_slider(model->get_mutable_transform());
+                }
+                else
+                {
+                    ImGui::Text("No model selected");
+                }
+                ImGui::Separator();
+            }
         }
         ImGui::End();
+        ImGui::ShowDemoWindow();
     }
     void ModelPropertyLayer::draw_transform_slider(glcpp::TransformComponent &transform)
     {

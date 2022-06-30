@@ -7,7 +7,7 @@
 class PixelateFramebuffer;
 namespace glcpp
 {
-    class Model;
+    class Entity;
 }
 class MainScene : public Scene
 {
@@ -18,8 +18,7 @@ public:
     virtual void init_framebuffer(uint32_t width, uint32_t height) override;
     virtual void pre_draw() override;
     virtual void draw() override;
-    virtual void select_model(uint32_t model_id) override;
-    virtual glcpp::Model *get_mutable_selected_model() override;
+    virtual glcpp::Entity *get_mutable_selected_entity() override;
 
 private:
     void init_shader();
@@ -35,8 +34,7 @@ private:
     std::shared_ptr<glcpp::Framebuffer> grid_framebuffer_;
     std::shared_ptr<PixelateFramebuffer> pixelate_framebuffer_;
 
-    uint32_t model_id_;
-    std::shared_ptr<glcpp::Model> selected_model_;
+    std::shared_ptr<glcpp::Entity> selected_entity_;
 };
 
 #endif

@@ -12,12 +12,13 @@ namespace glcpp
     class Shader;
     class Animation;
     struct ModelNode;
+    class Entity;
 
     class Animator
     {
     public:
         Animator();
-        void update_animation(float dt, Model *model, Shader *shader);
+        void update_animation(float dt, Entity *entity, Shader *shader);
         void calculate_bone_transform(const Model *model, const ModelNode *node, Animation *animation, glm::mat4 parentTransform);
 
     private:

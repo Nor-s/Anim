@@ -4,6 +4,7 @@
 #include "glcpp/model.h"
 #include "glcpp/framebuffer.h"
 #include "glcpp/shader.h"
+#include "glcpp/entity.h"
 
 PixelateFramebuffer::PixelateFramebuffer(int width, int height)
 {
@@ -22,9 +23,9 @@ PixelateFramebuffer::~PixelateFramebuffer()
 //(https://community.khronos.org/t/alpha-blending-issues-when-drawing-frame-buffer-into-default-buffer/73958)
 //(https://stackoverflow.com/questions/2171085/opengl-blending-with-previous-contents-of-framebuffer/4076268)
 
-void PixelateFramebuffer::pre_draw(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
+void PixelateFramebuffer::pre_draw(std::shared_ptr<glcpp::Entity> &entity, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
 {
-    capture_rgba(model, shader, view, projection);
+    capture_rgba(entity, shader, view, projection);
     if (is_outline_)
     {
         capture_outline();
@@ -51,7 +52,7 @@ void PixelateFramebuffer::to_png(const char *save_path)
     }
 }
 
-void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
+void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Entity> &entity, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
 {
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
@@ -59,11 +60,7 @@ void PixelateFramebuffer::capture_rgba(std::shared_ptr<glcpp::Model> &model, glc
     pixelate_framebuffer_->bind_with_depth({0.0f, 0.0f, 0.0f, 0.0f});
 
     glViewport(0, 0, pixelate_framebuffer_->get_width(), pixelate_framebuffer_->get_height());
-    if (model)
-    {
-        model->draw(shader, view, projection);
-    }
-
+    entity->draw(shader, view, projection);
     pixelate_framebuffer_->unbind();
     glDisable(GL_DEPTH_TEST);
 }

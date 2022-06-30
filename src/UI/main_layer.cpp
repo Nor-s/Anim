@@ -17,7 +17,9 @@
 namespace ui
 {
     MainLayer::MainLayer() = default;
+    
     MainLayer::~MainLayer() = default;
+
     void MainLayer::init(GLFWwindow *window)
     {
         NFD_Init();
@@ -70,6 +72,7 @@ namespace ui
         ImGui::NewFrame();
         context_ = UiContext{};
     }
+
     void MainLayer::end()
     {
         ImGui::Render();
@@ -85,7 +88,7 @@ namespace ui
         }
     }
 
-    void MainLayer::draw_dock()
+    void MainLayer::draw_dock(float fps)
     {
         static ImGuiDockNodeFlags dockspace_flags = ImGuiDockNodeFlags_None;
 
@@ -116,10 +119,11 @@ namespace ui
             ImGuiID dockspace_id = ImGui::GetID("MyDockSpace");
             ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), dockspace_flags);
         }
-        draw_menu_bar();
+        draw_menu_bar(fps);
         ImGui::End();
     }
-    void MainLayer::draw_menu_bar()
+
+    void MainLayer::draw_menu_bar(float fps)
     {
         if (ImGui::BeginMenuBar())
         {
@@ -142,9 +146,12 @@ namespace ui
                 "\n"
                 "Export: {animation glft2}");
 
+            ImGui::Text("fps: %.2f", fps);
+
             ImGui::EndMenuBar();
         }
     }
+
     void MainLayer::draw_scene(const std::string &title, Scene *scene)
     {
         if (scene_layer_map_.find(title) == scene_layer_map_.end())
@@ -154,14 +161,14 @@ namespace ui
         scene_layer_map_[title]->draw(title.c_str(), scene);
     }
 
-    void MainLayer::draw_model_properties(glcpp::Model *model)
+    void MainLayer::draw_model_properties(glcpp::Entity *entity)
     {
-        property_layer_->draw(model);
+        property_layer_->draw(entity);
     }
 
-    void MainLayer::draw_hierarchy_layer(glcpp::Model *model)
+    void MainLayer::draw_hierarchy_layer(glcpp::Entity *entity)
     {
-        hierarchy_layer_->draw(model);
+        hierarchy_layer_->draw(entity);
     }
 
     bool MainLayer::is_scene_layer_hovered(const std::string &title)

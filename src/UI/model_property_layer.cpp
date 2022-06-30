@@ -1,23 +1,25 @@
 #include "model_property_layer.h"
 
 #include "scene/scene.hpp"
-#include "glcpp/model.h"
+#include "glcpp/entity.h"
 #include "glcpp/component/transform_component.h"
 #include <imgui/imgui.h>
 
 namespace ui
 {
     ModelPropertyLayer::ModelPropertyLayer() = default;
+
     ModelPropertyLayer::~ModelPropertyLayer() = default;
-    void ModelPropertyLayer::draw(glcpp::Model *model)
+
+    void ModelPropertyLayer::draw(glcpp::Entity *entity)
     {
         ImGui::Begin("Model Property");
         {
             if (ImGui::CollapsingHeader("Transform"))
             {
-                if (model)
+                if (entity)
                 {
-                    draw_transform_slider(model->get_mutable_transform());
+                    draw_transform_slider(entity->get_mutable_transform());
                 }
                 else
                 {
@@ -29,6 +31,7 @@ namespace ui
         ImGui::End();
         ImGui::ShowDemoWindow();
     }
+
     void ModelPropertyLayer::draw_transform_slider(glcpp::TransformComponent &transform)
     {
         auto &rotation = transform.get_rotation();

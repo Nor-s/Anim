@@ -1,6 +1,7 @@
 #include "animator.h"
 
 #include <glm/gtx/matrix_decompose.hpp>
+#include "entity.h"
 #include "model.h"
 #include "anim/bone.hpp"
 #include "anim/animation.hpp"
@@ -21,14 +22,14 @@ namespace glcpp
             final_bone_matrices_.push_back(glm::mat4(1.0f));
     }
 
-    void Animator::update_animation(float dt, Model *model, Shader *shader)
+    void Animator::update_animation(float dt, Entity *entity, Shader *shader)
     {
-        if (model == nullptr || shader == nullptr)
+        if (entity == nullptr || shader == nullptr)
         {
             return;
         }
 
-        AnimationComponent *animation = model->get_mutable_pointer_animation_component();
+        AnimationComponent *animation = entity->get_mutable_pointer_animation_component();
         if (!animation)
         {
             return;
@@ -55,6 +56,7 @@ namespace glcpp
         }
         current_time_ = current_time;
         factor_ = animation->get_ticks_per_second_factor();
+        auto model = entity->get_mutable_model();
         calculate_bone_transform(model, model->get_root_node(), animation->get_mutable_animation(), glm::mat4(1.0f));
         shader->use();
         for (int i = 0; i < MAX_BONE_NUM; ++i)

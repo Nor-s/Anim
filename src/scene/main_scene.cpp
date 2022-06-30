@@ -7,6 +7,7 @@
 #include <glcpp/camera.h>
 #include <glcpp/model.h>
 #include <glcpp/animator.h>
+#include <glcpp/entity.h>
 
 #include <filesystem>
 
@@ -20,11 +21,12 @@ MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedReso
     }
     else
     {
-        resources_ = resources;
+        resources_ = std::move(resources);
     }
     init_shader();
     init_framebuffer(width_, height_);
     init_camera();
+    selected_entity_ = std::make_shared<glcpp::Entity>();
 }
 
 void MainScene::init_shader()
@@ -69,18 +71,19 @@ void MainScene::pre_draw()
     update_framebuffer();
     set_view_and_projection();
     glcpp::Shader *shader = nullptr;
-    if (selected_model_ && selected_model_->has_animation_component())
+    if (selected_entity_ && selected_entity_->get_mutable_model() && selected_entity_->has_animation_component())
     {
         shader = resources_->get_mutable_shader("animation").get();
-        resources_->get_mutable_animator()->update_animation(delta_time_, selected_model_.get(), shader);
+        resources_->get_mutable_animator()->update_animation(delta_time_, selected_entity_.get(), shader);
     }
     else
     {
         shader = resources_->get_mutable_shader("model").get();
     }
-    pixelate_framebuffer_->pre_draw(selected_model_, *shader, view_, projection_);
+    pixelate_framebuffer_->pre_draw(selected_entity_, *shader, view_, projection_);
     draw_to_framebuffer();
 }
+
 void MainScene::update_framebuffer()
 {
     if (framebuffer_->get_width() != width_ || framebuffer_->get_height() != height_)
@@ -89,6 +92,7 @@ void MainScene::update_framebuffer()
         init_pixelate_framebuffer(width_, height_);
     }
 }
+
 void MainScene::set_view_and_projection()
 {
     // https://stackoverflow.com/questions/17249429/opengl-strange-rendering-behaviour-flickering-faces
@@ -129,16 +133,10 @@ void MainScene::draw()
     framebuffer_->draw(*framebuffer_shader);
 }
 
-void MainScene::select_model(uint32_t model_id)
+glcpp::Entity* MainScene::get_mutable_selected_entity()
 {
-    model_id_ = model_id;
-    selected_model_ = resources_->get_mutable_model(model_id);
-}
-glcpp::Model *MainScene::get_mutable_selected_model()
-{
-    if (selected_model_)
-    {
-        return selected_model_.get();
+    if (selected_entity_) {
+        std::cout << "is\n";
     }
-    return nullptr;
+    return selected_entity_.get();
 }

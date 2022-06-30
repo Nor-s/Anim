@@ -3,7 +3,7 @@
 
 namespace glcpp
 {
-    class Model;
+    class Entity;
     struct TransformComponent;
 }
 
@@ -14,7 +14,7 @@ namespace ui
     public:
         ModelPropertyLayer();
         ~ModelPropertyLayer();
-        void draw(glcpp::Model *model);
+        void draw(glcpp::Entity *entity);
 
     private:
         void draw_transform_slider(glcpp::TransformComponent &transform);

@@ -8,12 +8,14 @@
 
 class SceneContext;
 class SharedResources;
+
 namespace glcpp
 {
     class Framebuffer;
     class Camera;
-    class Model;
+    class Entity;
 }
+
 class Scene
 {
 public:
@@ -22,8 +24,7 @@ public:
     virtual void init_framebuffer(uint32_t width, uint32_t height) = 0;
     virtual void pre_draw() = 0;
     virtual void draw() = 0;
-    virtual void select_model(uint32_t model_id) = 0;
-    virtual glcpp::Model *get_mutable_selected_model() = 0;
+    virtual glcpp::Entity *get_mutable_selected_entity() = 0;
     virtual std::shared_ptr<glcpp::Framebuffer> get_mutable_framebuffer()
     {
         return framebuffer_;

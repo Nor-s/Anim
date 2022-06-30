@@ -37,22 +37,15 @@ glcpp::Animator *SharedResources::get_mutable_animator()
     return animator_.get();
 }
 
-std::shared_ptr<glcpp::Model> SharedResources::get_mutable_model(uint32_t idx)
+std::shared_ptr<glcpp::Model> SharedResources::back_mutable_model()
 {
-    if (idx >= models_.size())
-    {
-        return nullptr;
-    }
-    return models_[idx];
+
+    return models_.back();
 }
 
-std::shared_ptr<glcpp::Animation> SharedResources::get_mutable_animation(uint32_t idx)
+std::shared_ptr<glcpp::Animation> SharedResources::back_mutable_animation()
 {
-    if (idx >= animations_.size())
-    {
-        return nullptr;
-    }
-    return animations_[idx];
+    return animations_.back();
 }
 
 std::shared_ptr<glcpp::Shader> SharedResources::get_mutable_shader(const std::string &name)
@@ -82,12 +75,12 @@ std::pair<bool, bool> SharedResources::add_model_or_animation_by_path(const char
     auto [sp_model, sp_animations] = importer.import(path);
     if (sp_model)
     {
-        models_.push_back(sp_model);
+        models_.push_back(std::move(sp_model));
         is_imported_model = true;
     }
     if (sp_animations.size() > 0)
     {
-        animations_.insert(animations_.end(), sp_animations.begin(), sp_animations.end());
+        animations_.insert(animations_.end(), std::make_move_iterator(sp_animations.begin()), std::make_move_iterator(sp_animations.end()));
         is_imported_animation = true;
     }
     return {is_imported_model, is_imported_animation};

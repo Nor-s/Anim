@@ -1,6 +1,7 @@
 #include "hierarchy_layer.h"
 
 #include "glcpp/model.h"
+#include "glcpp/entity.h"
 #include "glcpp/anim/animation.hpp"
 #include "glcpp/anim/bone.hpp"
 #include "glcpp/component/animation_component.h"
@@ -12,9 +13,10 @@ namespace ui
 {
     HierarchyLayer::HierarchyLayer() = default;
     HierarchyLayer::~HierarchyLayer() = default;
-    void HierarchyLayer::draw(glcpp::Model *model)
+    void HierarchyLayer::draw(glcpp::Entity *entity)
     {
         static const char *selected_node_name = nullptr;
+        auto model = entity->get_mutable_model();
         ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
         int node_count = 0;
         ImGui::Begin("Hierarchy");
@@ -22,7 +24,7 @@ namespace ui
             if (model)
             {
                 auto root_node = model->get_root_node();
-                auto animation = model->get_mutable_pointer_animation_component();
+                auto animation = entity->get_mutable_pointer_animation_component();
                 auto node_name = dfs(root_node, node_flags, node_count);
                 if (node_name)
                 {

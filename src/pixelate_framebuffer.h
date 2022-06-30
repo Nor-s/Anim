@@ -9,6 +9,7 @@ namespace glcpp
 {
     class Framebuffer;
     class Model;
+    class Entity;
 }
 
 class PixelateFramebuffer
@@ -16,7 +17,7 @@ class PixelateFramebuffer
 public:
     PixelateFramebuffer(int width, int height);
     ~PixelateFramebuffer();
-    void pre_draw(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
+    void pre_draw(std::shared_ptr<glcpp::Entity> &entity, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
     void draw();
     void to_png(const char *save_path);
     void set_pixelate_shader(std::shared_ptr<glcpp::Shader> &shader);
@@ -34,7 +35,7 @@ public:
     glm::vec3 &get_outline_color();
 
 private:
-    void capture_rgba(std::shared_ptr<glcpp::Model> &model, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
+    void capture_rgba(std::shared_ptr<glcpp::Entity> &entity, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection);
     void capture_outline();
 
 private:

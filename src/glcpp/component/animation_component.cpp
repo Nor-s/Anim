@@ -30,10 +30,11 @@ namespace glcpp
             init_animation();
         }
     }
+
     void AnimationComponent::set_animation(std::shared_ptr<Animation> animation)
     {
         animation_.reset();
-        animation_ = animation;
+        animation_ = std::move(animation);
         init_animation();
     }
 
@@ -47,6 +48,7 @@ namespace glcpp
         if (tick_per_second > 0.0f)
             custom_ticks_per_second_ = tick_per_second;
     }
+
     Animation *AnimationComponent::get_mutable_animation()
     {
         return animation_.get();

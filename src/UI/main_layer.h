@@ -11,7 +11,7 @@ class SharedResources;
 
 namespace glcpp
 {
-    class Model;
+    class Entity;
 }
 
 namespace ui
@@ -43,10 +43,10 @@ namespace ui
         void init(GLFWwindow *window);
         void begin();
         void end();
-        void draw_dock();
+        void draw_dock(float fps);
         void draw_scene(const std::string &title, Scene *scene);
-        void draw_model_properties(glcpp::Model *model);
-        void draw_hierarchy_layer(glcpp::Model *model);
+        void draw_model_properties(glcpp::Entity *entity);
+        void draw_hierarchy_layer(glcpp::Entity *entity);
 
         bool is_scene_layer_hovered(const std::string &title);
         const UiContext &get_context() const;
@@ -54,7 +54,7 @@ namespace ui
     private:
         void init_layer();
         void shutdown();
-        void draw_menu_bar();
+        void draw_menu_bar(float fps);
         // https://www.fluentcpp.com/2017/09/22/make-pimpl-using-unique_ptr/
         std::map<std::string, std::unique_ptr<SceneLayer>> scene_layer_map_;
         std::unique_ptr<HierarchyLayer> hierarchy_layer_;

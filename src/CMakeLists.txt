@@ -18,6 +18,7 @@ set(GLCPP_SRC
     glcpp/anim/assimp_animation.hpp
     glcpp/anim/json_animation.hpp
     glcpp/animator.cpp
+    glcpp/entity.cpp
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})

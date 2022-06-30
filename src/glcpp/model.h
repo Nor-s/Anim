@@ -1,5 +1,5 @@
-#ifndef GLCPP_MESHES_H
-#define GLCPP_MESHES_H
+#ifndef GLCPP_MODEL_H
+#define GLCPP_MODEL_H
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -70,12 +70,9 @@ namespace glcpp
         Model(const char *path, const aiScene *scene);
         ~Model();
 
-        void draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection);
+        void draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform);
         void draw(Shader &shader);
 
-        TransformComponent &get_mutable_transform();
-        AnimationComponent *get_mutable_pointer_animation_component();
-        const AnimationComponent *get_pointer_animation_component() const;
         const std::map<std::string, BoneInfo> &get_bone_info_map() const;
         std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
@@ -84,23 +81,7 @@ namespace glcpp
         void get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node);
         void get_ai_root_node_for_anim(aiNode *ai_node);
 
-        void set_animation_component(std::shared_ptr<Animation> animation);
-
-        bool has_animation_component();
-
     private:
-        // heirarchy
-        std::shared_ptr<ModelNode> root_node_;
-        // model data
-        std::vector<Mesh> meshes_;
-        std::filesystem::path directory_;
-        TransformComponent *transform_;
-        std::shared_ptr<AnimationComponent> animation_;
-        // bone data
-        std::map<std::string, BoneInfo> bone_info_map_;
-        int bone_count_ = 0;
-        int node_count_ = 0;
-
         void load_model(const char *path);
         void load_model(const char *path, const aiScene *scene);
         /**
@@ -111,7 +92,7 @@ namespace glcpp
          */
         void process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene);
         /**
-         * @brief 모든 vertex 데이터를 얻고, mesh의 indices를 얻고, 연관된 material(texture) 데이터를 얻는다.
+         * @brief 모든 vertex 데이터를 얻고, mesh의 indices를 얻고, 연관된 material(texture) 데이터를 얻음
          *
          * @param mesh
          * @param scene
@@ -129,6 +110,12 @@ namespace glcpp
 
         std::vector<Texture> load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                     std::string typeName);
+        std::shared_ptr<ModelNode> root_node_;
+        std::vector<Mesh> meshes_;
+        std::map<std::string, BoneInfo> bone_info_map_;
+        std::filesystem::path directory_;
+        int bone_count_ = 0;
+        int node_count_ = 0;
     };
 };
 

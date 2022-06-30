@@ -21,10 +21,12 @@ namespace glcpp
     {
         load_model(path, scene);
     }
+
     Model::Model(const char *path)
     {
         load_model(path);
     }
+
     Model::~Model()
     {
         root_node_.reset();
@@ -57,12 +59,13 @@ namespace glcpp
         }
         load_model(path, scene);
     }
+
     void Model::load_model(const char *path, const aiScene *scene)
     {
         directory_ = std::filesystem::u8path(path);
         process_node(root_node_, scene->mRootNode, scene);
-        transform_ = &(root_node_->relative_transformation);
     }
+
     void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
     {
         node_count_++;
@@ -90,6 +93,7 @@ namespace glcpp
             process_node(model_node->childrens[i], ai_node->mChildren[i], scene);
         }
     }
+
     void Model::get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node)
     {
         ai_node->mName = aiString(model_node->name.c_str());
@@ -104,6 +108,7 @@ namespace glcpp
             get_ai_node_for_anim(ai_node->mChildren[i], model_node->childrens[i].get(), ai_node);
         }
     }
+
     void Model::get_ai_root_node_for_anim(aiNode *ai_root_node)
     {
         get_ai_node_for_anim(ai_root_node, root_node_.get(), NULL);
@@ -295,6 +300,7 @@ namespace glcpp
 
         return textureID;
     }
+
     void LoadMemory(const aiTexture *texture, unsigned int *id)
     {
         if (!*id)
@@ -344,12 +350,12 @@ namespace glcpp
 }
 namespace glcpp
 {
-    void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection)
+    void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform)
     {
         shader.use();
         shader.set_mat4("projection", projection);
         shader.set_mat4("view", view);
-        shader.set_mat4("model", transform_->get_mat4());
+        shader.set_mat4("model", transform);
         for (unsigned int i = 0; i < meshes_.size(); i++)
             meshes_[i].draw(shader);
     }
@@ -360,18 +366,6 @@ namespace glcpp
             meshes_[i].draw(shader);
     }
 
-    TransformComponent &Model::get_mutable_transform()
-    {
-        return *transform_;
-    }
-    AnimationComponent *Model::get_mutable_pointer_animation_component()
-    {
-        return animation_.get();
-    }
-    const AnimationComponent *Model::get_pointer_animation_component() const
-    {
-        return animation_.get();
-    }
     std::map<std::string, BoneInfo> &Model::get_mutable_bone_info_map()
     {
         return bone_info_map_;
@@ -395,22 +389,4 @@ namespace glcpp
     {
         return root_node_;
     }
-
-    void Model::set_animation_component(std::shared_ptr<Animation> animation)
-    {
-        if (animation_)
-        {
-            animation_->set_animation(animation);
-        }
-        else
-        {
-            animation_ = std::make_shared<AnimationComponent>(animation);
-        }
-    }
-
-    bool Model::has_animation_component()
-    {
-        return animation_ != nullptr;
-    }
-
 }

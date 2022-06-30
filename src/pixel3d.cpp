@@ -8,6 +8,7 @@
 #include "scene/main_scene.h"
 #include "scene/shared_resources.h"
 #include "glcpp/model.h"
+#include "glcpp/entity.h"
 
 namespace fs = std::filesystem;
 
@@ -69,11 +70,11 @@ void Pixel3D::loop()
         pre_draw();
         {
             ui_->begin();
-            ui_->draw_dock();
+            ui_->draw_dock(fps_);
             this->draw_scene();
-            auto p_model = scenes_[current_scene_idx_]->get_mutable_selected_model();
-            ui_->draw_model_properties(p_model);
-            ui_->draw_hierarchy_layer(p_model);
+            auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+            ui_->draw_model_properties(entity);
+            ui_->draw_hierarchy_layer(entity);
             ui_->end();
         }
         post_draw();
@@ -103,25 +104,23 @@ void Pixel3D::update_time()
 }
 void Pixel3D::update_resources()
 {
-    auto shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
-    auto ui_context = ui_->get_context();
+    auto &shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
+    auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+    auto &ui_context = ui_->get_context();
     if (ui_context.menu_context.clicked_import_model)
     {
         std::pair<bool, bool> result = shared_resources->add_model_or_animation_by_path(nullptr);
         if (result.first)
         {
-            int back_idx = shared_resources->get_models_size() - 1;
-            auto model = shared_resources->get_mutable_model(back_idx);
-            model->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
-            scenes_[current_scene_idx_]->select_model(back_idx);
+            auto model = shared_resources->back_mutable_model();
+            entity->set_model(model);
+            entity->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
         }
 
         if (result.second)
         {
-            int back_idx = shared_resources->get_animations_size() - 1;
-            auto animation = shared_resources->get_mutable_animation(back_idx);
-            auto model = scenes_[current_scene_idx_]->get_mutable_selected_model();
-            model->set_animation_component(animation);
+            auto animation = shared_resources->back_mutable_animation();
+            entity->set_animation_component(animation);
         }
     }
     if (ui_context.menu_context.clicked_export_animation)

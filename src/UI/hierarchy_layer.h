@@ -9,6 +9,7 @@ namespace glcpp
     class Model;
     class Animation;
     struct ModelNode;
+    class Entity;
 }
 
 namespace ui
@@ -18,7 +19,7 @@ namespace ui
     public:
         HierarchyLayer();
         ~HierarchyLayer();
-        void draw(glcpp::Model *model);
+        void draw(glcpp::Entity *model);
 
     private:
         void draw_selected_node(const char *node_name, glcpp::Animation *animation);

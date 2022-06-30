@@ -1,4 +1,4 @@
-#include "pixel3d.h"
+#include "pixel3D.h"
 
 #include <stb/stb_image.h>
 #include "glcpp/camera.h"

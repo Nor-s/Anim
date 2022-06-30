@@ -9,6 +9,7 @@
 #include <map>
 #include <memory>
 #include <filesystem>
+#include <vector>
 
 namespace glcpp
 {

@@ -21,7 +21,7 @@ namespace ui
     void MainLayer::init(GLFWwindow *window)
     {
         NFD_Init();
-        const char *glsl_version = "#version 430";
+        const char *glsl_version = "#version 330";
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();

@@ -28,7 +28,7 @@ namespace glcpp
         void set_model(std::shared_ptr<Model> model);
         void set_animation_component(std::shared_ptr<Animation> animation);
 
-        bool has_animation_component();
+        bool has_animation_component() const;
 
     private:
         std::shared_ptr<Model> model_;

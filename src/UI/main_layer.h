@@ -50,6 +50,7 @@ namespace ui
         void draw_scene(const std::string &title, Scene *scene);
         void draw_model_properties(glcpp::Entity *entity);
         void draw_hierarchy_layer(glcpp::Entity *entity);
+        void draw_timeline(Scene *scene);
 
         bool is_scene_layer_hovered(const std::string &title);
 

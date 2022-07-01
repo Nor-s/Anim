@@ -18,6 +18,7 @@ namespace glcpp
         void set_animation(std::shared_ptr<Animation> animation);
         void set_current_frame_num_to_time(uint32_t frame);
         void set_custom_tick_per_second(float tick_per_second);
+        const Animation *get_animation() const;
         Animation *get_mutable_animation();
         float get_origin_current_time(float time);
         bool *get_mutable_pointer_is_loop();

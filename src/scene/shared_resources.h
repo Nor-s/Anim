@@ -31,6 +31,9 @@ public:
     std::shared_ptr<glcpp::Model> back_mutable_model();
     std::shared_ptr<glcpp::Animation> back_mutable_animation();
     std::shared_ptr<glcpp::Shader> get_mutable_shader(const std::string &name);
+    const std::vector<std::shared_ptr<glcpp::Model>> &get_models() const;
+    const std::vector<std::shared_ptr<glcpp::Animation>> &get_animations() const;
+
     int get_models_size() const;
     int get_animations_size() const;
     std::pair<bool, bool> add_model_or_animation_by_path(const char *path);

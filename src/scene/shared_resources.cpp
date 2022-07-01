@@ -56,6 +56,14 @@ std::shared_ptr<glcpp::Shader> SharedResources::get_mutable_shader(const std::st
     }
     return shaders_[name];
 }
+const std::vector<std::shared_ptr<glcpp::Model>> &SharedResources::get_models() const
+{
+    return models_;
+}
+const std::vector<std::shared_ptr<glcpp::Animation>> &SharedResources::get_animations() const
+{
+    return animations_;
+}
 
 int SharedResources::get_models_size() const
 {

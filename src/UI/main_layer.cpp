@@ -160,6 +160,10 @@ namespace ui
     {
         hierarchy_layer_.draw(entity);
     }
+    void MainLayer::draw_timeline(Scene *scene)
+    {
+        timeline_layer_.draw(scene, context_.timeline_context);
+    }
 
     bool MainLayer::is_scene_layer_hovered(const std::string &title)
     {

@@ -49,6 +49,11 @@ namespace glcpp
             custom_ticks_per_second_ = tick_per_second;
     }
 
+    const Animation *AnimationComponent::get_animation() const
+    {
+        return animation_.get();
+    }
+
     Animation *AnimationComponent::get_mutable_animation()
     {
         return animation_.get();

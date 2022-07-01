@@ -1,21 +1,28 @@
 #include "timeline_layer.h"
 #include "text_edit_layer.h"
+#include "scene/shared_resources.h"
 #include "scene/scene.hpp"
+#include "glcpp/entity.h"
 #include "glcpp/anim/bone.hpp"
 #include "glcpp/anim/animation.hpp"
+#include "glcpp/component/animation_component.h"
 
-#include "imgui/imgui.h"
-#include "imgui/imgui_neo_sequencer.h"
+#include <imgui/imgui.h>
+#include <imgui/imgui_neo_sequencer.h>
+
 #include <iostream>
 
 namespace ui
 {
+    bool TimelineLayer::IsHoveredZoomSlider = false;
+
     TimelineLayer::TimelineLayer()
     {
         text_editor_.reset(new TextEditLayer());
         text_editor_->init();
     }
-    void TimelineLayer::draw(std::vector<std::shared_ptr<Scene>> &scenes, uint32_t scene_idx)
+
+    void TimelineLayer::draw(Scene *scene, TimelineContext &context)
     {
         // std::vector<const char *> animation_items = animator->get_animation_name_list();
 
@@ -26,32 +33,39 @@ namespace ui
         // float &fps = animator->get_mutable_fps();
         // float &tick_per_second = animator->get_mutable_custom_tick_per_second();
         // std::vector<uint32_t> keys = {0, 0, 10, 24};
-        // ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
 
-        // if (is_hovered_animation_zoom_slider)
-        // {
-        //     window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
-        // }
+        ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
+        auto entity = scene->get_mutable_selected_entity();
+        auto resource = scene->get_mutable_shared_resources().get();
 
-        // ImGui::Begin("Animation bar", NULL, window_flags);
-        // {
-        //     ImGui::SameLine();
-        //     float input_fps = fps;
-        //     ImGui::InputFloat("fps", &input_fps);
-        //     fps = input_fps;
+        if (IsHoveredZoomSlider)
+        {
+            window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
+        }
+        ImGui::Begin("Animation", NULL, window_flags);
+        {
+            draw_play_all_button(context);
+            ImGui::SameLine();
+            draw_play_and_stop_button(context);
+            ImGui::SameLine();
+            draw_animation_option_button(entity);
+            //     float input_fps = fps;
+            //     ImGui::InputFloat("fps", &input_fps);
+            //     fps = input_fps;
 
-        //     ImGui::SameLine();
-        //     float input_tick_per_second = tick_per_second;
-        //     ImGui::InputFloat("scale", &input_tick_per_second);
-        //     tick_per_second = input_tick_per_second;
-        // }
-        // ImGui::End();
-        // if (beforeFrame != currentFrame)
-        // {
-        //     animator->set_current_frame_num_to_time(currentFrame);
-        // }
+            //     ImGui::SameLine();
+            //     float input_tick_per_second = tick_per_second;
+            //     ImGui::InputFloat("scale", &input_tick_per_second);
+            //     tick_per_second = input_tick_per_second;
+            // }
+            // if (beforeFrame != currentFrame)
+            // {
+            //     animator->set_current_frame_num_to_time(currentFrame);
+            // }
+        }
+        ImGui::End();
     }
-    void draw_sequencer(glcpp::Animation *current_animation)
+    void TimelineLayer::draw_sequencer(glcpp::Animation *current_animation)
     {
         //     if (ImGui::BeginNeoSequencer("Sequencer", &currentFrame, &startFrame, &endFrame))
         //     {
@@ -71,7 +85,7 @@ namespace ui
         //     ImGui::EndNeoSequencer();
         // }
     }
-    void draw_keyframes()
+    void TimelineLayer::draw_keyframes()
     {
         // if (ImGui::BeginNeoGroup("Transform", &m_pTransformOpen))
         // {
@@ -102,7 +116,7 @@ namespace ui
         //         }
         //     }
     }
-    void draw_keyframe_popup()
+    void TimelineLayer::draw_keyframe_popup()
     {
         // if (clicked_time != -1.0f && clicked_bone)
         // {
@@ -156,76 +170,91 @@ namespace ui
         // }
     }
 
-    void draw_play_all_button()
+    void TimelineLayer::draw_play_all_button(TimelineContext &context)
     {
-        // if (ImGui::Button("All play"))
-        // {
-        //     for (auto &scene : scenes)
-        //     {
-        //         animator->get_mutable_is_stop() = false;
-
-        //         animator->set_current_frame_num_to_time(0);
-        //     }
-        // }
-    }
-    void draw_play_and_stop_button()
-    {
-        // if (ImGui::Button("play"))
-        // {
-        //     is_stop = false;
-        //     currentFrame = 0;
-        // }
-        // ImGui::SameLine();
-
-        // if (ImGui::Button("stop"))
-        // {
-        //     is_stop = true;
-        // }
-        // ImGui::SameLine();
-
-        // bool *p_is_loop = animator->get_mutable_pointer_is_loop();
-        // ImGui::Checkbox("loop", p_is_loop);
+        if (ImGui::Button("All play"))
+        {
+            context.is_clicked_play_all = true;
+        }
     }
 
-    void draw_json_animation_button()
+    void TimelineLayer::draw_play_and_stop_button(TimelineContext &context)
     {
-        // static bool edit_open = false;
-        // if (ImGui::Button("edit"))
-        // {
-        //     text_editor_->open(animator->get_mutable_current_animation()->get_name());
-        //     edit_open = true;
-        // }
-        // text_editor_->draw(&edit_open);
 
-        // ImGui::SameLine();
-        // if (ImGui::Button("reload"))
-        // {
-        //     animator->reload();
-        // }
+        if (ImGui::Button("play"))
+        {
+            context.is_clicked_play = true;
+        }
+        ImGui::SameLine();
+
+        if (ImGui::Button("stop"))
+        {
+            context.is_clicked_stop = true;
+        }
     }
-    void draw_animation_list()
-    {
-        // if (ImGui::BeginCombo("animations", current_item))
-        // {
-        //     for (size_t i = 0; i < animation_items.size(); i++)
-        //     {
 
-        //         bool is_selected = false;
-        //         if (current_item != nullptr)
-        //         {
-        //             is_selected = (strcmp(current_item, animation_items[i]) == 0);
-        //         }
-        //         if (ImGui::Selectable(animation_items[i], is_selected))
-        //         {
-        //             current_item = animation_items[i];
-        //             animator->play_animation(i);
-        //         }
-        //         if (is_selected)
-        //         {
-        //             ImGui::SetItemDefaultFocus();
-        //         }
-        //     }
-        //     ImGui::EndCombo();
-        // }
+    void TimelineLayer::draw_animation_option_button(glcpp::Entity *entity)
+    {
+        static bool edit_open = false;
+        glcpp::AnimationComponent *animation_component = nullptr;
+        if (entity && entity->has_animation_component())
+        {
+            animation_component = entity->get_mutable_pointer_animation_component();
+            bool *p_is_loop = animation_component->get_mutable_pointer_is_loop();
+            ImGui::Checkbox("loop", p_is_loop);
+
+            if (animation_component->get_animation()->get_type() == glcpp::AnimationType::Json)
+            {
+                ImGui::SameLine();
+
+                if (ImGui::Button("edit"))
+                {
+                    text_editor_->open(animation_component->get_mutable_animation()->get_name());
+                    edit_open = true;
+                }
+                text_editor_->draw(&edit_open);
+                ImGui::SameLine();
+
+                if (ImGui::Button("reload"))
+                {
+                    animation_component->reload();
+                }
+            }
+        }
+    }
+
+    void TimelineLayer::draw_animation_list(TimelineContext &context, const SharedResources *shared_resources, const glcpp::Entity *entity)
+    {
+        const auto &animations = shared_resources->get_animations();
+        const char *current_animation_name = nullptr;
+        if (entity->has_animation_component())
+        {
+            current_animation_name = entity->get_pointer_animation_component()->get_animation()->get_name();
+        }
+
+        if (ImGui::BeginCombo("animations", current_animation_name))
+        {
+            for (size_t i = 0; i < animations.size(); i++)
+            {
+                const char *animation_name = animations[i]->get_name();
+
+                bool is_selected = false;
+                if (current_animation_name != nullptr)
+                {
+                    is_selected = (strcmp(current_animation_name, animation_name) == 0);
+                }
+                if (ImGui::Selectable(animation_name, is_selected))
+                {
+                    std::cout << "clicke\n";
+                    current_animation_name = animation_name;
+                    context.animation_idx = i;
+                }
+                if (is_selected)
+                {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
     }
 }

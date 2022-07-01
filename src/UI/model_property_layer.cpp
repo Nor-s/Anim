@@ -13,7 +13,7 @@ namespace ui
 
     void ModelPropertyLayer::draw(glcpp::Entity *entity)
     {
-        ImGui::Begin("Model Property");
+        ImGui::Begin("Model");
         {
             if (ImGui::CollapsingHeader("Models"))
             {

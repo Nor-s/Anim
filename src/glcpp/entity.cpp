@@ -52,7 +52,7 @@ namespace glcpp
         }
     }
 
-    bool Entity::has_animation_component()
+    bool Entity::has_animation_component() const
     {
         return animation_component_ != nullptr;
     }

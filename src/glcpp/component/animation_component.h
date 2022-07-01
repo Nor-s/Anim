@@ -30,6 +30,8 @@ namespace glcpp
         float get_ticks_per_second_factor() const;
         float &get_mutable_current_time();
         float &get_mutable_fps();
+        float get_fps() const;
+        float get_tps() const;
 
     private:
         std::shared_ptr<Animation> animation_;

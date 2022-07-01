@@ -20,6 +20,7 @@ namespace glcpp
         }
         current_time_ = 0.0f;
         fps_ = custom_ticks_per_second_;
+        is_stop_ = false;
     }
 
     void AnimationComponent::reload()
@@ -107,5 +108,12 @@ namespace glcpp
     {
         return fps_;
     }
-
+    float AnimationComponent::get_fps() const
+    {
+        return fps_;
+    }
+    float AnimationComponent::get_tps() const
+    {
+        return custom_ticks_per_second_;
+    }
 }

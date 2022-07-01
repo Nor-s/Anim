@@ -133,10 +133,7 @@ void MainScene::draw()
     framebuffer_->draw(*framebuffer_shader);
 }
 
-glcpp::Entity* MainScene::get_mutable_selected_entity()
+glcpp::Entity *MainScene::get_mutable_selected_entity()
 {
-    if (selected_entity_) {
-        std::cout << "is\n";
-    }
     return selected_entity_.get();
 }

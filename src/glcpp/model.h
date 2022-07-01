@@ -42,21 +42,16 @@ namespace glcpp
     struct ModelNode
     {
         glm::mat4 initial_transformation;
-        TransformComponent relative_transformation;
         std::string name;
         std::vector<std::shared_ptr<ModelNode>> childrens;
-        ModelNode(const glm::mat4 &initial_transform, const TransformComponent &relative_transform, const std::string &node_name, unsigned int num_children)
-            : initial_transformation(initial_transform), relative_transformation(relative_transform), name(node_name)
+        ModelNode(const glm::mat4 &initial_transform, const std::string &node_name, unsigned int num_children)
+            : initial_transformation(initial_transform), name(node_name)
         {
             childrens.resize(num_children);
         }
         ~ModelNode()
         {
             childrens.clear();
-        }
-        glm::mat4 get_mix_transformation() const
-        {
-            return initial_transformation * relative_transformation.get_mat4();
         }
     };
 
@@ -74,6 +69,7 @@ namespace glcpp
         void draw(Shader &shader);
 
         const std::map<std::string, BoneInfo> &get_bone_info_map() const;
+        const BoneInfo *get_pointer_bone_info(const std::string &bone_name) const;
         std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
         const ModelNode *get_root_node() const;

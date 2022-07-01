@@ -24,7 +24,7 @@ namespace glcpp
 
     void AnimationComponent::reload()
     {
-        if (animation_)
+        if (animation_ && animation_->get_type() == AnimationType::Json)
         {
             animation_->reload();
             init_animation();

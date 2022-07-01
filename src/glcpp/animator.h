@@ -19,7 +19,7 @@ namespace glcpp
     public:
         Animator();
         void update_animation(float dt, Entity *entity, Shader *shader);
-        void calculate_bone_transform(const Model *model, const ModelNode *node, Animation *animation, glm::mat4 parentTransform);
+        void calculate_bone_transform(const Model *model, const ModelNode *node, Animation *animation, const glm::mat4 &parentTransform);
 
     private:
         std::vector<glm::mat4> final_bone_matrices_;

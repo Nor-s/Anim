@@ -15,6 +15,10 @@ namespace ui
     {
         ImGui::Begin("Model Property");
         {
+            if (ImGui::CollapsingHeader("Models"))
+            {
+                // resources model list;
+            }
             if (ImGui::CollapsingHeader("Transform"))
             {
                 if (entity)
@@ -29,7 +33,6 @@ namespace ui
             }
         }
         ImGui::End();
-        ImGui::ShowDemoWindow();
     }
 
     void ModelPropertyLayer::draw_transform_slider(glcpp::TransformComponent &transform)

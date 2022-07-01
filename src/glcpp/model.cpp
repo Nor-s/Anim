@@ -77,7 +77,6 @@ namespace glcpp
             model_name = model_name.substr(find_mixamorig + 9);
         }
         model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
-                                       TransformComponent(),
                                        model_name,
                                        ai_node->mNumChildren));
 
@@ -374,6 +373,16 @@ namespace glcpp
     const std::map<std::string, BoneInfo> &Model::get_bone_info_map() const
     {
         return bone_info_map_;
+    }
+
+    const BoneInfo *Model::get_pointer_bone_info(const std::string &bone_name) const
+    {
+        auto it = bone_info_map_.find(bone_name);
+        if (it != bone_info_map_.end())
+        {
+            return &it->second;
+        }
+        return nullptr;
     }
 
     int &Model::get_mutable_bone_count()

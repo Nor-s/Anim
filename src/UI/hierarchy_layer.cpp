@@ -46,7 +46,7 @@ namespace ui
     {
         ImGui::BeginChild("Bone property", {0, 100}, true);
         ImGui::Text("%s", node_name);
-        glcpp::Bone *bone = animation->FindBone(node_name);
+        glcpp::Bone *bone = animation->find_bone(node_name);
         if (bone)
         {
             glm::vec3 *p_pos = bone->get_mutable_pointer_recently_used_position();

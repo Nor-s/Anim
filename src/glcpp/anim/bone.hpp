@@ -129,26 +129,31 @@ namespace glcpp
             }
         }
 
-        void
-        Update(float animationTime, float factor)
+        void update(float animation_time, float factor)
         {
             factor_ = factor;
-            glm::mat4 translation = InterpolatePosition(animationTime);
-            glm::mat4 rotation = InterpolateRotation(animationTime);
-            glm::mat4 scale = InterpolateScaling(animationTime);
+            glm::mat4 translation = interpolate_position(animation_time);
+            glm::mat4 rotation = interpolate_rotation(animation_time);
+            glm::mat4 scale = interpolate_scaling(animation_time);
             local_transform_ = translation * rotation * scale;
         }
 
-        glm::mat4 &GetLocalTransform() { return local_transform_; }
+        glm::mat4 &get_local_transform() { return local_transform_; }
+
+        glm::mat4 &get_local_transform(float animation_time, float factor)
+        {
+            update(animation_time, factor);
+            return local_transform_;
+        }
 
         const std::string &get_bone_name() const { return name_; }
 
-        int GetPositionIndex(float animationTime)
+        int get_position_index(float animation_time)
         {
 
             for (int index = 0; index < num_positions_ - 1; ++index)
             {
-                if (animationTime < positions_[index + 1].get_time(factor_))
+                if (animation_time < positions_[index + 1].get_time(factor_))
                 {
                     recently_used_position_idx_ = index;
                     return index;
@@ -157,11 +162,11 @@ namespace glcpp
             return -1;
         }
 
-        int GetRotationIndex(float animationTime)
+        int get_totation_index(float animation_time)
         {
             for (int index = 0; index < num_rotations_ - 1; ++index)
             {
-                if (animationTime < rotations_[index + 1].get_time(factor_))
+                if (animation_time < rotations_[index + 1].get_time(factor_))
                 {
                     recently_used_rotation_idx_ = index;
                     return index;
@@ -170,12 +175,12 @@ namespace glcpp
             return -1;
         }
 
-        int GetScaleIndex(float animationTime)
+        int GetScaleIndex(float animation_time)
         {
 
             for (int index = 0; index < num_scales_ - 1; ++index)
             {
-                if (animationTime < scales_[index + 1].get_time(factor_))
+                if (animation_time < scales_[index + 1].get_time(factor_))
                 {
                     recently_used_scale_idx_ = index;
                     return index;
@@ -346,21 +351,21 @@ namespace glcpp
         }
 
     private:
-        float GetScaleFactor(float lastTimeStamp, float nextTimeStamp, float animationTime)
+        float get_scale_factor(float last_time_stamp, float next_time_stamp, float animation_time)
         {
             float scaleFactor = 0.0f;
-            float midWayLength = animationTime - lastTimeStamp;
-            float framesDiff = nextTimeStamp - lastTimeStamp;
+            float midWayLength = animation_time - last_time_stamp;
+            float framesDiff = next_time_stamp - last_time_stamp;
             scaleFactor = midWayLength / framesDiff;
             return scaleFactor;
         }
 
-        glm::mat4 InterpolatePosition(float animationTime)
+        glm::mat4 interpolate_position(float animation_time)
         {
             if (1 == num_positions_)
                 return glm::translate(glm::mat4(1.0f), positions_[0].position);
 
-            int p0Index = GetPositionIndex(animationTime);
+            int p0Index = get_position_index(animation_time);
             if (p0Index == -1)
             {
                 return glm::mat4(1.0f);
@@ -371,14 +376,14 @@ namespace glcpp
             it++;
             if (it != time_positions_map_.end())
                 p1Index = it->second;
-            float scaleFactor = GetScaleFactor(positions_[p0Index].get_time(factor_),
-                                               positions_[p1Index].get_time(factor_), animationTime);
+            float scaleFactor = get_scale_factor(positions_[p0Index].get_time(factor_),
+                                                 positions_[p1Index].get_time(factor_), animation_time);
             glm::vec3 finalPosition = glm::mix(positions_[p0Index].position, positions_[p1Index].position, scaleFactor);
 
             return glm::translate(glm::mat4(1.0f), finalPosition);
         }
 
-        glm::mat4 InterpolateRotation(float animationTime)
+        glm::mat4 interpolate_rotation(float animation_time)
         {
             if (1 == num_rotations_)
             {
@@ -386,32 +391,32 @@ namespace glcpp
                 return glm::toMat4(rotation);
             }
 
-            int p0Index = GetRotationIndex(animationTime);
+            int p0Index = get_totation_index(animation_time);
             if (p0Index == -1)
             {
                 return glm::mat4(1.0f);
             }
             int p1Index = p0Index + 1;
-            float scaleFactor = GetScaleFactor(rotations_[p0Index].get_time(factor_),
-                                               rotations_[p1Index].get_time(factor_), animationTime);
+            float scaleFactor = get_scale_factor(rotations_[p0Index].get_time(factor_),
+                                                 rotations_[p1Index].get_time(factor_), animation_time);
             glm::quat finalRotation = glm::slerp(rotations_[p0Index].orientation, rotations_[p1Index].orientation, scaleFactor);
             finalRotation = glm::normalize(finalRotation);
             return glm::toMat4(finalRotation);
         }
 
-        glm::mat4 InterpolateScaling(float animationTime)
+        glm::mat4 interpolate_scaling(float animation_time)
         {
             if (1 == num_scales_)
                 return glm::scale(glm::mat4(1.0f), scales_[0].scale);
 
-            int p0Index = GetScaleIndex(animationTime);
+            int p0Index = GetScaleIndex(animation_time);
             if (p0Index == -1)
             {
                 return glm::mat4(1.0f);
             }
             int p1Index = p0Index + 1;
-            float scaleFactor = GetScaleFactor(scales_[p0Index].get_time(factor_),
-                                               scales_[p1Index].get_time(factor_), animationTime);
+            float scaleFactor = get_scale_factor(scales_[p0Index].get_time(factor_),
+                                                 scales_[p1Index].get_time(factor_), animation_time);
             glm::vec3 finalScale = glm::mix(scales_[p0Index].scale, scales_[p1Index].scale, scaleFactor);
             return glm::scale(glm::mat4(1.0f), finalScale);
         }

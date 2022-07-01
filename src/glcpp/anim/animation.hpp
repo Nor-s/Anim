@@ -25,7 +25,7 @@ namespace glcpp
         {
         }
         virtual ~Animation() = default;
-        Bone *FindBone(const std::string &name)
+        Bone *find_bone(const std::string &name)
         {
             auto iter = name_bone_map_.find(name);
             if (iter == name_bone_map_.end())

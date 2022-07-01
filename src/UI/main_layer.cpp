@@ -1,9 +1,7 @@
 #include "main_layer.h"
 #include "imgui_helper.hpp"
-#include "hierarchy_layer.h"
 #include "scene_layer.h"
-#include "model_property_layer.h"
-#include "timeline_layer.h"
+
 #include "text_edit_layer.h"
 
 #include <glcpp/window.h>
@@ -17,7 +15,7 @@
 namespace ui
 {
     MainLayer::MainLayer() = default;
-    
+
     MainLayer::~MainLayer() = default;
 
     void MainLayer::init(GLFWwindow *window)
@@ -48,14 +46,6 @@ namespace ui
         // Setup Platform/Renderer backends
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init(glsl_version);
-        init_layer();
-    }
-
-    void MainLayer::init_layer()
-    {
-        hierarchy_layer_ = std::make_unique<HierarchyLayer>();
-        property_layer_ = std::make_unique<ModelPropertyLayer>();
-        timeline_layer_ = std::make_unique<TimelineLayer>();
     }
 
     void MainLayer::shutdown()
@@ -163,12 +153,12 @@ namespace ui
 
     void MainLayer::draw_model_properties(glcpp::Entity *entity)
     {
-        property_layer_->draw(entity);
+        property_layer_.draw(entity);
     }
 
     void MainLayer::draw_hierarchy_layer(glcpp::Entity *entity)
     {
-        hierarchy_layer_->draw(entity);
+        hierarchy_layer_.draw(entity);
     }
 
     bool MainLayer::is_scene_layer_hovered(const std::string &title)

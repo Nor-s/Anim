@@ -24,16 +24,9 @@ namespace glcpp
 
     void Animator::update_animation(float dt, Entity *entity, Shader *shader)
     {
-        if (entity == nullptr || shader == nullptr)
-        {
-            return;
-        }
-
+        assert(entity && shader);
         AnimationComponent *animation = entity->get_mutable_pointer_animation_component();
-        if (!animation)
-        {
-            return;
-        }
+        assert(animation);
 
         bool &is_stop = animation->get_mutable_is_stop();
         float &current_time = animation->get_mutable_current_time();
@@ -43,7 +36,14 @@ namespace glcpp
 
         if (!is_stop)
         {
-            current_time += fps * dt;
+            if (dt <= 0)
+            {
+                current_time = 0.0f;
+            }
+            else
+            {
+                current_time += fps * dt;
+            }
             if (current_time > duration && !is_loop)
             {
                 current_time = duration - 0.01f;
@@ -65,31 +65,28 @@ namespace glcpp
         }
     }
 
-    void Animator::calculate_bone_transform(const Model *model, const ModelNode *node, Animation *animation, glm::mat4 parentTransform)
+    void Animator::calculate_bone_transform(const Model *model, const ModelNode *node, Animation *animation, const glm::mat4 &parentTransform)
     {
-        std::string node_name = node->name;
+        const std::string &node_name = node->name;
         // 모델의 바인딩포즈 렌더링
-        glm::mat4 node_transform = node->initial_transformation;
+        glm::mat4 global_transformation = parentTransform * node->initial_transformation;
 
-        // 애니메이션 렌더링
-        Bone *Bone = animation->FindBone(node_name);
-        if (Bone != nullptr)
+        // 애니메이션
+        auto bone = animation->find_bone(node_name);
+        if (bone != nullptr)
         {
-            Bone->Update(current_time_, factor_);
-            node_transform *= Bone->GetLocalTransform();
+            global_transformation *= bone->get_local_transform(current_time_, factor_);
         }
         // FK
-        glm::mat4 globalTransformation = parentTransform * node_transform;
 
-        auto &bone_info_map = model->get_bone_info_map();
-        auto it = bone_info_map.find(node_name);
-        if (it != bone_info_map.end())
+        auto bone_info = model->get_pointer_bone_info(node_name);
+        if (bone_info)
         {
             // 역바인딩변환 행렬과 변환행렬을 곱해줌 (본공간 => 로컬공간)
-            final_bone_matrices_[it->second.get_id()] = globalTransformation * it->second.get_offset();
+            final_bone_matrices_[bone_info->get_id()] = global_transformation * bone_info->get_offset();
         }
 
         for (size_t i = 0; i < node->childrens.size(); i++)
-            calculate_bone_transform(model, node->childrens[i].get(), animation, globalTransformation);
+            calculate_bone_transform(model, node->childrens[i].get(), animation, global_transformation);
     }
 }

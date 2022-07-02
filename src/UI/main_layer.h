@@ -30,8 +30,9 @@ namespace ui
 
     struct UiContext
     {
-        MenuContext menu_context;
-        TimelineContext timeline_context;
+        MenuContext menu_context{};
+        TimelineContext timeline_context{};
+        PropertiesContext properties_context{};
     };
     /**
      * @brief dock + menu bar(import, export)
@@ -48,7 +49,7 @@ namespace ui
         void end();
         void draw_dock(float fps);
         void draw_scene(const std::string &title, Scene *scene);
-        void draw_model_properties(glcpp::Entity *entity);
+        void draw_model_properties(Scene *scene);
         void draw_hierarchy_layer(glcpp::Entity *entity);
         void draw_timeline(Scene *scene);
 

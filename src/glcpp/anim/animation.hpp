@@ -21,7 +21,7 @@ namespace glcpp
     public:
         Animation() = default;
         Animation(const char *file_path)
-            : name_(file_path)
+            : path_(file_path)
         {
         }
         virtual ~Animation() = default;
@@ -35,9 +35,13 @@ namespace glcpp
         }
         inline float get_ticks_per_second() { return ticks_per_second_; }
         inline float get_duration() { return duration_; }
-        const char *get_name() const
+        const std::string &get_name() const
         {
-            return name_.c_str();
+            return name_;
+        }
+        const char *get_path() const
+        {
+            return path_.c_str();
         }
         const std::map<std::string, std::unique_ptr<Bone>> &get_name_bone_map() const
         {
@@ -59,7 +63,7 @@ namespace glcpp
         }
         void get_ai_animation(aiAnimation *ai_anim, const aiNode *ai_root_node)
         {
-            std::filesystem::path p = std::filesystem::u8path(name_.c_str());
+            std::filesystem::path p = std::filesystem::u8path(path_.c_str());
             std::string anim_name = p.filename().string();
             ai_anim->mName = aiString(anim_name);
             ai_anim->mDuration = static_cast<double>(duration_);
@@ -95,6 +99,7 @@ namespace glcpp
         std::string name_;
         std::map<std::string, std::unique_ptr<Bone>> name_bone_map_;
         AnimationType type;
+        std::string path_;
     };
 
 }

@@ -151,9 +151,9 @@ namespace ui
         scene_layer_map_[title]->draw(title.c_str(), scene);
     }
 
-    void MainLayer::draw_model_properties(glcpp::Entity *entity)
+    void MainLayer::draw_model_properties(Scene *scene)
     {
-        property_layer_.draw(entity);
+        property_layer_.draw(context_.properties_context, scene);
     }
 
     void MainLayer::draw_hierarchy_layer(glcpp::Entity *entity)

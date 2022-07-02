@@ -34,33 +34,40 @@ namespace ui
         }
         ImGui::Begin("Animation", NULL, window_flags);
         {
-            draw_play_all_button(context);
-            ImGui::SameLine();
-            draw_play_and_stop_button(context);
-            ImGui::SameLine();
-            draw_animation_list(context, resources, entity);
-            if (animation_component)
+            if (animation_component && entity->has_bone())
             {
+                draw_play_all_button(context);
+                ImGui::SameLine();
+                draw_play_and_stop_button(context);
+                ImGui::SameLine();
+                draw_mp2mm(context);
+                ImGui::SameLine();
+                draw_animation_list(context, resources, entity);
                 ImGui::SameLine();
                 draw_input_box(context, animation_component);
                 ImGui::SameLine();
                 draw_animation_option_button(animation_component);
                 draw_sequencer(context, animation_component);
             }
+            else
+            {
+                ImGui::Text("can't find bone");
+            }
         }
         ImGui::End();
     }
+
     void TimelineLayer::draw_play_all_button(TimelineContext &context)
     {
         if (ImGui::Button("All play"))
         {
             context.is_clicked_play_all = true;
+            context.is_clicked_play = true;
         }
     }
 
     void TimelineLayer::draw_play_and_stop_button(TimelineContext &context)
     {
-
         if (ImGui::Button("play"))
         {
             context.is_clicked_play = true;
@@ -70,6 +77,14 @@ namespace ui
         if (ImGui::Button("stop"))
         {
             context.is_clicked_stop = true;
+        }
+    }
+
+    void TimelineLayer::draw_mp2mm(TimelineContext &context)
+    {
+        if (ImGui::Button("mp2mm"))
+        {
+            context.is_clicked_mp2mm = true;
         }
     }
 
@@ -84,7 +99,7 @@ namespace ui
 
             if (ImGui::Button("edit"))
             {
-                text_editor_->open(animation_component->get_mutable_animation()->get_name());
+                text_editor_->open(animation_component->get_mutable_animation()->get_path());
                 edit_open = true;
             }
             text_editor_->draw(&edit_open);
@@ -101,32 +116,26 @@ namespace ui
     {
         const auto &animations = shared_resources->get_animations();
         const char *current_animation_name = nullptr;
+        int current_idx = entity->get_animation_id();
         if (entity->has_animation_component())
         {
-            current_animation_name = entity->get_pointer_animation_component()->get_animation()->get_name();
+            current_animation_name = (std::to_string(current_idx) + ":" + entity->get_pointer_animation_component()->get_animation()->get_name()).c_str();
         }
 
         ImGui::PushItemWidth(100);
-        if (ImGui::BeginCombo("animations", current_animation_name))
+        ImGui::Text("Animation:");
+        ImGui::SameLine();
+        if (ImGui::BeginCombo("##animations", current_animation_name))
         {
             for (size_t i = 0; i < animations.size(); i++)
             {
-                const char *animation_name = animations[i]->get_name();
+                std::string tmp = std::to_string(i) + ":" + animations[i]->get_name();
+                const char *animation_name = tmp.c_str();
 
-                bool is_selected = false;
-                if (current_animation_name != nullptr)
+                bool is_selected = (current_idx == i);
+                if (ImGui::Selectable(animation_name, is_selected) && current_idx != i)
                 {
-                    is_selected = (strcmp(current_animation_name, animation_name) == 0);
-                }
-                bool before_is_selected = is_selected;
-                if (ImGui::Selectable(animation_name, is_selected) && !before_is_selected)
-                {
-                    current_animation_name = animation_name;
                     context.animation_idx = i;
-                }
-                if (is_selected)
-                {
-                    ImGui::SetItemDefaultFocus();
                 }
             }
             ImGui::EndCombo();
@@ -137,14 +146,18 @@ namespace ui
     {
         context.fps = animation_component->get_fps();
         context.tps = animation_component->get_tps();
-        ImGui::PushItemWidth(80);
+        ImGui::PushItemWidth(30);
 
-        ImGui::InputFloat("fps", &context.fps, 1.0f, 1.0f, "%.0f");
+        ImGui::Text("Fps:");
         ImGui::SameLine();
-        ImGui::InputFloat("scale", &context.tps, 1.0f, 1.0f, "%.0f");
+        ImGui::DragFloat("##fps", &context.fps, 1.0f, 1.0f, FLT_MAX, "%.0f");
+        ImGui::SameLine();
+        ImGui::Text("Scale:");
+        ImGui::SameLine();
+        ImGui::DragFloat("##scale", &context.tps, 1.0f, 1.0f, FLT_MAX, "%.0f");
     }
 
-    void TimelineLayer::draw_sequencer(TimelineContext& context, glcpp::AnimationComponent *animation_component)
+    void TimelineLayer::draw_sequencer(TimelineContext &context, glcpp::AnimationComponent *animation_component)
     {
         current_frame_ = animation_component->get_current_frame_num();
         uint32_t before_frame = current_frame_;
@@ -166,7 +179,7 @@ namespace ui
         }
         ImGui::EndNeoSequencer();
 
-        //update current time
+        // update current time
         if (before_frame != current_frame_)
         {
             animation_component->set_current_frame_num_to_time(current_frame_);
@@ -206,7 +219,7 @@ namespace ui
         }
     }
 
-    void TimelineLayer::draw_keyframe_popup(TimelineContext& context)
+    void TimelineLayer::draw_keyframe_popup(TimelineContext &context)
     {
         if (clicked_time_ != -1.0f && clicked_bone_)
         {

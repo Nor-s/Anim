@@ -22,7 +22,14 @@ namespace glcpp
         fps_ = custom_ticks_per_second_;
         is_stop_ = false;
     }
-
+    void AnimationComponent::play()
+    {
+        is_stop_ = false;
+    }
+    void AnimationComponent::stop()
+    {
+        is_stop_ = true;
+    }
     void AnimationComponent::reload()
     {
         if (animation_ && animation_->get_type() == AnimationType::Json)
@@ -47,7 +54,17 @@ namespace glcpp
     void AnimationComponent::set_custom_tick_per_second(float tick_per_second)
     {
         if (tick_per_second > 0.0f)
+        {
             custom_ticks_per_second_ = tick_per_second;
+        }
+    }
+
+    void AnimationComponent::set_fps(float fps)
+    {
+        if (fps > 0.0f)
+        {
+            fps_ = fps;
+        }
     }
 
     const Animation *AnimationComponent::get_animation() const

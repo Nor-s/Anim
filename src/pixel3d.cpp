@@ -9,6 +9,7 @@
 #include "scene/shared_resources.h"
 #include "glcpp/model.h"
 #include "glcpp/entity.h"
+#include "glcpp/component/animation_component.h"
 
 namespace fs = std::filesystem;
 
@@ -73,7 +74,7 @@ void Pixel3D::loop()
             ui_->draw_dock(fps_);
             this->draw_scene();
             auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
-            ui_->draw_model_properties(entity);
+            ui_->draw_model_properties(scenes_[current_scene_idx_].get());
             ui_->draw_hierarchy_layer(entity);
             ui_->draw_timeline(scenes_[current_scene_idx_].get());
             ui_->end();
@@ -88,6 +89,8 @@ void Pixel3D::update()
 }
 void Pixel3D::update_time()
 {
+    auto &ui_context = ui_->get_context();
+    auto &time_context = ui_context.timeline_context;
     float current_time = static_cast<float>(glfwGetTime());
     frames_++;
     if (current_time - start_time_ >= 1.0)
@@ -100,7 +103,30 @@ void Pixel3D::update_time()
     last_frame_ = current_time;
     for (auto &scene : scenes_)
     {
-        scene->set_delta_time(delta_frame_);
+        if (ui_context.timeline_context.is_clicked_play_all)
+        {
+            scene->set_delta_time(-delta_frame_);
+        }
+        else
+        {
+            scene->set_delta_time(delta_frame_);
+        }
+    }
+    auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+    if (entity->has_animation_component())
+    {
+        auto animation_component = entity->get_mutable_pointer_animation_component();
+        animation_component->set_custom_tick_per_second(time_context.tps);
+        animation_component->set_fps(time_context.fps);
+
+        if (time_context.is_clicked_play)
+        {
+            animation_component->play();
+        }
+        if (time_context.is_clicked_stop)
+        {
+            animation_component->stop();
+        }
     }
 }
 void Pixel3D::update_resources()
@@ -108,24 +134,55 @@ void Pixel3D::update_resources()
     auto &shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
     auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
     auto &ui_context = ui_->get_context();
-    if (ui_context.menu_context.clicked_import_model)
+    auto &menu_context = ui_context.menu_context;
+    auto &time_context = ui_context.timeline_context;
+    auto &properties_context = ui_context.properties_context;
+    if (menu_context.clicked_import_model)
     {
         std::pair<bool, bool> result = shared_resources->add_model_or_animation_by_path(nullptr);
         if (result.first)
         {
+#ifndef NDEBUG
+            std::cout << "import model\n";
+#endif
             auto model = shared_resources->back_mutable_model();
-            entity->set_model(model);
-            entity->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
+            entity->set_model(model, shared_resources->get_models_size() - 1);
+            // entity->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
         }
 
         if (result.second)
         {
+#ifndef NDEBUG
+            std::cout << "import animation\n";
+#endif
             auto animation = shared_resources->back_mutable_animation();
-            entity->set_animation_component(animation);
+            entity->set_animation_component(animation, shared_resources_->get_animations_size() - 1);
         }
     }
-    if (ui_context.menu_context.clicked_export_animation)
+    if (menu_context.clicked_export_animation)
     {
+    }
+    int current_animation_idx = entity->get_animation_id();
+    int animation_idx[2] = {properties_context.animation_idx, time_context.animation_idx};
+    for (int i = 0; i < 2; i++)
+    {
+        if (animation_idx[i] >= 0 && animation_idx[i] != current_animation_idx)
+        {
+#ifndef NDEBUG
+            std::cout << "animation id: " << animation_idx[i] << " <-> " << entity->get_model_id() << std::endl;
+#endif
+            auto animation = shared_resources->get_mutable_animation(animation_idx[i]);
+            entity->set_animation_component(animation, animation_idx[i]);
+            break;
+        }
+    }
+    if (properties_context.model_idx >= 0 && properties_context.model_idx != entity->get_model_id())
+    {
+#ifndef NDEBUG
+        std::cout << "model id: " << properties_context.model_idx << " <-> " << entity->get_animation_id() << std::endl;
+#endif
+        auto model = shared_resources->get_mutable_model(properties_context.model_idx);
+        entity->set_model(model, properties_context.model_idx);
     }
 }
 void Pixel3D::pre_draw()

@@ -35,25 +35,48 @@ namespace glcpp
         return animation_component_.get();
     }
 
-    void Entity::set_model(std::shared_ptr<Model> model)
+    int Entity::get_model_id() const
     {
-        model_ = std::move(model);
+        return model_id_;
     }
 
-    void Entity::set_animation_component(std::shared_ptr<Animation> animation)
+    int Entity::get_animation_id() const
+    {
+        return animation_id_;
+    }
+
+    void Entity::set_model(std::shared_ptr<Model> model, int id)
+    {
+        model_ = std::move(model);
+        model_id_ = id;
+    }
+
+    void Entity::set_animation_component(std::shared_ptr<Animation> animation, int id)
     {
         if (animation_component_)
         {
-            animation_component_->set_animation(animation);
+            animation_component_->set_animation(std::move(animation));
         }
         else
         {
-            animation_component_ = std::make_unique<AnimationComponent>(animation);
+            animation_component_ = std::make_unique<AnimationComponent>(std::move(animation));
         }
+        animation_id_ = id;
     }
 
     bool Entity::has_animation_component() const
     {
         return animation_component_ != nullptr;
+    }
+    bool Entity::has_bone() const
+    {
+        if (model_)
+        {
+            return (model_->get_mutable_bone_info_map().size() != 0);
+        }
+        else
+        {
+            return false;
+        }
     }
 }

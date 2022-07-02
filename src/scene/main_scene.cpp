@@ -71,7 +71,7 @@ void MainScene::pre_draw()
     update_framebuffer();
     set_view_and_projection();
     glcpp::Shader *shader = nullptr;
-    if (selected_entity_ && selected_entity_->get_mutable_model() && selected_entity_->has_animation_component())
+    if (selected_entity_ && selected_entity_->get_mutable_model() && selected_entity_->has_bone())
     {
         shader = resources_->get_mutable_shader("animation").get();
         resources_->get_mutable_animator()->update_animation(delta_time_, selected_entity_.get(), shader);

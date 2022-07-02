@@ -25,9 +25,10 @@ namespace ui
         bool is_clicked_play{false};
         bool is_clicked_stop{false};
         bool is_changed_animation{false};
+        bool is_clicked_mp2mm{false};
         float fps = -1.0f;
         float tps = -1.0f;
-        uint32_t animation_idx{0u};
+        int animation_idx{-1};
     };
 
     class TimelineLayer
@@ -40,12 +41,13 @@ namespace ui
     private:
         void draw_play_all_button(TimelineContext &context);
         void draw_play_and_stop_button(TimelineContext &context);
+        void draw_mp2mm(TimelineContext &context);
         void draw_animation_option_button(glcpp::AnimationComponent *animation_component);
         void draw_animation_list(TimelineContext &context, const SharedResources *shared_resources, const glcpp::Entity *entity);
         void draw_input_box(TimelineContext &context, const glcpp::AnimationComponent *animation_component);
-        void draw_sequencer(TimelineContext& context, glcpp::AnimationComponent *animation_component);
+        void draw_sequencer(TimelineContext &context, glcpp::AnimationComponent *animation_component);
         void draw_keyframes(glcpp::Animation *animation);
-        void draw_keyframe_popup(TimelineContext& context);
+        void draw_keyframe_popup(TimelineContext &context);
 
         std::shared_ptr<TextEditLayer> text_editor_;
         bool is_hovered_zoom_slider_{false};

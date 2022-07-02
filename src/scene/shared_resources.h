@@ -28,6 +28,8 @@ public:
     virtual ~SharedResources();
     glcpp::Cubemap *get_mutable_skybox();
     glcpp::Animator *get_mutable_animator();
+    std::shared_ptr<glcpp::Model> get_mutable_model(int idx);
+    std::shared_ptr<glcpp::Animation> get_mutable_animation(int idx);
     std::shared_ptr<glcpp::Model> back_mutable_model();
     std::shared_ptr<glcpp::Animation> back_mutable_animation();
     std::shared_ptr<glcpp::Shader> get_mutable_shader(const std::string &name);

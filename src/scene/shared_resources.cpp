@@ -36,7 +36,14 @@ glcpp::Animator *SharedResources::get_mutable_animator()
 {
     return animator_.get();
 }
-
+std::shared_ptr<glcpp::Model> SharedResources::get_mutable_model(int idx)
+{
+    return models_[idx];
+}
+std::shared_ptr<glcpp::Animation> SharedResources::get_mutable_animation(int idx)
+{
+    return animations_[idx];
+}
 std::shared_ptr<glcpp::Model> SharedResources::back_mutable_model()
 {
 

@@ -1,6 +1,8 @@
 #ifndef GLCPP_ANIM_ASSIMP_ANIMATION_HPP
 #define GLCPP_ANIM_ASSIMP_ANIMATION_HPP
 
+#include "animation.hpp"
+#include "../utility.hpp"
 #include <glm/glm.hpp>
 #include <assimp/scene.h>
 
@@ -11,8 +13,8 @@
 #include <string>
 #include <set>
 
-#include "../utility.hpp"
-#include "animation.hpp"
+namespace fs = std::filesystem;
+
 namespace glcpp
 {
     class AssimpAnimation : public Animation
@@ -20,7 +22,7 @@ namespace glcpp
     public:
         AssimpAnimation() = default;
 
-        AssimpAnimation(const char *animation_path)
+        AssimpAnimation(const char *path)
         {
             type = AnimationType::Assimp;
             Assimp::Importer importer;
@@ -30,7 +32,7 @@ namespace glcpp
                 aiProcess_LimitBoneWeights;
 
             importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-            const aiScene *scene = importer.ReadFile(animation_path, assimp_read_flag);
+            const aiScene *scene = importer.ReadFile(path, assimp_read_flag);
 
             if (!scene || !scene->mRootNode || !scene->HasAnimations())
             {
@@ -41,12 +43,12 @@ namespace glcpp
             else
             {
                 auto animation = scene->mAnimations[0];
-                init_animation(animation, scene);
+                init_animation(animation, scene, path);
             }
         }
-        AssimpAnimation(const aiAnimation *animation, const aiScene *scene)
+        AssimpAnimation(const aiAnimation *animation, const aiScene *scene, const char *path)
         {
-            init_animation(animation, scene);
+            init_animation(animation, scene, path);
         }
 
         virtual ~AssimpAnimation()
@@ -54,9 +56,11 @@ namespace glcpp
         }
 
     private:
-        void init_animation(const aiAnimation *animation, const aiScene *scene)
+        void init_animation(const aiAnimation *animation, const aiScene *scene, const char *path)
         {
-            name_ = animation->mName.C_Str();
+            path_ = std::string(path);
+            fs::path anim_path = fs::u8path(path_);
+            name_ = anim_path.filename();
             duration_ = animation->mDuration;
             ticks_per_second_ = animation->mTicksPerSecond;
             process_bones(animation, scene->mRootNode);

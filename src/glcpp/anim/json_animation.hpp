@@ -47,7 +47,7 @@ namespace glcpp
   class JsonAnimation : public Animation
   {
   public:
-    JsonAnimation() = default;
+    JsonAnimation() = delete;
     JsonAnimation(const char *animation_path)
         : Animation(animation_path)
     {
@@ -76,12 +76,14 @@ namespace glcpp
     {
       try
       {
+        std::filesystem::path path = std::filesystem::u8path((path_).c_str());
+        name_ = path.filename();
         type = AnimationType::Json;
         Json::Value root;
 #ifndef NDEBUG
-        std::cout << "init json: " << name_ << std::endl;
+        std::cout << "init json: " << path_ << std::endl;
 #endif
-        std::ifstream anim_stream(std::filesystem::u8path((name_).c_str()), std::ifstream::in | std::ifstream::binary);
+        std::ifstream anim_stream(path.c_str(), std::ifstream::in | std::ifstream::binary);
         anim_stream >> root;
         if (anim_stream.is_open())
         {

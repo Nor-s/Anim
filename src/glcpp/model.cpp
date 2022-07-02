@@ -63,6 +63,7 @@ namespace glcpp
     void Model::load_model(const char *path, const aiScene *scene)
     {
         directory_ = std::filesystem::u8path(path);
+        name_ = directory_.filename();
         process_node(root_node_, scene->mRootNode, scene);
     }
 
@@ -397,5 +398,9 @@ namespace glcpp
     std::shared_ptr<ModelNode> &Model::get_mutable_root_node()
     {
         return root_node_;
+    }
+    const std::string &Model::get_name() const
+    {
+        return name_;
     }
 }

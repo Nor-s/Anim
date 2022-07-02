@@ -24,16 +24,22 @@ namespace glcpp
         TransformComponent &get_mutable_transform();
         AnimationComponent *get_mutable_pointer_animation_component();
         const AnimationComponent *get_pointer_animation_component() const;
+        int get_model_id() const;
+        int get_animation_id() const;
 
-        void set_model(std::shared_ptr<Model> model);
-        void set_animation_component(std::shared_ptr<Animation> animation);
+        void set_model(std::shared_ptr<Model> model, int id);
+        void set_animation_component(std::shared_ptr<Animation> animation, int id);
 
         bool has_animation_component() const;
+
+        bool has_bone() const;
 
     private:
         std::shared_ptr<Model> model_;
         TransformComponent transform_component_{};
         std::unique_ptr<AnimationComponent> animation_component_;
+        int model_id_{-1};
+        int animation_id_{-1};
     };
 }
 

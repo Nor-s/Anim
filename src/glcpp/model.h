@@ -9,6 +9,7 @@
 
 #include <filesystem>
 #include <map>
+#include <string>
 
 #include "component/transform_component.h"
 
@@ -76,6 +77,7 @@ namespace glcpp
         std::shared_ptr<ModelNode> &get_mutable_root_node();
         void get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node);
         void get_ai_root_node_for_anim(aiNode *ai_node);
+        const std::string &get_name() const;
 
     private:
         void load_model(const char *path);
@@ -110,6 +112,7 @@ namespace glcpp
         std::vector<Mesh> meshes_;
         std::map<std::string, BoneInfo> bone_info_map_;
         std::filesystem::path directory_;
+        std::string name_;
         int bone_count_ = 0;
         int node_count_ = 0;
     };

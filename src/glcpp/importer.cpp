@@ -88,9 +88,9 @@ namespace glcpp
                        aiProcess_GenNormals |
                        aiProcess_CalcTangentSpace |
                        aiProcess_LimitBoneWeights |
-                       aiProcess_JoinIdenticalVertices |
-                       aiProcess_FlipWindingOrder |
-                       aiProcess_SortByPType;
+                       aiProcess_JoinIdenticalVertices;
+        //    aiProcess_FlipWindingOrder |
+        //    aiProcess_SortByPType;
     }
     std::shared_ptr<glcpp::Model> Importer::import_model(const aiScene *scene)
     {
@@ -110,7 +110,7 @@ namespace glcpp
         for (unsigned int i = 0; i < scene->mNumAnimations; i++)
         {
             auto animation = scene->mAnimations[i];
-            sp_animations.push_back(std::make_shared<glcpp::AssimpAnimation>(animation, scene));
+            sp_animations.push_back(std::make_shared<glcpp::AssimpAnimation>(animation, scene, path_.c_str()));
         }
         return sp_animations;
     }

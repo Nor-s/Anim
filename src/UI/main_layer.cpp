@@ -119,12 +119,12 @@ namespace ui
         {
             if (ImGui::BeginMenu("File"))
             {
-                if (ImGui::MenuItem("Import:model", NULL, nullptr))
+                if (ImGui::MenuItem("Import: model, animation", NULL, nullptr))
                 {
                     context_.menu_context.clicked_import_model = true;
                 }
                 ImGui::Separator();
-                if (ImGui::MenuItem("Export:animation", NULL, nullptr))
+                if (ImGui::MenuItem("Export: animation", NULL, nullptr))
                 {
                     context_.menu_context.clicked_export_animation = true;
                 }

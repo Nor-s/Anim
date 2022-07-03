@@ -10,6 +10,7 @@
 #include "glcpp/model.h"
 #include "glcpp/entity.h"
 #include "glcpp/component/animation_component.h"
+#include "glcpp/exporter.h"
 
 namespace fs = std::filesystem;
 
@@ -86,7 +87,9 @@ void Pixel3D::update()
 {
     update_resources();
     update_time();
+    process_buttons();
 }
+
 void Pixel3D::update_time()
 {
     auto &ui_context = ui_->get_context();
@@ -131,6 +134,7 @@ void Pixel3D::update_time()
 }
 void Pixel3D::update_resources()
 {
+    glcpp::Exporter exporter;
     auto &shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
     auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
     auto &ui_context = ui_->get_context();
@@ -147,6 +151,7 @@ void Pixel3D::update_resources()
 #endif
             auto model = shared_resources->back_mutable_model();
             entity->set_model(model, shared_resources->get_models_size() - 1);
+            exporter.to_json(model.get(), "model.json");
         }
 
         if (result.second)
@@ -181,10 +186,19 @@ void Pixel3D::update_resources()
 #endif
             auto model = shared_resources->get_mutable_model(properties_context.model_idx);
             entity->set_model(model, properties_context.model_idx);
+            exporter.to_json(model.get(), "model.json");
         }
     }
     if (menu_context.clicked_export_animation)
     {
+    }
+}
+void Pixel3D::process_buttons()
+{
+    auto &time_context = ui_->get_context().timeline_context;
+    if (time_context.is_clicked_mp2mm)
+    {
+        mp2mm_.open();
     }
 }
 void Pixel3D::pre_draw()

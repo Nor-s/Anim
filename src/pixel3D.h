@@ -9,6 +9,7 @@
 #include <vector>
 #include <filesystem>
 #include "glcpp/application.hpp"
+#include "mp2mm.h"
 
 struct GLFWwindow;
 class Scene;
@@ -40,6 +41,8 @@ public:
     void update();
     void update_time();
     void update_resources();
+    void process_buttons();
+
     void pre_draw();
     void draw_scene();
     void post_draw();
@@ -65,6 +68,7 @@ private:
     std::shared_ptr<SharedResources> shared_resources_;
     std::unique_ptr<ui::MainLayer> ui_;
     uint32_t current_scene_idx_ = 0u;
+    Mp2mm mp2mm_;
 };
 
 #endif

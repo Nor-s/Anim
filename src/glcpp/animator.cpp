@@ -80,7 +80,7 @@ namespace glcpp
         // FK
 
         auto bone_info = model->get_pointer_bone_info(node_name);
-        if (bone_info)
+        if (bone_info && bone_info->id < MAX_BONE_NUM)
         {
             // 역바인딩변환 행렬과 변환행렬을 곱해줌 (본공간 => 로컬공간)
             final_bone_matrices_[bone_info->get_id()] = global_transformation * bone_info->get_offset();

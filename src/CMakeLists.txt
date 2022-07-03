@@ -62,6 +62,7 @@ add_executable(pixel3D
 ./UI/imgui_helper.hpp
 
 
+./mp2mm.cpp
 ./pixel3D.cpp
 ./scene/scene.hpp
 ./scene/main_scene.cpp

@@ -22,7 +22,7 @@ namespace glcpp
     class Exporter
     {
     public:
-        Exporter();
+        Exporter() = default;
         ~Exporter() = default;
         void to_png(Framebuffer *framebuffer, const char *save_path);
         void to_json(Model *model, const char *save_path);

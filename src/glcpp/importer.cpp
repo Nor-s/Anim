@@ -50,7 +50,7 @@ namespace glcpp
             if (sp_model == nullptr && sp_animations.size() == 0)
             {
 #ifndef NDEBUG
-                std::cout << "ERROR::IMPORTER: " << importer.GetErrorString() << std::endl;
+                std::cout << "ERROR::IMPORTER::NULL " << importer.GetErrorString() << std::endl;
 #endif
             }
         }
@@ -87,9 +87,9 @@ namespace glcpp
                        aiProcess_GenNormals |
                        aiProcess_CalcTangentSpace |
                        aiProcess_LimitBoneWeights |
-                  //     aiProcess_JoinIdenticalVertices;
-            aiProcess_FlipWindingOrder |
-           aiProcess_SortByPType;
+                       aiProcess_JoinIdenticalVertices;
+        aiProcess_FlipWindingOrder |
+            aiProcess_SortByPType;
     }
     std::shared_ptr<glcpp::Model> Importer::import_model(const aiScene *scene)
     {
@@ -97,19 +97,18 @@ namespace glcpp
         {
             return nullptr;
         }
-        return std::make_shared<glcpp::Model>(path_.c_str(),scene);
+        return std::make_shared<glcpp::Model>(path_.c_str(), scene);
     }
     std::vector<std::shared_ptr<glcpp::Animation>> Importer::import_animation(const aiScene *scene)
     {
         std::vector<std::shared_ptr<glcpp::Animation>> sp_animations;
-        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
+        if (scene && scene->mRootNode)
         {
-            return sp_animations;
-        }
-        for (unsigned int i = 0; i < scene->mNumAnimations; i++)
-        {
-            auto animation = scene->mAnimations[i];
-            sp_animations.push_back(std::make_shared<glcpp::AssimpAnimation>(animation, scene, path_.c_str()));
+            for (unsigned int i = 0; i < scene->mNumAnimations; i++)
+            {
+                auto animation = scene->mAnimations[i];
+                sp_animations.push_back(std::make_shared<glcpp::AssimpAnimation>(animation, scene, path_.c_str()));
+            }
         }
         return sp_animations;
     }

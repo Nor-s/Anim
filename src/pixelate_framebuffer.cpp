@@ -6,23 +6,23 @@
 #include "glcpp/shader.h"
 #include "glcpp/entity.h"
 
-PixelateFramebuffer::PixelateFramebuffer(int width, int height)
+PixelateFramebuffer::PixelateFramebuffer(uint32_t width, uint32_t height, uint32_t factor)
+    : width_(width), height_(height), factor_(factor)
 {
-    set_size(width, height);
-    factor_ = 1;
+    set_framebuffer();
 }
+
 PixelateFramebuffer::~PixelateFramebuffer()
 {
     pixelate_shader_.reset();
     outline_shader_.reset();
-    tmp_shader_.reset();
     pixelate_framebuffer_.reset();
     outline_framebuffer_.reset();
 }
+
 // model capture to RGB for blend
 //(https://community.khronos.org/t/alpha-blending-issues-when-drawing-frame-buffer-into-default-buffer/73958)
 //(https://stackoverflow.com/questions/2171085/opengl-blending-with-previous-contents-of-framebuffer/4076268)
-
 void PixelateFramebuffer::pre_draw(std::shared_ptr<glcpp::Entity> &entity, glcpp::Shader &shader, glm::mat4 &view, glm::mat4 &projection)
 {
     capture_rgba(entity, shader, view, projection);
@@ -31,6 +31,7 @@ void PixelateFramebuffer::pre_draw(std::shared_ptr<glcpp::Entity> &entity, glcpp
         capture_outline();
     }
 }
+
 void PixelateFramebuffer::draw()
 {
     if (is_outline_)
@@ -42,6 +43,7 @@ void PixelateFramebuffer::draw()
         pixelate_framebuffer_->draw(*pixelate_shader_);
     }
 }
+
 void PixelateFramebuffer::to_png(const char *save_path)
 {
     if (is_outline_)
@@ -76,17 +78,13 @@ void PixelateFramebuffer::capture_outline()
     outline_framebuffer_->unbind();
 }
 
-void PixelateFramebuffer::set_pixelate_shader(std::shared_ptr<glcpp::Shader> &shader)
+void PixelateFramebuffer::set_pixelate_shader(std::shared_ptr<glcpp::Shader> shader)
 {
-    pixelate_shader_ = shader;
+    pixelate_shader_ = std::move(shader);
 }
-void PixelateFramebuffer::set_tmp_shader(std::shared_ptr<glcpp::Shader> &shader)
+void PixelateFramebuffer::set_outline_shader(std::shared_ptr<glcpp::Shader> shader)
 {
-    tmp_shader_ = shader;
-}
-void PixelateFramebuffer::set_outline_shader(std::shared_ptr<glcpp::Shader> &shader)
-{
-    outline_shader_ = shader;
+    outline_shader_ = std::move(shader);
 }
 void PixelateFramebuffer::set_outline_flag(bool flag)
 {
@@ -96,15 +94,34 @@ void PixelateFramebuffer::set_outline_color(const glm::vec3 &color)
 {
     outline_color_ = color;
 }
-void PixelateFramebuffer::set_size(int width, int height)
+void PixelateFramebuffer::set_framebuffer(uint32_t width, uint32_t height)
+{
+    set_size(width, height);
+    set_framebuffer();
+}
+void PixelateFramebuffer::set_framebuffer(uint32_t factor)
+{
+    set_factor(factor);
+    set_framebuffer();
+}
+void PixelateFramebuffer::set_framebuffer()
+{
+    uint32_t width = width_ / factor_;
+    uint32_t height = height_ / factor_;
+
+    pixelate_framebuffer_.reset(new glcpp::Framebuffer(width, height, GL_RGBA));
+    outline_framebuffer_.reset(new glcpp::Framebuffer(width, height, GL_RGBA));
+}
+void PixelateFramebuffer::set_size(uint32_t width, uint32_t height)
 {
     width_ = width;
     height_ = height;
-    pixelate_framebuffer_ = std::make_unique<glcpp::Framebuffer>(width_, height_, GL_RGBA);
-    outline_framebuffer_ = std::make_unique<glcpp::Framebuffer>(width_, height_, GL_RGBA);
 }
-
-int PixelateFramebuffer::get_width()
+void PixelateFramebuffer::set_factor(uint32_t factor)
+{
+    factor_ = factor;
+}
+uint32_t PixelateFramebuffer::get_width()
 {
     return width_;
 }
@@ -112,14 +129,11 @@ uint32_t PixelateFramebuffer::get_texture()
 {
     return outline_framebuffer_->get_color_texture(); // pixelate_framebuffer_->get_color_texture();
 }
-int PixelateFramebuffer::get_factor()
+uint32_t PixelateFramebuffer::get_factor()
 {
     return factor_;
 }
-void PixelateFramebuffer::set_factor(int factor)
-{
-    factor_ = factor;
-}
+
 glcpp::Framebuffer &PixelateFramebuffer::get_framebuffer()
 {
     return *pixelate_framebuffer_;

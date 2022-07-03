@@ -10,6 +10,7 @@ set(GLCPP_SRC
     glcpp/application.hpp
     glcpp/importer.cpp
     glcpp/exporter.cpp
+    glcpp/component/component.hpp
     glcpp/component/transform_component.cpp
     glcpp/component/animation_component.cpp
     glcpp/utility.hpp

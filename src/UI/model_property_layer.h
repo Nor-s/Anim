@@ -3,6 +3,7 @@
 
 class Scene;
 class SharedResources;
+class PixelateStateComponent;
 namespace glcpp
 {
     class Entity;
@@ -27,6 +28,7 @@ namespace ui
         void draw_model_list(PropertiesContext &context, const SharedResources *shared_resource, const glcpp::Entity *entity);
         void draw_transform_slider(glcpp::TransformComponent &transform);
         void draw_transform_reset_button(glcpp::TransformComponent &transform);
+        void draw_pixelate_properties(PixelateStateComponent* state);
     };
 }
 

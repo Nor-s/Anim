@@ -1,5 +1,4 @@
 #include "main_scene.h"
-#include "scene_context.h"
 #include "shared_resources.h"
 #include "pixelate_framebuffer.h"
 #include <glcpp/shader.h>
@@ -15,6 +14,7 @@ namespace fs = std::filesystem;
 
 MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedResources> resources)
 {
+    add_component<PixelateStateComponent>();
     if (resources == nullptr)
     {
         resources_ = std::make_shared<SharedResources>();
@@ -25,6 +25,7 @@ MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedReso
     }
     init_shader();
     init_framebuffer(width_, height_);
+    init_pixelate_framebuffer(width, height);
     init_camera();
     selected_entity_ = std::make_shared<glcpp::Entity>();
 }
@@ -46,19 +47,16 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
     framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
     skybox_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
     grid_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
-
-    init_pixelate_framebuffer(width, height);
 }
 
 void MainScene::init_pixelate_framebuffer(uint32_t width, uint32_t height)
 {
-    int factor = 1; // imgui_option_.get_int_property(pixelate_value_idx_);
-    auto framebuffer_shader = resources_->get_mutable_shader("framebuffer");
-    auto outline_shader = resources_->get_mutable_shader("outline");
-    pixelate_framebuffer_.reset(new PixelateFramebuffer(width / factor, height / factor));
-    pixelate_framebuffer_->set_factor(factor);
-    pixelate_framebuffer_->set_pixelate_shader(framebuffer_shader);
-    pixelate_framebuffer_->set_outline_shader(outline_shader);
+    auto state = get_component<PixelateStateComponent>();
+    pixelate_framebuffer_.reset(new PixelateFramebuffer(width, height, state->get_factor()));
+    pixelate_framebuffer_->set_pixelate_shader(resources_->get_mutable_shader("framebuffer"));
+    pixelate_framebuffer_->set_outline_shader(resources_->get_mutable_shader("outline"));
+    pixelate_framebuffer_->set_outline_color(state->get_outline_color());
+    pixelate_framebuffer_->set_outline_flag(state->get_is_outline());
 }
 
 void MainScene::init_camera()
@@ -89,8 +87,16 @@ void MainScene::update_framebuffer()
     if (framebuffer_->get_width() != width_ || framebuffer_->get_height() != height_)
     {
         init_framebuffer(width_, height_);
-        init_pixelate_framebuffer(width_, height_);
+        pixelate_framebuffer_->set_framebuffer(width_, height_);
     }
+    auto state = get_component<PixelateStateComponent>();
+    uint32_t factor = state->get_factor();
+    if (factor != pixelate_framebuffer_->get_factor())
+    {
+        pixelate_framebuffer_->set_framebuffer(factor);
+    }
+    pixelate_framebuffer_->set_outline_color(state->get_outline_color());
+    pixelate_framebuffer_->set_outline_flag(state->get_is_outline());
 }
 
 void MainScene::set_view_and_projection()

@@ -85,8 +85,8 @@ void Pixel3D::loop()
 }
 void Pixel3D::update()
 {
-    update_resources();
     update_time();
+    update_resources();
     process_buttons();
 }
 

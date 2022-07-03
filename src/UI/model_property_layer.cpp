@@ -7,6 +7,7 @@
 #include "glcpp/model.h"
 #include "glcpp/component/transform_component.h"
 #include <imgui/imgui.h>
+#include "pixelate_framebuffer.h"
 
 namespace ui
 {
@@ -19,7 +20,7 @@ namespace ui
         glcpp::Entity *entity = scene->get_mutable_selected_entity();
         SharedResources *resources = scene->get_mutable_ref_shared_resources().get();
 
-        if (ImGui::Begin("Entity"))
+        if (ImGui::Begin("Properties"))
         {
             if (ImGui::CollapsingHeader("Model&Animation"))
             {
@@ -30,15 +31,19 @@ namespace ui
             {
                 if (entity)
                 {
-                    draw_transform_slider(entity->get_mutable_transform());
-                    ImGui::Separator();
                     draw_transform_reset_button(entity->get_mutable_transform());
+                    ImGui::Separator();
+                    draw_transform_slider(entity->get_mutable_transform());
                 }
                 else
                 {
                     ImGui::Text("No model selected");
                 }
                 ImGui::Separator();
+            }
+            if (auto pixelate_component = scene->get_component<PixelateStateComponent>(); pixelate_component)
+            {
+                draw_pixelate_properties(pixelate_component);
             }
         }
         ImGui::End();
@@ -156,6 +161,28 @@ namespace ui
         if (ImGui::Button("reset"))
         {
             transform.set_translation({0.0f, 0.0f, 0.0f}).set_rotation({0.0f, 0.0f, 0.0f}).set_scale({1.0f, 1.0f, 1.0f});
+        }
+    }
+    void ModelPropertyLayer::draw_pixelate_properties(PixelateStateComponent *state)
+    {
+        if (ImGui::CollapsingHeader("Outline"))
+        {
+            ImGui::Text("enable:");
+            ImGui::SameLine();
+            ImGui::Checkbox("##outline", state->get_mutable_pointer_is_outline());
+            ImGui::Text("color:");
+            ImGui::SameLine();
+            ImGui::ColorEdit3("##outcolor", &(*state->get_mutable_pointer_outline_color())[0]);
+            ImGui::Separator();
+        }
+        if (ImGui::CollapsingHeader("Pixelate"))
+        {
+            ImGui::Text("mod:");
+            ImGui::SameLine();
+            int factor = static_cast<int>(state->get_factor());
+            ImGui::SliderInt("##mod", &factor, 1, 100);
+            (*state->get_mutable_pointer_factor()) = factor;
+            ImGui::Separator();
         }
     }
 }

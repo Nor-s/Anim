@@ -4,9 +4,10 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <string>
+#include <vector>
 #include <memory>
+#include "glcpp/component/component.hpp"
 
-class SceneContext;
 class SharedResources;
 
 namespace glcpp
@@ -29,10 +30,6 @@ public:
     {
         return framebuffer_;
     }
-    virtual std::shared_ptr<SceneContext> get_mutable_scene_context()
-    {
-        return context_;
-    }
     virtual std::shared_ptr<SharedResources> get_mutable_shared_resources()
     {
         return resources_;
@@ -54,9 +51,13 @@ public:
     {
         delta_time_ = dt;
     }
+    template <class T>
+    T *get_component();
+    template <class T>
+    void add_component();
 
 protected:
-    std::shared_ptr<SceneContext> context_;
+    std::vector<std::unique_ptr<glcpp::Component>> components_;
     std::shared_ptr<SharedResources> resources_;
     std::shared_ptr<glcpp::Framebuffer> framebuffer_;
     std::shared_ptr<glcpp::Camera> camera_;
@@ -66,5 +67,21 @@ protected:
     uint32_t width_ = 800;
     uint32_t height_ = 600;
 };
+
+template <class T>
+T *Scene::get_component()
+{
+    for (auto it = components_.begin(); it != components_.end(); ++it)
+    {
+        if ((*it)->get_type() == T::type)
+            return static_cast<T *>((*it).get());
+    }
+    return nullptr;
+}
+template <class T>
+void Scene::add_component()
+{
+    components_.push_back(std::make_unique<T>());
+}
 
 #endif

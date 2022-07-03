@@ -103,16 +103,7 @@ void MainScene::set_view_and_projection()
 void MainScene::draw_to_framebuffer()
 {
     auto grid_shader = resources_->get_mutable_shader("grid");
-    glcpp::Shader* shader = nullptr;
-    if (selected_entity_ && selected_entity_->get_mutable_model() && selected_entity_->has_bone())
-    {
-        shader = resources_->get_mutable_shader("animation").get();
-        //resources_->get_mutable_animator()->update_animation(delta_time_, selected_entity_.get(), shader);
-    }
-    else
-    {
-        shader = resources_->get_mutable_shader("model").get();
-    }
+
     glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -120,14 +111,13 @@ void MainScene::draw_to_framebuffer()
     {
         grid_shader->use();
         grid_shader->set_mat4("view", view_);
-        grid_shader->set_mat4("projection", projection_);       
+        grid_shader->set_mat4("projection", projection_);
 
-        grid_framebuffer_->draw(*grid_shader);     
+        grid_framebuffer_->draw(*grid_shader);
         pixelate_framebuffer_->draw();
 
-      //  glEnable(GL_DEPTH_TEST);
-      //  selected_entity_->draw(*shader, view_, projection_);
-
+        //  glEnable(GL_DEPTH_TEST);
+        //  selected_entity_->draw(*shader, view_, projection_);
     }
     framebuffer_->unbind();
     auto error = glGetError();

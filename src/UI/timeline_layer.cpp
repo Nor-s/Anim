@@ -115,26 +115,24 @@ namespace ui
     void TimelineLayer::draw_animation_list(TimelineContext &context, const SharedResources *shared_resources, const glcpp::Entity *entity)
     {
         const auto &animations = shared_resources->get_animations();
-        const char *current_animation_name = nullptr;
         int current_idx = entity->get_animation_id();
+        std::string current_animation_name("None");
         if (entity->has_animation_component())
         {
-            std::string name = std::to_string(current_idx) + ":" + entity->get_pointer_animation_component()->get_animation()->get_name();
-            current_animation_name = name.c_str();
+            current_animation_name = std::to_string(current_idx) + ":" + entity->get_pointer_animation_component()->get_animation()->get_name();
         }
 
         ImGui::PushItemWidth(100);
         ImGui::Text("Animation:");
         ImGui::SameLine();
-        if (ImGui::BeginCombo("##animations", current_animation_name))
+        if (ImGui::BeginCombo("##animations", current_animation_name.c_str()))
         {
             for (size_t i = 0; i < animations.size(); i++)
             {
                 std::string name = std::to_string(i) + ":" + animations[i]->get_name();
-                const char *animation_name = name.c_str();
 
                 bool is_selected = (current_idx == i);
-                if (ImGui::Selectable(animation_name, is_selected) && current_idx != i)
+                if (ImGui::Selectable(name.c_str(), is_selected) && current_idx != i)
                 {
                     context.animation_idx = i;
                 }
@@ -176,9 +174,9 @@ namespace ui
             else
             {
                 is_hovered_zoom_slider_ = false;
-            }
+            }        
+            ImGui::EndNeoSequencer();
         }
-        ImGui::EndNeoSequencer();
 
         // update current time
         if (before_frame != current_frame_)

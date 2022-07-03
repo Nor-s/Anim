@@ -47,6 +47,9 @@ namespace glcpp
 
     void Entity::set_model(std::shared_ptr<Model> model, int id)
     {
+#ifndef NDEBUG
+        std::cout << "SET ID: " << id << std::endl;
+#endif
         model_ = std::move(model);
         model_id_ = id;
     }

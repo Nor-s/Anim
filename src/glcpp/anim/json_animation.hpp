@@ -77,7 +77,7 @@ namespace glcpp
       try
       {
         std::filesystem::path path = std::filesystem::u8path((path_).c_str());
-        name_ = path.filename();
+        name_ = path.filename().string();
         type = AnimationType::Json;
         Json::Value root;
 #ifndef NDEBUG

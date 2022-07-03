@@ -83,7 +83,8 @@ namespace ui
                     for (int idx = 0; idx < models.size(); idx++)
                     {
                         bool is_selected = (idx == model_idx);
-                        if (ImGui::Selectable((std::to_string(idx) + ":" + models[idx]->get_name()).c_str(), is_selected))
+                        std::string name = std::to_string(idx) + ":" + models[idx]->get_name();
+                        if (ImGui::Selectable(name.c_str(), is_selected))
                         {
                             model_idx = idx;
                         }
@@ -93,8 +94,10 @@ namespace ui
                 {
                     for (int idx = 0; idx < animations.size(); idx++)
                     {
+                        std::string name = std::to_string(idx) + ":" + animations[idx]->get_name();
+
                         bool is_selected = (idx == animation_idx);
-                        if (ImGui::Selectable((std::to_string(idx) + ":" + animations[idx]->get_name()).c_str(), is_selected))
+                        if (ImGui::Selectable(name.c_str(), is_selected))
                         {
                             animation_idx = idx;
                         }

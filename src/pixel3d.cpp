@@ -84,8 +84,8 @@ void Pixel3D::loop()
 }
 void Pixel3D::update()
 {
-    update_time();
     update_resources();
+    update_time();
 }
 void Pixel3D::update_time()
 {
@@ -147,7 +147,6 @@ void Pixel3D::update_resources()
 #endif
             auto model = shared_resources->back_mutable_model();
             entity->set_model(model, shared_resources->get_models_size() - 1);
-            // entity->get_mutable_transform().set_translation(glm::vec3{0.0f, 0.0f, 0.0f}).set_rotation(glm::vec3{0.0f, 0.0f, 0.0f}).set_scale(glm::vec3{1.0f, 1.0f, 1.0f});
         }
 
         if (result.second)
@@ -159,30 +158,33 @@ void Pixel3D::update_resources()
             entity->set_animation_component(animation, shared_resources_->get_animations_size() - 1);
         }
     }
-    if (menu_context.clicked_export_animation)
+    else
     {
-    }
-    int current_animation_idx = entity->get_animation_id();
-    int animation_idx[2] = {properties_context.animation_idx, time_context.animation_idx};
-    for (int i = 0; i < 2; i++)
-    {
-        if (animation_idx[i] >= 0 && animation_idx[i] != current_animation_idx)
+        int current_animation_idx = entity->get_animation_id();
+        int animation_idx[2] = {properties_context.animation_idx, time_context.animation_idx};
+        for (int i = 0; i < 2; i++)
+        {
+            if (animation_idx[i] >= 0 && animation_idx[i] != current_animation_idx)
+            {
+#ifndef NDEBUG
+                std::cout << "animation id: " << animation_idx[i] << " <-> " << entity->get_model_id() << std::endl;
+#endif
+                auto animation = shared_resources->get_mutable_animation(animation_idx[i]);
+                entity->set_animation_component(animation, animation_idx[i]);
+                break;
+            }
+        }
+        if (properties_context.model_idx >= 0 && properties_context.model_idx != entity->get_model_id())
         {
 #ifndef NDEBUG
-            std::cout << "animation id: " << animation_idx[i] << " <-> " << entity->get_model_id() << std::endl;
+            std::cout << "model id: " << properties_context.model_idx << " <-> " << entity->get_model_id() << std::endl;
 #endif
-            auto animation = shared_resources->get_mutable_animation(animation_idx[i]);
-            entity->set_animation_component(animation, animation_idx[i]);
-            break;
+            auto model = shared_resources->get_mutable_model(properties_context.model_idx);
+            entity->set_model(model, properties_context.model_idx);
         }
     }
-    if (properties_context.model_idx >= 0 && properties_context.model_idx != entity->get_model_id())
+    if (menu_context.clicked_export_animation)
     {
-#ifndef NDEBUG
-        std::cout << "model id: " << properties_context.model_idx << " <-> " << entity->get_animation_id() << std::endl;
-#endif
-        auto model = shared_resources->get_mutable_model(properties_context.model_idx);
-        entity->set_model(model, properties_context.model_idx);
     }
 }
 void Pixel3D::pre_draw()

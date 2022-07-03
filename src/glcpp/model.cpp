@@ -63,8 +63,9 @@ namespace glcpp
     void Model::load_model(const char *path, const aiScene *scene)
     {
         directory_ = std::filesystem::u8path(path);
-        name_ = directory_.filename();
+        name_ = directory_.filename().string();
         process_node(root_node_, scene->mRootNode, scene);
+        textures_loaded_.clear();
     }
 
     void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
@@ -225,11 +226,11 @@ namespace glcpp
             aiString str;
             mat->GetTexture(type, i, &str);
             bool skip = false;
-            for (unsigned int j = 0; j < textures.size(); j++)
+            for (unsigned int j = 0; j < textures_loaded_.size(); j++)
             {
-                if (std::strcmp(textures[j].path.data(), str.C_Str()) == 0)
+                if (std::strcmp(textures_loaded_[j].path.data(), str.C_Str()) == 0)
                 {
-                    textures.push_back(textures[j]);
+                    textures.push_back(textures_loaded_[j]);
                     skip = true;
                     break;
                 }
@@ -239,8 +240,9 @@ namespace glcpp
                 Texture texture;
                 texture.id = TextureFromFile(str.C_Str(), directory_, scene);
                 texture.type = typeName;
-                texture.path = str.C_Str();
+                texture.path = std::string(str.C_Str());
                 textures.push_back(texture);
+                textures_loaded_.push_back(texture); // add to loaded textures
             }
         }
         return textures;

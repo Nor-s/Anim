@@ -112,6 +112,7 @@ namespace glcpp
         std::vector<Mesh> meshes_;
         std::map<std::string, BoneInfo> bone_info_map_;
         std::filesystem::path directory_;
+        std::vector<Texture> textures_loaded_;
         std::string name_;
         int bone_count_ = 0;
         int node_count_ = 0;

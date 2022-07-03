@@ -119,7 +119,8 @@ namespace ui
         int current_idx = entity->get_animation_id();
         if (entity->has_animation_component())
         {
-            current_animation_name = (std::to_string(current_idx) + ":" + entity->get_pointer_animation_component()->get_animation()->get_name()).c_str();
+            std::string name = std::to_string(current_idx) + ":" + entity->get_pointer_animation_component()->get_animation()->get_name();
+            current_animation_name = name.c_str();
         }
 
         ImGui::PushItemWidth(100);
@@ -129,8 +130,8 @@ namespace ui
         {
             for (size_t i = 0; i < animations.size(); i++)
             {
-                std::string tmp = std::to_string(i) + ":" + animations[i]->get_name();
-                const char *animation_name = tmp.c_str();
+                std::string name = std::to_string(i) + ":" + animations[i]->get_name();
+                const char *animation_name = name.c_str();
 
                 bool is_selected = (current_idx == i);
                 if (ImGui::Selectable(animation_name, is_selected) && current_idx != i)

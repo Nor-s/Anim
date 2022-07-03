@@ -53,7 +53,6 @@ namespace glcpp
                 std::cout << "ERROR::IMPORTER: " << importer.GetErrorString() << std::endl;
 #endif
             }
-            importer.FreeScene();
         }
         catch (std::exception &e)
         {
@@ -88,9 +87,9 @@ namespace glcpp
                        aiProcess_GenNormals |
                        aiProcess_CalcTangentSpace |
                        aiProcess_LimitBoneWeights |
-                       aiProcess_JoinIdenticalVertices;
-        //    aiProcess_FlipWindingOrder |
-        //    aiProcess_SortByPType;
+                  //     aiProcess_JoinIdenticalVertices;
+            aiProcess_FlipWindingOrder |
+           aiProcess_SortByPType;
     }
     std::shared_ptr<glcpp::Model> Importer::import_model(const aiScene *scene)
     {
@@ -98,7 +97,7 @@ namespace glcpp
         {
             return nullptr;
         }
-        return std::make_shared<glcpp::Model>(path_.c_str(), scene);
+        return std::make_shared<glcpp::Model>(path_.c_str(),scene);
     }
     std::vector<std::shared_ptr<glcpp::Animation>> Importer::import_animation(const aiScene *scene)
     {

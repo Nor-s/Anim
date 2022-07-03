@@ -24,7 +24,6 @@ namespace glcpp
 
         AssimpAnimation(const char *path)
         {
-            type = AnimationType::Assimp;
             Assimp::Importer importer;
             unsigned int assimp_read_flag =
                 aiProcess_SortByPType |
@@ -58,9 +57,11 @@ namespace glcpp
     private:
         void init_animation(const aiAnimation *animation, const aiScene *scene, const char *path)
         {
+            type = AnimationType::Assimp;
+
             path_ = std::string(path);
             fs::path anim_path = fs::u8path(path_);
-            name_ = anim_path.filename();
+            name_ = anim_path.filename().string();
             duration_ = animation->mDuration;
             ticks_per_second_ = animation->mTicksPerSecond;
             process_bones(animation, scene->mRootNode);

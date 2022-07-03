@@ -86,7 +86,7 @@ std::pair<bool, bool> SharedResources::add_model_or_animation_by_path(const char
     bool is_imported_model = false;
     bool is_imported_animation = false;
 
-    glcpp::Importer importer;
+    glcpp::Importer importer{};
     auto [sp_model, sp_animations] = importer.import(path);
     if (sp_model)
     {

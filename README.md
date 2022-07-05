@@ -2,6 +2,14 @@
 
 ![](./screenshot/2022-07-04.png)
 
+## **TODO**
+
+-   Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)
+-   model picking
+-   visualize bone
+-   z oder (grid <-> model)
+-   mp2mm: increased accuracy
+
 ## **build**
 
 -   windows: MSVC 19.33.31517.0
@@ -42,6 +50,7 @@ conda env create -f mp_gui_build.yaml
 
     -   timeline: https://gitlab.com/GroGy/im-neo-sequencer
     -   text editor: https://github.com/BalazsJako/ImGuiColorTextEdit
+    -   dialog: https://github.com/dfranx/ImFileDialog
 
 -   stb: https://github.com/nothings/stb
 

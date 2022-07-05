@@ -13,3 +13,6 @@
 [submodule "mediapipe-to-mixamo"]
 	path = mediapipe-to-mixamo
 	url = https://github.com/Nor-s/mediapipe-to-mixamo.git
+[submodule "external/ImFileDialog"]
+	path = external/ImFileDialog
+	url = https://github.com/dfranx/ImFileDialog.git

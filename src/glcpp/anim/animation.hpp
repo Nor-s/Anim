@@ -96,10 +96,10 @@ namespace glcpp
     protected:
         float duration_{0.0f};
         int ticks_per_second_{0};
-        std::string name_;
-        std::map<std::string, std::unique_ptr<Bone>> name_bone_map_;
-        AnimationType type;
-        std::string path_;
+        std::string name_{};
+        std::map<std::string, std::unique_ptr<Bone>> name_bone_map_{};
+        AnimationType type{};
+        std::string path_{};
     };
 
 }

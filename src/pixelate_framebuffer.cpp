@@ -108,6 +108,8 @@ void PixelateFramebuffer::set_framebuffer()
 {
     uint32_t width = width_ / factor_;
     uint32_t height = height_ / factor_;
+    width = (width) ? width : 1u;
+    height = (height) ? height : 1u;
 
     pixelate_framebuffer_.reset(new glcpp::Framebuffer(width, height, GL_RGBA));
     outline_framebuffer_.reset(new glcpp::Framebuffer(width, height, GL_RGBA));

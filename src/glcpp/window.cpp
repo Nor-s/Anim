@@ -4,13 +4,16 @@ namespace glcpp
 {
     Window::Window(uint32_t width, uint32_t height, std::string title)
         : width_(width), height_(height), title_(title)
-    {
-        init_window(width_, height_, title_);
+    {            
+        init_glfw();
     }
     Window::~Window()
     {
         if (handle_)
         {
+#ifndef NDEBUG
+            std::cout << "Window::~Window"<<std::endl;
+#endif
             destroy_window();
         }
     }
@@ -26,17 +29,7 @@ namespace glcpp
     {
         glfwPollEvents();
     }
-    void Window::init_window(uint32_t width, uint32_t height, std::string &title)
-    {
-        if (!handle_)
-        {
-            init_glfw();
-        }
-        else
-        {
-            set_window(width, height, title);
-        }
-    }
+
     void Window::init_glfw()
     {
         if (!glfwInit())
@@ -46,6 +39,9 @@ namespace glcpp
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
         glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifndef NDEBUG
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+#endif
         // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 #ifdef __APPLE__
         glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
@@ -67,8 +63,9 @@ namespace glcpp
     void Window::destroy_window()
     {
         glfwDestroyWindow(handle_);
+        glfwTerminate();        
         handle_ = nullptr;
-        glfwTerminate();
+
     }
     void Window::wait_events()
     {
@@ -89,13 +86,13 @@ namespace glcpp
     void Window::set_window(uint32_t width, uint32_t height, const std::string &title)
     {
         set_size(width, height);
+
         set_title(title);
     }
     void Window::set_size(uint32_t width, uint32_t height)
     {
         width_ = width;
         height_ = height;
-        glfwSetWindowSize(handle_, width_, height_);
     }
     void Window::set_title(const std::string &title)
     {
@@ -164,9 +161,9 @@ namespace glcpp
     }
     std::pair<int, int> Window::get_framebuffer_size() const
     {
-        std::pair<int, int> size;
+        std::pair<int, int> size{0,0};
         glfwGetFramebufferSize(handle_, &size.first, &size.second);
-        // set_size(size.first, size.second);
+        //set_size(static_cast<uint32_t>(size.first), static_cast<uint32_t>(size.second));
         return size;
     }
     void Window::update_window()

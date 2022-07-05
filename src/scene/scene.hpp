@@ -44,7 +44,9 @@ public:
     }
     virtual void set_size(uint32_t width, uint32_t height)
     {
+        if(width > 0)
         width_ = width;
+        if(height > 0)
         height_ = height;
     }
     virtual void set_delta_time(float dt)

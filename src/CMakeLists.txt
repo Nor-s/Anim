@@ -61,6 +61,7 @@ add_executable(pixel3D
 ./UI/timeline_layer.cpp
 ./UI/main_layer.cpp
 ./UI/imgui_helper.hpp
+./UI/ImFileDialog.cpp
 
 
 ./mp2mm.cpp

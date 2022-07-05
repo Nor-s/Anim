@@ -19,7 +19,6 @@ namespace glcpp
         bool should_close();
         void close();
         void process_events();
-        void init_window(uint32_t width, uint32_t height, std::string &title);
         void init_glfw();
         void destroy_window();
         void wait_events();

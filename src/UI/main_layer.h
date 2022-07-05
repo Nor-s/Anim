@@ -26,6 +26,7 @@ namespace ui
     {
         bool clicked_import_model{false};
         bool clicked_export_animation{false};
+        std::string path{""};
     };
 
     struct UiContext

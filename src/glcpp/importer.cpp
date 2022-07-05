@@ -16,6 +16,7 @@ namespace glcpp
     {
         init_assimp_flag();
     }
+
     std::pair<std::shared_ptr<glcpp::Model>, std::vector<std::shared_ptr<glcpp::Animation>>> Importer::import(const char *path)
     {
         if (path)

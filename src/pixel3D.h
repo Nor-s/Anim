@@ -39,6 +39,7 @@ public:
 
     virtual void loop() override;
     void update();
+    void update_window();
     void update_time();
     void update_resources();
     void process_buttons();
@@ -52,22 +53,24 @@ public:
     static void mouse_callback(GLFWwindow *window, double xposIn, double yposIn);
     static void mouse_btn_callback(GLFWwindow *window, int button, int action, int mods);
     static void scroll_callback(GLFWwindow *window, double xoffset, double yoffset);
-
-private:
+    // mouse event
+    bool is_pressed_ = false;
+    bool is_pressed_scroll_ = false;
+    glm::vec2 prev_mouse_{-1.0f, -1.0f}, cur_mouse_{-1.0f, -1.0f};    
+    uint32_t current_scene_idx_ = 0u;
+    std::unique_ptr<ui::MainLayer> ui_;
     // timing
     float start_time_ = 0.0f;
     float delta_frame_ = 0.0f;
     float last_frame_ = 0.0f;
     float fps_ = 0.0f;
-    int frames_ = 0;
-    // mouse event
-    bool is_pressed_ = false;
-    bool is_pressed_scroll_ = false;
-    glm::vec2 prev_mouse_{-1.0f, -1.0f}, cur_mouse_{-1.0f, -1.0f};
+    int frames_ = 0;    
     std::vector<std::shared_ptr<Scene>> scenes_;
+
+private:
+
     std::shared_ptr<SharedResources> shared_resources_;
-    std::unique_ptr<ui::MainLayer> ui_;
-    uint32_t current_scene_idx_ = 0u;
+
     Mp2mm mp2mm_;
 };
 

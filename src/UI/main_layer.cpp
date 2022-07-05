@@ -11,6 +11,7 @@
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
 #include <nfd.h>
+#include "ImFileDialog.h"
 
 namespace ui
 {
@@ -20,6 +21,30 @@ namespace ui
 
     void MainLayer::init(GLFWwindow *window)
     {
+        ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
+        {
+
+            GLuint tex;
+
+            glGenTextures(1, &tex);
+            glBindTexture(GL_TEXTURE_2D, tex);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, (fmt == 0) ? GL_BGRA : GL_RGBA, GL_UNSIGNED_BYTE, data);
+            glGenerateMipmap(GL_TEXTURE_2D);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            return reinterpret_cast<void *>(tex);
+        };
+
+        ifd::FileDialog::Instance().DeleteTexture = [](void *tex)
+        {
+            GLuint texID = static_cast<GLuint>(reinterpret_cast<uintptr_t>(tex));
+            glDeleteTextures(1, &texID);
+
+        };
         NFD_Init();
         const char *glsl_version = "#version 330";
 
@@ -61,11 +86,14 @@ namespace ui
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
         context_ = UiContext{};
+
     }
 
     void MainLayer::end()
     {
+
         ImGui::Render();
+
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         ImGuiIO &io = ImGui::GetIO();
@@ -76,6 +104,14 @@ namespace ui
             ImGui::RenderPlatformWindowsDefault();
             glfwMakeContextCurrent(backup_current_context);
         }
+#ifndef NDEBUG
+
+        auto error = glGetError();
+        if (error != GL_NO_ERROR)
+        {
+            std::cout << "ImGui Render: " << error << std::endl;
+        }
+#endif
     }
 
     void MainLayer::draw_dock(float fps)
@@ -111,6 +147,17 @@ namespace ui
         }
         draw_menu_bar(fps);
         ImGui::End();
+
+        if (ifd::FileDialog::Instance().IsDone("Import"))
+        {
+            if (ifd::FileDialog::Instance().HasResult())
+            {
+                context_.menu_context.path = ifd::FileDialog::Instance().GetResult().u8string();
+                context_.menu_context.clicked_import_model = true;
+
+            }
+            ifd::FileDialog::Instance().Close();
+        }
     }
 
     void MainLayer::draw_menu_bar(float fps)
@@ -121,7 +168,9 @@ namespace ui
             {
                 if (ImGui::MenuItem("Import: model, animation", NULL, nullptr))
                 {
-                    context_.menu_context.clicked_import_model = true;
+
+                    ifd::FileDialog::Instance().Open("Import", "import", "model {.obj,.dae,.pmx,.fbx,.md5mesh,.gltf,.json},.*");
+
                 }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Export: animation", NULL, nullptr))

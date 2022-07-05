@@ -14,6 +14,14 @@
 
 namespace fs = std::filesystem;
 
+#ifndef NDEBUG
+
+void error_callback(int code, const char *description)
+{
+    printf("error %d: %s\n", code, description);
+}
+#endif
+
 Pixel3D::Pixel3D()
 {
 }
@@ -41,10 +49,15 @@ void Pixel3D::init_window(uint32_t width, uint32_t height, const std::string &ti
 }
 void Pixel3D::init_callback()
 {
-    window_->set_framebuffer_size_callback(framebuffer_size_callback);
+    //    window_->set_framebuffer_size_callback(framebuffer_size_callback);
     window_->set_scroll_callback(scroll_callback);
     window_->set_mouse_button_callback(mouse_btn_callback);
     window_->set_cursor_pos_callback(mouse_callback);
+
+#ifndef NDEBUG
+
+    glfwSetErrorCallback(error_callback);
+#endif
 }
 void Pixel3D::init_ui()
 {
@@ -67,29 +80,46 @@ void Pixel3D::loop()
     while (!window_->should_close())
     {
         update();
-        process_input(window_->get_handle());
 
         pre_draw();
         {
             ui_->begin();
+
             ui_->draw_dock(fps_);
+
             this->draw_scene();
+
             auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+
             ui_->draw_model_properties(scenes_[current_scene_idx_].get());
+
             ui_->draw_hierarchy_layer(entity);
+
             ui_->draw_timeline(scenes_[current_scene_idx_].get());
+
             ui_->end();
         }
+
         post_draw();
     }
 }
 void Pixel3D::update()
 {
+    update_window();
     update_time();
     update_resources();
     process_buttons();
 }
-
+void Pixel3D::update_window()
+{
+    auto size = window_->get_framebuffer_size();
+    while (size.first == 0 || size.second == 0)
+    {
+        window_->wait_events();
+        size = window_->get_framebuffer_size();
+    }
+    window_->set_size(size.first, size.second);
+}
 void Pixel3D::update_time()
 {
     auto &ui_context = ui_->get_context();
@@ -143,7 +173,7 @@ void Pixel3D::update_resources()
     auto &properties_context = ui_context.properties_context;
     if (menu_context.clicked_import_model)
     {
-        std::pair<bool, bool> result = shared_resources->add_model_or_animation_by_path(nullptr);
+        std::pair<bool, bool> result = shared_resources->add_model_or_animation_by_path(menu_context.path.c_str());
         if (result.first)
         {
 #ifndef NDEBUG
@@ -203,6 +233,8 @@ void Pixel3D::process_buttons()
 }
 void Pixel3D::pre_draw()
 {
+    process_input(window_->get_handle());
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, window_->get_width(), window_->get_height());
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
@@ -225,6 +257,7 @@ void Pixel3D::draw_scene()
 void Pixel3D::post_draw()
 {
     glfwSwapBuffers(window_->get_handle());
+
     glfwPollEvents();
 }
 
@@ -241,22 +274,17 @@ void Pixel3D::process_input(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
 }
-void Pixel3D::framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
-    auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
 
-    app->window_->update_window();
-}
 void Pixel3D::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 {
-    auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-    if (app->is_pressed_)
+    auto app = static_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+    if (app->is_pressed_ && app->scenes_.size() > app->current_scene_idx_)
     {
         app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
         app->prev_mouse_.x = xposIn;
         app->prev_mouse_.y = yposIn;
     }
-    if (app->is_pressed_scroll_)
+    if (app->is_pressed_scroll_ && app->scenes_.size() > app->current_scene_idx_)
     {
         app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll_press((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
         app->prev_mouse_.x = xposIn;
@@ -265,10 +293,11 @@ void Pixel3D::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
     app->cur_mouse_.x = xposIn;
     app->cur_mouse_.y = yposIn;
 }
+
 void Pixel3D::mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
 {
-    auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+    auto app = static_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
     {
         app->prev_mouse_.x = app->cur_mouse_.x;
         app->prev_mouse_.y = app->cur_mouse_.y;
@@ -278,7 +307,7 @@ void Pixel3D::mouse_btn_callback(GLFWwindow *window, int button, int action, int
     {
         app->is_pressed_ = false;
     }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
     {
         app->prev_mouse_.x = app->cur_mouse_.x;
         app->prev_mouse_.y = app->cur_mouse_.y;
@@ -292,7 +321,7 @@ void Pixel3D::mouse_btn_callback(GLFWwindow *window, int button, int action, int
 
 void Pixel3D::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    auto app = reinterpret_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
-    if (app->scenes_[app->current_scene_idx_] && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+    auto app = static_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+    if (app->scenes_.size() > app->current_scene_idx_ && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
         app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll(yoffset);
 }

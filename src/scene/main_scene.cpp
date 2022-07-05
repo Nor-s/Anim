@@ -24,7 +24,7 @@ MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedReso
         resources_ = std::move(resources);
     }
     init_shader();
-    init_framebuffer(width_, height_);
+    init_framebuffer(width, height);
     init_pixelate_framebuffer(width, height);
     init_camera();
     selected_entity_ = std::make_shared<glcpp::Entity>();
@@ -126,13 +126,15 @@ void MainScene::draw_to_framebuffer()
         //  selected_entity_->draw(*shader, view_, projection_);
     }
     framebuffer_->unbind();
+#ifndef NDEBUG
+
     auto error = glGetError();
     if (error != GL_NO_ERROR)
     {
-#ifndef NDEBUG
-        std::cout << error << std::endl;
-#endif
+        std::cout <<"main scene: " << error << std::endl;
     }
+#endif
+
 }
 
 void MainScene::draw()

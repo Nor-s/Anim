@@ -2,6 +2,12 @@
 
 ![](./screenshot/2022-07-04.png)
 
+## **heighmap branch**
+
+[heightmap](https://github.com/Nor-s/Pixel3D/tree/heightmap)
+
+![](https://github.com/Nor-s/Pixel3D/blob/heightmap/screenshot/88903.gif?raw=true)
+
 ## **TODO**
 
 -   Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)
@@ -9,6 +15,7 @@
 -   visualize bone
 -   z oder (grid <-> model)
 -   mp2mm: increased accuracy
+-   Add export
 
 ## **build**
 

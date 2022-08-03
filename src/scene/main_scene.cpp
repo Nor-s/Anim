@@ -14,7 +14,6 @@ namespace fs = std::filesystem;
 
 MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedResources> resources)
 {
-    add_component<PixelateStateComponent>();
     if (resources == nullptr)
     {
         resources_ = std::make_shared<SharedResources>();
@@ -25,7 +24,6 @@ MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedReso
     }
     init_shader();
     init_framebuffer(width, height);
-    init_pixelate_framebuffer(width, height);
     init_camera();
     selected_entity_ = std::make_shared<glcpp::Entity>();
 }
@@ -78,7 +76,6 @@ void MainScene::pre_draw()
     {
         shader = resources_->get_mutable_shader("model").get();
     }
-    pixelate_framebuffer_->pre_draw(selected_entity_, *shader, view_, projection_);
     draw_to_framebuffer();
 }
 
@@ -87,16 +84,7 @@ void MainScene::update_framebuffer()
     if (framebuffer_->get_width() != width_ || framebuffer_->get_height() != height_)
     {
         init_framebuffer(width_, height_);
-        pixelate_framebuffer_->set_framebuffer(width_, height_);
     }
-    auto state = get_component<PixelateStateComponent>();
-    uint32_t factor = state->get_factor();
-    if (factor != pixelate_framebuffer_->get_factor())
-    {
-        pixelate_framebuffer_->set_framebuffer(factor);
-    }
-    pixelate_framebuffer_->set_outline_color(state->get_outline_color());
-    pixelate_framebuffer_->set_outline_flag(state->get_is_outline());
 }
 
 void MainScene::set_view_and_projection()
@@ -109,10 +97,16 @@ void MainScene::set_view_and_projection()
 void MainScene::draw_to_framebuffer()
 {
     auto grid_shader = resources_->get_mutable_shader("grid");
+    glcpp::Shader *shader = resources_->get_mutable_shader("model").get();
+
+    if (selected_entity_ && selected_entity_->get_mutable_model() && selected_entity_->has_bone() && selected_entity_->has_animation_component())
+    {
+        shader = resources_->get_mutable_shader("animation").get();
+    }
 
     glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    // glEnable(GL_BLEND);
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     framebuffer_->bind_with_depth(background_color_);
     {
         grid_shader->use();
@@ -120,10 +114,12 @@ void MainScene::draw_to_framebuffer()
         grid_shader->set_mat4("projection", projection_);
 
         grid_framebuffer_->draw(*grid_shader);
-        pixelate_framebuffer_->draw();
 
-        //  glEnable(GL_DEPTH_TEST);
-        //  selected_entity_->draw(*shader, view_, projection_);
+        if (selected_entity_)
+        {
+            // glEnable(GL_DEPTH_TEST);
+            selected_entity_->draw(*shader, view_, projection_);
+        }
     }
     framebuffer_->unbind();
 #ifndef NDEBUG
@@ -131,10 +127,9 @@ void MainScene::draw_to_framebuffer()
     auto error = glGetError();
     if (error != GL_NO_ERROR)
     {
-        std::cout <<"main scene: " << error << std::endl;
+        std::cout << "main scene: " << error << std::endl;
     }
 #endif
-
 }
 
 void MainScene::draw()

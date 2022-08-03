@@ -15,29 +15,25 @@ struct GLFWwindow;
 class Scene;
 class SharedResources;
 
+namespace glcpp
+{
+    class Model;
+}
 namespace ui
 {
     class MainLayer;
 }
 
-class Pixel3D : public glcpp::Application<Pixel3D>
+class App : public glcpp::Application<App>
 {
     template <typename T>
     friend class glcpp::Application;
 
-private:
-    Pixel3D();
-
 public:
-    virtual ~Pixel3D();
-    virtual void init(uint32_t width, uint32_t height, const std::string &title) override;
-    void init_window(uint32_t width, uint32_t height, const std::string &title);
-    void init_callback();
-    void init_ui();
-    void init_shared_resources();
-    void init_scene(uint32_t width, uint32_t height);
+    ~App();
+    void init(uint32_t width, uint32_t height, const std::string &title) override;
 
-    virtual void loop() override;
+    void loop() override;
     void update();
     void update_window();
     void update_time();
@@ -56,7 +52,7 @@ public:
     // mouse event
     bool is_pressed_ = false;
     bool is_pressed_scroll_ = false;
-    glm::vec2 prev_mouse_{-1.0f, -1.0f}, cur_mouse_{-1.0f, -1.0f};    
+    glm::vec2 prev_mouse_{-1.0f, -1.0f}, cur_mouse_{-1.0f, -1.0f};
     uint32_t current_scene_idx_ = 0u;
     std::unique_ptr<ui::MainLayer> ui_;
     // timing
@@ -64,11 +60,19 @@ public:
     float delta_frame_ = 0.0f;
     float last_frame_ = 0.0f;
     float fps_ = 0.0f;
-    int frames_ = 0;    
+    int frames_ = 0;
     std::vector<std::shared_ptr<Scene>> scenes_;
 
 private:
+    App();
+    void init_window(uint32_t width, uint32_t height, const std::string &title);
+    void init_callback();
+    void init_ui();
+    void init_shared_resources();
+    void init_scene(uint32_t width, uint32_t height);
 
+    void import_model_or_animation(const char *const path);
+    void export_model_to_json(glcpp::Model *model);
     std::shared_ptr<SharedResources> shared_resources_;
 
     Mp2mm mp2mm_;

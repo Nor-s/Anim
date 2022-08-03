@@ -1,4 +1,4 @@
-#include "pixel3D.h"
+#include "app.h"
 
 #include <stb/stb_image.h>
 #include "glcpp/camera.h"
@@ -22,17 +22,17 @@ void error_callback(int code, const char *description)
 }
 #endif
 
-Pixel3D::Pixel3D()
+App::App()
 {
 }
 
-Pixel3D::~Pixel3D()
+App::~App()
 {
     scenes_.clear();
     ui_.reset();
 }
 
-void Pixel3D::init(uint32_t width, uint32_t height, const std::string &title)
+void App::init(uint32_t width, uint32_t height, const std::string &title)
 {
     stbi_set_flip_vertically_on_load(true);
     init_window(width, height, title);
@@ -40,14 +40,14 @@ void Pixel3D::init(uint32_t width, uint32_t height, const std::string &title)
     init_shared_resources();
     init_scene(width, height);
 }
-void Pixel3D::init_window(uint32_t width, uint32_t height, const std::string &title)
+void App::init_window(uint32_t width, uint32_t height, const std::string &title)
 {
     window_ = std::make_unique<glcpp::Window>(width, height, title);
     window_->set_factor();
     window_->set_user_pointer(this);
     init_callback();
 }
-void Pixel3D::init_callback()
+void App::init_callback()
 {
     //    window_->set_framebuffer_size_callback(framebuffer_size_callback);
     window_->set_scroll_callback(scroll_callback);
@@ -59,20 +59,21 @@ void Pixel3D::init_callback()
     glfwSetErrorCallback(error_callback);
 #endif
 }
-void Pixel3D::init_ui()
+void App::init_ui()
 {
     ui_ = std::make_unique<ui::MainLayer>();
     ui_->init(window_->get_handle());
 }
-void Pixel3D::init_shared_resources()
+void App::init_shared_resources()
 {
     shared_resources_ = std::make_shared<SharedResources>();
 }
-void Pixel3D::init_scene(uint32_t width, uint32_t height)
+void App::init_scene(uint32_t width, uint32_t height)
 {
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
+    import_model_or_animation("./resources/models/ybot.fbx");
 }
-void Pixel3D::loop()
+void App::loop()
 {
     glfwSwapInterval(0);
     start_time_ = static_cast<float>(glfwGetTime());
@@ -103,14 +104,14 @@ void Pixel3D::loop()
         post_draw();
     }
 }
-void Pixel3D::update()
+void App::update()
 {
     update_window();
     update_time();
     update_resources();
     process_buttons();
 }
-void Pixel3D::update_window()
+void App::update_window()
 {
     auto size = window_->get_framebuffer_size();
     while (size.first == 0 || size.second == 0)
@@ -120,7 +121,7 @@ void Pixel3D::update_window()
     }
     window_->set_size(size.first, size.second);
 }
-void Pixel3D::update_time()
+void App::update_time()
 {
     auto &ui_context = ui_->get_context();
     auto &time_context = ui_context.timeline_context;
@@ -162,9 +163,8 @@ void Pixel3D::update_time()
         }
     }
 }
-void Pixel3D::update_resources()
+void App::update_resources()
 {
-    glcpp::Exporter exporter;
     auto &shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
     auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
     auto &ui_context = ui_->get_context();
@@ -173,25 +173,7 @@ void Pixel3D::update_resources()
     auto &properties_context = ui_context.properties_context;
     if (menu_context.clicked_import_model)
     {
-        std::pair<bool, bool> result = shared_resources->add_model_or_animation_by_path(menu_context.path.c_str());
-        if (result.first)
-        {
-#ifndef NDEBUG
-            std::cout << "import model\n";
-#endif
-            auto model = shared_resources->back_mutable_model();
-            entity->set_model(model, shared_resources->get_models_size() - 1);
-            exporter.to_json(model.get(), "model.json");
-        }
-
-        if (result.second)
-        {
-#ifndef NDEBUG
-            std::cout << "import animation\n";
-#endif
-            auto animation = shared_resources->back_mutable_animation();
-            entity->set_animation_component(animation, shared_resources_->get_animations_size() - 1);
-        }
+        import_model_or_animation(menu_context.path.c_str());
     }
     else
     {
@@ -216,14 +198,45 @@ void Pixel3D::update_resources()
 #endif
             auto model = shared_resources->get_mutable_model(properties_context.model_idx);
             entity->set_model(model, properties_context.model_idx);
-            exporter.to_json(model.get(), "model.json");
+            export_model_to_json(model.get());
         }
     }
     if (menu_context.clicked_export_animation)
     {
+        // TODO: Implement
     }
 }
-void Pixel3D::process_buttons()
+void App::import_model_or_animation(const char *const path)
+{
+    auto &shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
+    auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+
+    std::pair<bool, bool> result = shared_resources->add_model_or_animation_by_path(path);
+    if (result.first)
+    {
+#ifndef NDEBUG
+        std::cout << "import model\n";
+#endif
+        auto model = shared_resources->back_mutable_model();
+        entity->set_model(model, shared_resources->get_models_size() - 1);
+        export_model_to_json(model.get());
+    }
+
+    if (result.second)
+    {
+#ifndef NDEBUG
+        std::cout << "import animation\n";
+#endif
+        auto animation = shared_resources->back_mutable_animation();
+        entity->set_animation_component(animation, shared_resources_->get_animations_size() - 1);
+    }
+}
+void App::export_model_to_json(glcpp::Model *model)
+{
+    glcpp::Exporter exporter;
+    exporter.to_json(model, "model.json");
+}
+void App::process_buttons()
 {
     auto &time_context = ui_->get_context().timeline_context;
     if (time_context.is_clicked_mp2mm)
@@ -231,7 +244,7 @@ void Pixel3D::process_buttons()
         mp2mm_.open();
     }
 }
-void Pixel3D::pre_draw()
+void App::pre_draw()
 {
     process_input(window_->get_handle());
 
@@ -240,7 +253,7 @@ void Pixel3D::pre_draw()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
-void Pixel3D::draw_scene()
+void App::draw_scene()
 {
     size_t size = scenes_.size();
     for (size_t i = 0; i < size; i++)
@@ -254,14 +267,14 @@ void Pixel3D::draw_scene()
         }
     }
 }
-void Pixel3D::post_draw()
+void App::post_draw()
 {
     glfwSwapBuffers(window_->get_handle());
 
     glfwPollEvents();
 }
 
-void Pixel3D::process_input(GLFWwindow *window)
+void App::process_input(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
@@ -275,9 +288,9 @@ void Pixel3D::process_input(GLFWwindow *window)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
 }
 
-void Pixel3D::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
+void App::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 {
-    auto app = static_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+    auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
     if (app->is_pressed_ && app->scenes_.size() > app->current_scene_idx_)
     {
         app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
@@ -294,9 +307,9 @@ void Pixel3D::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
     app->cur_mouse_.y = yposIn;
 }
 
-void Pixel3D::mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
+void App::mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
 {
-    auto app = static_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+    auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
     {
         app->prev_mouse_.x = app->cur_mouse_.x;
@@ -319,9 +332,9 @@ void Pixel3D::mouse_btn_callback(GLFWwindow *window, int button, int action, int
     }
 }
 
-void Pixel3D::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+void App::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
 {
-    auto app = static_cast<Pixel3D *>(glfwGetWindowUserPointer(window));
+    auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
     if (app->scenes_.size() > app->current_scene_idx_ && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
         app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll(yoffset);
 }

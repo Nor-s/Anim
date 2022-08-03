@@ -9,9 +9,9 @@ if(APPLE)
 endif()
 
 project(
-  n-glcpp
+  Anim
   LANGUAGES CXX
-  VERSION 0.0.5)
+  VERSION 0.0.1)
 set(CMAKE_CXX_STANDARD 17)
 if (UNIX AND NOT APPLE)
     set(CMAKE_MAKE_PROGRAM /usr/bin/ninja CACHE FILEPATH "")
@@ -94,7 +94,7 @@ if(WIN32)
   endif()
 else()
   add_subdirectory(external/imgui/)
-  add_subdirectory(external/assimp/)
+  add_subdirectory(external/assimp2/)
   add_subdirectory(external/glfw/)
 endif()
 

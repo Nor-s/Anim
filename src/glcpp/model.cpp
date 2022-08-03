@@ -120,6 +120,9 @@ namespace glcpp
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
+#ifndef NDEBUG
+        std::cout << mesh->mName.C_Str() << std::endl;
+#endif
 
         // process vertex
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -220,6 +223,9 @@ namespace glcpp
     std::vector<Texture> Model::load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                        std::string typeName)
     {
+#ifndef NDEBUG
+        std::cout << "LoadMaterialTextures: " << (int)type << " " << mat->GetTextureCount(type) << std::endl;
+#endif
         std::vector<Texture> textures;
         for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
         {
@@ -250,6 +256,9 @@ namespace glcpp
 
     unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, const aiScene *scene)
     {
+#ifndef NDEBUG
+        std::cout << "TextureFromFile:: " << path << std::endl;
+#endif
         std::string filename(path);
         size_t idx = filename.find_first_of("/\\");
         if (filename[0] == '.' || idx == 0)
@@ -305,6 +314,9 @@ namespace glcpp
 
     void LoadMemory(const aiTexture *texture, unsigned int *id)
     {
+#ifndef NDEBUG
+        std::cout << "LoadMemory" << std::endl;
+#endif
         if (!*id)
             glGenTextures(1, id);
         glBindTexture(GL_TEXTURE_2D, *id);

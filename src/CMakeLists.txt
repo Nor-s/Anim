@@ -65,11 +65,12 @@ add_executable(pixel3D
 
 
 ./mp2mm.cpp
-./pixel3D.cpp
+./app.cpp
 ./scene/scene.hpp
 ./scene/main_scene.cpp
 ./scene/shared_resources.cpp
 )
+
 if(MSVC)
   message("------------------MSVC")
   target_compile_options(pixel3D PUBLIC   "/utf-8")#  target_link_options(pixel3D PUBLIC "/INCREMENTAL")

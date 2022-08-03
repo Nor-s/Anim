@@ -1,12 +1,5 @@
-# **Pixel3D v0.0.5**
+# **Anim v0.0.1**
 
-![](./screenshot/2022-07-04.png)
-
-## **heighmap branch**
-
-[heightmap](https://github.com/Nor-s/Pixel3D/tree/heightmap)
-
-![](https://github.com/Nor-s/Pixel3D/blob/heightmap/screenshot/88903.gif?raw=true)
 
 ## **TODO**
 

@@ -120,6 +120,7 @@ namespace glcpp
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
+        MaterialProperties mat_properties;
 #ifndef NDEBUG
         std::cout << mesh->mName.C_Str() << std::endl;
 #endif
@@ -138,11 +139,33 @@ namespace glcpp
                 vertex.set_texture_coords(glm::vec2{mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y});
             }
             if (mesh->mTangents)
+            {
                 vertex.set_tangent(glm::vec3{
                     mesh->mTangents[i].x, mesh->mTangents[i].y, mesh->mTangents[i].z});
+            }
             if (mesh->mBitangents)
+            {
                 vertex.set_bitangent(glm::vec3{
                     mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z});
+            }
+#ifndef NDEBUG
+            for (int j = 0; j < AI_MAX_NUMBER_OF_COLOR_SETS; j++)
+            {
+                // if mesh has vertex colours for specifc colour set...
+                if (mesh->HasVertexColors(j))
+                {
+                    //...for all the colours in that set
+                    printf("%s: mesh->mColors[%i][%i]: [%f, %f, %f, %f]\n",
+                           mesh->mName.C_Str(),
+                           j,
+                           i,
+                           mesh->mColors[j][i].r,
+                           mesh->mColors[j][i].g,
+                           mesh->mColors[j][i].b,
+                           mesh->mColors[j][i].a);
+                }
+            }
+#endif
 
             vertices.push_back(vertex);
         }
@@ -159,9 +182,29 @@ namespace glcpp
 
         // process material
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+        aiColor3D color{};
+        material->Get(AI_MATKEY_COLOR_AMBIENT, color);
+        mat_properties.ambient.x = color.r;
+        mat_properties.ambient.y = color.g;
+        mat_properties.ambient.z = color.b;
+        material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
+        mat_properties.diffuse.x = color.r;
+        mat_properties.diffuse.y = color.g;
+        mat_properties.diffuse.z = color.b;
+        material->Get(AI_MATKEY_COLOR_SPECULAR, color);
+        mat_properties.specular.x = color.r;
+        mat_properties.specular.y = color.g;
+        mat_properties.specular.z = color.b;
+        float shininess{};
+        material->Get(AI_MATKEY_SHININESS, shininess);
+        mat_properties.shininess = shininess;
 
         std::vector<Texture> diffuseMaps = load_material_textures(material, scene, aiTextureType_DIFFUSE, "texture_diffuse");
         textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
+        if (diffuseMaps.size() > 0)
+        {
+            mat_properties.has_diffuse_texture = true;
+        }
 
         std::vector<Texture> specularMaps = load_material_textures(material, scene, aiTextureType_SPECULAR, "texture_specular");
         textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
@@ -172,7 +215,7 @@ namespace glcpp
         std::vector<Texture> heightMaps = load_material_textures(material, scene, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-        return Mesh(vertices, indices, textures);
+        return Mesh(vertices, indices, textures, mat_properties);
     }
 
     void Model::process_bone(aiMesh *mesh, const aiScene *scene, std::vector<Vertex> &vertices)

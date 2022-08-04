@@ -16,9 +16,12 @@ const int MAX_BONES = 128;
 const int MAX_BONE_INFLUENCE = 4;
 
 out vec2 TexCoords;
-
+out vec3 Normal;
+out vec3 FragPos;
 void main()
 {
     TexCoords = aTexCoords;    
     gl_Position = projection * view * model * vec4(aPos, 1.0);
+    Normal = aNormal;
+    FragPos = vec3(model * vec4(aPos, 1.0));
 }

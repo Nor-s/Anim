@@ -4,8 +4,8 @@
 
 namespace glcpp
 {
-    Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures)
-        : vertices_(vertices), indices_(indices), textures_(textures)
+    Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, const MaterialProperties &mat_properties)
+        : vertices_(vertices), indices_(indices), textures_(textures), mat_properties_(mat_properties)
     {
         setup_mesh();
     }
@@ -16,6 +16,12 @@ namespace glcpp
         unsigned int specularNr = 1;
         unsigned int normalNr = 1;
         unsigned int heightNr = 1;
+        shader.set_vec3("material.ambient", mat_properties_.ambient);
+        shader.set_vec3("material.diffuse", mat_properties_.diffuse);
+        shader.set_vec3("material.specular", mat_properties_.specular);
+        shader.set_float("material.shininess", mat_properties_.shininess);
+        shader.set_bool("material.has_diffuse_texture", mat_properties_.has_diffuse_texture);
+
         for (unsigned int i = 0; i < textures_.size(); i++)
         {
             glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding

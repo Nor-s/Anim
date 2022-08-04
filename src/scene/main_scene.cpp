@@ -105,8 +105,8 @@ void MainScene::draw_to_framebuffer()
     }
 
     glDisable(GL_DEPTH_TEST);
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     framebuffer_->bind_with_depth(background_color_);
     {
         grid_shader->use();
@@ -117,7 +117,7 @@ void MainScene::draw_to_framebuffer()
 
         if (selected_entity_)
         {
-            // glEnable(GL_DEPTH_TEST);
+            glEnable(GL_DEPTH_TEST);
             selected_entity_->draw(*shader, view_, projection_);
         }
     }

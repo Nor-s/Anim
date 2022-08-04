@@ -75,6 +75,14 @@ namespace glcpp
             bitangent = vec;
         }
     };
+    struct MaterialProperties
+    {
+        glm::vec3 ambient{0.8f, 0.8f, 0.8f};
+        glm::vec3 diffuse{1.0f, 1.0f, 1.0f};
+        glm::vec3 specular{0.9f, 0.9f, 0.9f};
+        float shininess{1.0f};
+        bool has_diffuse_texture{false};
+    };
     struct Texture
     {
         unsigned int id{0};
@@ -86,7 +94,7 @@ namespace glcpp
     {
 
     public:
-        Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures);
+        Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture> textures, const MaterialProperties &mat_properties = MaterialProperties());
         ~Mesh() = default;
         void draw(Shader &shader);
 
@@ -94,6 +102,7 @@ namespace glcpp
         std::vector<Vertex> vertices_;
         std::vector<unsigned int> indices_;
         std::vector<Texture> textures_;
+        MaterialProperties mat_properties_;
         unsigned int VAO_, VBO_, EBO_;
 
         // setup vao, vbo, ebo => vertex attribute

@@ -9,3 +9,7 @@ tmp/
 
 .vs/
 dist/
+
+resources/models/
+
+*.fbx

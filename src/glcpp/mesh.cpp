@@ -21,7 +21,10 @@ namespace glcpp
         shader.set_vec3("material.specular", mat_properties_.specular);
         shader.set_float("material.shininess", mat_properties_.shininess);
         shader.set_bool("material.has_diffuse_texture", mat_properties_.has_diffuse_texture);
-
+        shader.set_vec3("dir_lights[0].direction", 0.0f, -1.0f, -1.0f);
+        shader.set_vec3("dir_lights[0].ambient", 0.5f);
+        shader.set_vec3("dir_lights[0].diffuse", 0.8f);
+        shader.set_vec3("dir_lights[0].specular", 0.6f);
         for (unsigned int i = 0; i < textures_.size(); i++)
         {
             glActiveTexture(GL_TEXTURE0 + i); // active proper texture unit before binding

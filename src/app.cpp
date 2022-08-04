@@ -72,6 +72,7 @@ void App::init_scene(uint32_t width, uint32_t height)
 {
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
     import_model_or_animation("./resources/models/ybot.fbx");
+    import_model_or_animation("./anim.json");
 }
 void App::loop()
 {

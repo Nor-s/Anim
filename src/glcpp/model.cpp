@@ -191,6 +191,8 @@ namespace glcpp
         mat_properties.diffuse.x = color.r;
         mat_properties.diffuse.y = color.g;
         mat_properties.diffuse.z = color.b;
+
+        std::cout << mat_properties.diffuse.x << " " << mat_properties.diffuse.y << " " << mat_properties.diffuse.z << std::endl;
         material->Get(AI_MATKEY_COLOR_SPECULAR, color);
         mat_properties.specular.x = color.r;
         mat_properties.specular.y = color.g;

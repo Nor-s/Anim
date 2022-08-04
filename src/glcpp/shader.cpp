@@ -44,7 +44,8 @@ namespace glcpp
         catch (std::ifstream::failure &e)
         {
 #ifndef NDEBUG
-            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << "\n";
+            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ"
+                      << "\n";
 #endif
         }
         const char *vert_shader_code = vertex_code.c_str();
@@ -131,6 +132,10 @@ namespace glcpp
     {
         glUniform3f(glGetUniformLocation(id_, name.c_str()), x, y, z);
     }
+    void Shader::set_vec3(const std::string &name, float xyz) const
+    {
+        glUniform3f(glGetUniformLocation(id_, name.c_str()), xyz, xyz, xyz);
+    }
     // ------------------------------------------------------------------------
     void Shader::set_vec4(const std::string &name, const glm::vec4 &value) const
     {
@@ -168,7 +173,8 @@ namespace glcpp
                 glGetShaderInfoLog(shader, 1024, NULL, info_log);
 #ifndef NDEBUG
                 std::cout << "ERROR::SHADER_COMPILATION_ERROR of type: " << type << "\n"
-                          << info_log << "\n -- --------------------------------------------------- -- " << "\n";
+                          << info_log << "\n -- --------------------------------------------------- -- "
+                          << "\n";
 #endif
             }
         }
@@ -180,7 +186,8 @@ namespace glcpp
                 glGetProgramInfoLog(shader, 1024, NULL, info_log);
 #ifndef NDEBUG
                 std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n"
-                          << info_log << "\n -- --------------------------------------------------- -- " << "\n";
+                          << info_log << "\n -- --------------------------------------------------- -- "
+                          << "\n";
 #endif
             }
         }

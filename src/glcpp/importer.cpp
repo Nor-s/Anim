@@ -83,14 +83,13 @@ namespace glcpp
     {
         assimp_flag_ = aiProcess_Triangulate |
                        aiProcess_GenUVCoords |
+                       aiProcess_OptimizeGraph |
                        aiProcess_OptimizeMeshes |
                        aiProcess_ValidateDataStructure |
                        aiProcess_GenNormals |
                        aiProcess_CalcTangentSpace |
                        aiProcess_LimitBoneWeights |
-                       aiProcess_JoinIdenticalVertices;
-        aiProcess_FlipWindingOrder |
-            aiProcess_SortByPType;
+                       aiProcess_SortByPType;
     }
     std::shared_ptr<glcpp::Model> Importer::import_model(const aiScene *scene)
     {

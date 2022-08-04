@@ -76,6 +76,8 @@ void MainScene::pre_draw()
     {
         shader = resources_->get_mutable_shader("model").get();
     }
+    shader->use();
+    shader->set_vec3("viewPos", camera_->get_current_pos());
     draw_to_framebuffer();
 }
 
@@ -113,7 +115,10 @@ void MainScene::draw_to_framebuffer()
         grid_shader->set_mat4("view", view_);
         grid_shader->set_mat4("projection", projection_);
 
-        grid_framebuffer_->draw(*grid_shader);
+        if (camera_->get_current_pos().y >= 0)
+        {
+            grid_framebuffer_->draw(*grid_shader);
+        }
 
         if (selected_entity_)
         {

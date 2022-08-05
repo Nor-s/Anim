@@ -138,7 +138,8 @@ namespace ui
         ImGui::Text("Scale");
         ImGui::Text("x:");
         ImGui::SameLine();
-        ImGui::DragFloat("##scale", &r.x, 0.05f, 0.1f, 100.0f);
+        ImGui::DragFloat("##scalr", &r.x, 0.05f, 0.1f, 100.0f);
+        ImGui::DragFloat3("##scale", &r[0]);
         transform.set_scale({r.x, r.x, r.x});
         ImGui::Separator();
 

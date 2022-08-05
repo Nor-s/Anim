@@ -22,19 +22,31 @@ namespace glcpp
         update_camera_vectors();
     }
 
-    glm::mat4 Camera::get_view_matrix() const
+    const glm::mat4 &Camera::get_view() const
     {
+        return view_;
+    }
+    const glm::mat4 &Camera::get_projection() const
+    {
+        return projection_;
+    }
+
+    glm::vec3 Camera::get_current_pos()
+    {
+        glm::mat4 mat = glm::inverse(get_view());
+        return mat * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+
+    void Camera::set_view_and_projection(float aspect)
+    {
+        // https://stackoverflow.com/questions/17249429/opengl-strange-rendering-behaviour-flickering-faces
+        projection_ = glm::perspective(zoom_, aspect, 1.0f, 10000.0f);
 
         glm::mat4 mat = glm::lookAt(position_, position_ + front_, up_);
         mat = glm::rotate(mat, x_angle_, glm::vec3(1.0f, 0.0f, 0.0f));
-        return glm::rotate(mat, y_angle_, glm::vec3(0.0f, 1.0f, 0.0f));
+        view_ = glm::rotate(mat, y_angle_, glm::vec3(0.0f, 1.0f, 0.0f));
     }
 
-    glm::vec3 Camera::get_current_pos() {
-        glm::mat4 mat = glm::inverse(get_view_matrix());
-        return mat*glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    }
-    
     void Camera::process_keyboard(CameraMovement direction, float deltaTime)
     {
         float velocity = movement_sensitivity_ * deltaTime;
@@ -57,9 +69,9 @@ namespace glcpp
     void Camera::process_mouse_scroll(float yoffset)
     {
         if (yoffset > 0)
-            position_ += front_ * movement_sensitivity_ *0.5f;
+            position_ += front_ * movement_sensitivity_ * 0.1f;
         if (yoffset < 0)
-            position_ -= front_ * movement_sensitivity_ * 0.5f;
+            position_ -= front_ * movement_sensitivity_ * 0.1f;
     }
 
     void Camera::process_mouse_scroll_press(float yoffset, float xoffset, float deltaTime)

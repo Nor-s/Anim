@@ -25,7 +25,6 @@ private:
     void init_camera();
     void init_pixelate_framebuffer(uint32_t width, uint32_t height);
     void update_framebuffer();
-    void set_view_and_projection();
     void draw_to_framebuffer();
 
     glm::vec4 background_color_{0.4f, 0.4f, 0.4f, 1.0f};

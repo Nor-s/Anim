@@ -1,14 +1,25 @@
 # **Anim v0.0.1**
 
+Animating tool
+
+-   video -> glft2
+
+## **devlog**
+
+### **08/05**
+
+-   simple lighting, add imguizmo
+
+![](/screenshot/2022-0805.gif)
 
 ## **TODO**
 
--   Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)
+-   ~~Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)~~
+    -   Change: NFD to IFD
 -   model picking
 -   visualize bone
--   z oder (grid <-> model)
 -   mp2mm: increased accuracy
--   Add export
+-   refactor export
 
 ## **build**
 
@@ -51,6 +62,7 @@ conda env create -f mp_gui_build.yaml
     -   timeline: https://gitlab.com/GroGy/im-neo-sequencer
     -   text editor: https://github.com/BalazsJako/ImGuiColorTextEdit
     -   dialog: https://github.com/dfranx/ImFileDialog
+    -   ImGuizmo: https://github.com/CedricGuillemet/ImGuizmo
 
 -   stb: https://github.com/nothings/stb
 

@@ -65,7 +65,7 @@ void MainScene::init_camera()
 void MainScene::pre_draw()
 {
     update_framebuffer();
-    set_view_and_projection();
+    camera_->set_view_and_projection(framebuffer_->get_aspect());
     glcpp::Shader *shader = nullptr;
     if (selected_entity_ && selected_entity_->get_mutable_model() && selected_entity_->has_bone() && selected_entity_->has_animation_component())
     {
@@ -89,13 +89,6 @@ void MainScene::update_framebuffer()
     }
 }
 
-void MainScene::set_view_and_projection()
-{
-    // https://stackoverflow.com/questions/17249429/opengl-strange-rendering-behaviour-flickering-faces
-    projection_ = glm::perspective(glm::radians(camera_->zoom_), framebuffer_->get_aspect(), 1.0f, 10000.0f);
-    view_ = camera_->get_view_matrix();
-}
-
 void MainScene::draw_to_framebuffer()
 {
     auto grid_shader = resources_->get_mutable_shader("grid");
@@ -112,8 +105,8 @@ void MainScene::draw_to_framebuffer()
     framebuffer_->bind_with_depth(background_color_);
     {
         grid_shader->use();
-        grid_shader->set_mat4("view", view_);
-        grid_shader->set_mat4("projection", projection_);
+        grid_shader->set_mat4("view", camera_->get_view());
+        grid_shader->set_mat4("projection", camera_->get_projection());
 
         if (camera_->get_current_pos().y >= 0)
         {
@@ -123,7 +116,7 @@ void MainScene::draw_to_framebuffer()
         if (selected_entity_)
         {
             glEnable(GL_DEPTH_TEST);
-            selected_entity_->draw(*shader, view_, projection_);
+            selected_entity_->draw(*shader, camera_->get_view(), camera_->get_projection());
         }
     }
     framebuffer_->unbind();

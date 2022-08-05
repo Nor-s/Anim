@@ -44,10 +44,10 @@ public:
     }
     virtual void set_size(uint32_t width, uint32_t height)
     {
-        if(width > 0)
-        width_ = width;
-        if(height > 0)
-        height_ = height;
+        if (width > 0)
+            width_ = width;
+        if (height > 0)
+            height_ = height;
     }
     virtual void set_delta_time(float dt)
     {
@@ -63,8 +63,6 @@ protected:
     std::shared_ptr<SharedResources> resources_;
     std::shared_ptr<glcpp::Framebuffer> framebuffer_;
     std::shared_ptr<glcpp::Camera> camera_;
-    glm::mat4 projection_ = glm::mat4(1.0f);
-    glm::mat4 view_ = glm::mat4(1.0f);
     float delta_time_ = 0.0f;
     uint32_t width_ = 800;
     uint32_t height_ = 600;

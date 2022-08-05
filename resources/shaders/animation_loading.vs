@@ -51,9 +51,7 @@ void main()
     mat4 viewModel = view * model;
     gl_Position =  projection * viewModel * totalPosition;
 
-	mat3 normalMat = mat3(1.0f,0.0f,0.0f,0.0f,1.0f,0.0f,0.0f,0.0f,1.0f);
-
     TexCoords = aTexCoords;
-    Normal = normalMat * totalNormal;
+    Normal = mat3(model)* totalNormal;
     FragPos = vec3(model * finalBonesMatrices[maxId] * vec4(aPos,1.0f));
 }

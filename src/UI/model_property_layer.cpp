@@ -6,6 +6,7 @@
 #include "glcpp/anim/animation.hpp"
 #include "glcpp/model.h"
 #include "glcpp/component/transform_component.h"
+#include "imgui_helper.h"
 #include <imgui/imgui.h>
 #include "pixelate_framebuffer.h"
 
@@ -118,44 +119,26 @@ namespace ui
 
     void ModelPropertyLayer::draw_transform_slider(glcpp::TransformComponent &transform)
     {
-        auto &rotation = transform.get_rotation();
-        glm::vec3 r = rotation;
-        ImGui::Text("Rotate");
-        ImGui::Text("x:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##rotate.x", &r.x, 0.01f, -6.5f, 6.5f);
-        ImGui::Text("y:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##rotate.y", &r.y, 0.01f, -6.5f, 6.5f);
-        ImGui::Text("z:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##rotate.z", &r.z, 0.01f, -6.5f, 6.5f);
-        transform.set_rotation({r.x, r.y, r.z});
-        ImGui::Separator();
+        auto vec = transform.get_rotation();
+        bool result = DragPropertyXYZ("Rotation", vec);
+        if (result)
+        {
+            transform.set_rotation(vec);
+        }
 
-        auto &scale = transform.get_scale();
-        r = scale;
-        ImGui::Text("Scale");
-        ImGui::Text("x:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##scalr", &r.x, 0.05f, 0.1f, 100.0f);
-        ImGui::DragFloat3("##scale", &r[0]);
-        transform.set_scale({r.x, r.x, r.x});
-        ImGui::Separator();
+        vec = transform.get_scale();
+        result = DragPropertyXYZ("Scale", vec);
+        if (result)
+        {
+            transform.set_scale(vec);
+        }
 
-        auto &translation = transform.get_translation();
-        r = translation;
-        ImGui::Text("Translate");
-        ImGui::Text("x:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##translation.x", &r.x, 1.0f, -1000.0f, 1000.0f);
-        ImGui::Text("y:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##translation.y", &r.y, 1.0f, -1000.0f, 1000.0f);
-        ImGui::Text("z:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##translation.z", &r.z, 1.0f, -1000.0f, 1000.0f);
-        transform.set_translation({r.x, r.y, r.z});
+        vec = transform.get_translation();
+        result = DragPropertyXYZ("Translation", vec);
+        if (result)
+        {
+            transform.set_translation(vec);
+        }
     }
     void ModelPropertyLayer::draw_transform_reset_button(glcpp::TransformComponent &transform)
     {

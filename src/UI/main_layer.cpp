@@ -1,5 +1,5 @@
 #include "main_layer.h"
-#include "imgui_helper.hpp"
+#include "imgui_helper.h"
 #include "scene_layer.h"
 
 #include "text_edit_layer.h"
@@ -86,12 +86,14 @@ namespace ui
         ImGui::NewFrame();
         ImGuizmo::SetOrthographic(false); // is perspective
         ImGuizmo::BeginFrame();
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {250.f, 50.f});
 
         context_ = UiContext{};
     }
 
     void MainLayer::end()
     {
+        ImGui::PopStyleVar();
 
         ImGui::Render();
 

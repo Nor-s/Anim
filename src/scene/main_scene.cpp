@@ -66,15 +66,11 @@ void MainScene::pre_draw()
 {
     update_framebuffer();
     camera_->set_view_and_projection(framebuffer_->get_aspect());
-    glcpp::Shader *shader = nullptr;
+    glcpp::Shader *shader = shader = resources_->get_mutable_shader("model").get();
     if (selected_entity_ && selected_entity_->get_mutable_model() && selected_entity_->has_bone() && selected_entity_->has_animation_component())
     {
         shader = resources_->get_mutable_shader("animation").get();
         resources_->get_mutable_animator()->update_animation(delta_time_, selected_entity_.get(), shader);
-    }
-    else
-    {
-        shader = resources_->get_mutable_shader("model").get();
     }
     shader->use();
     shader->set_vec3("viewPos", camera_->get_current_pos());

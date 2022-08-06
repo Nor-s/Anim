@@ -17,79 +17,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <imgui/icons/icons.h>
 
-bool DecomposeTransform(const glm::mat4 &transform, glm::vec3 &translation, glm::vec3 &rotation, glm::vec3 &scale)
-{
-    // From glm::decompose in matrix_decompose.inl
-
-    using namespace glm;
-    using T = float;
-
-    mat4 LocalMatrix(transform);
-
-    // Normalize the matrix.
-    if (epsilonEqual(LocalMatrix[3][3], static_cast<float>(0), epsilon<T>()))
-        return false;
-
-    // First, isolate perspective.  This is the messiest.
-    if (
-        epsilonNotEqual(LocalMatrix[0][3], static_cast<T>(0), epsilon<T>()) ||
-        epsilonNotEqual(LocalMatrix[1][3], static_cast<T>(0), epsilon<T>()) ||
-        epsilonNotEqual(LocalMatrix[2][3], static_cast<T>(0), epsilon<T>()))
-    {
-        // Clear the perspective partition
-        LocalMatrix[0][3] = LocalMatrix[1][3] = LocalMatrix[2][3] = static_cast<T>(0);
-        LocalMatrix[3][3] = static_cast<T>(1);
-    }
-
-    // Next take care of translation (easy).
-    translation = vec3(LocalMatrix[3]);
-    LocalMatrix[3] = vec4(0, 0, 0, LocalMatrix[3].w);
-
-    vec3 Row[3], Pdum3;
-
-    // Now get scale and shear.
-    for (length_t i = 0; i < 3; ++i)
-        for (length_t j = 0; j < 3; ++j)
-            Row[i][j] = LocalMatrix[i][j];
-
-    // Compute X scale factor and normalize first row.
-    scale.x = length(Row[0]);
-    Row[0] = detail::scale(Row[0], static_cast<T>(1));
-    scale.y = length(Row[1]);
-    Row[1] = detail::scale(Row[1], static_cast<T>(1));
-    scale.z = length(Row[2]);
-    Row[2] = detail::scale(Row[2], static_cast<T>(1));
-
-    // At this point, the matrix (in rows[]) is orthonormal.
-    // Check for a coordinate system flip.  If the determinant
-    // is -1, then negate the matrix and the scaling factors.
-#if 0
-		Pdum3 = cross(Row[1], Row[2]); // v3Cross(row[1], row[2], Pdum3);
-		if (dot(Row[0], Pdum3) < 0)
-		{
-			for (length_t i = 0; i < 3; i++)
-			{
-				scale[i] *= static_cast<T>(-1);
-				Row[i] *= static_cast<T>(-1);
-			}
-		}
-#endif
-
-    rotation.y = asin(-Row[0][2]);
-    if (cos(rotation.y) != 0)
-    {
-        rotation.x = atan2(Row[1][2], Row[2][2]);
-        rotation.z = atan2(Row[0][1], Row[0][0]);
-    }
-    else
-    {
-        rotation.x = atan2(-Row[2][0], Row[1][1]);
-        rotation.z = 0;
-    }
-
-    return true;
-}
 namespace ui
 {
     static const float identityMatrix[16] =
@@ -120,7 +49,7 @@ namespace ui
     void SceneLayer::draw(const char *title, Scene *scene)
     {
         static ImGuizmo::MODE mCurrentGizmoMode(ImGuizmo::LOCAL);
-        static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::OPERATION::ROTATE);
+        static ImGuizmo::OPERATION mCurrentGizmoOperation(ImGuizmo::OPERATION::ROTATE | ImGuizmo::OPERATION::TRANSLATE | ImGuizmo::OPERATION::SCALE | ImGuizmo::OPERATION::UNIVERSAL);
         static bool useSnap = true;
         float snap_value = 0.1f;
         float snap[3] = {snap_value, snap_value, snap_value};
@@ -129,8 +58,8 @@ namespace ui
         float viewManipulateRight = io.DisplaySize.x;
         float viewManipulateTop = 0;
         static ImGuiWindowFlags gizmoWindowFlags = 0;
-
-        ImGui::Begin(title, 0, gizmoWindowFlags);
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
+        ImGui::Begin(title, 0, gizmoWindowFlags | ImGuiWindowFlags_NoScrollbar);
 
         // imguizmo setting
         ImGuizmo::SetDrawlist();
@@ -140,14 +69,12 @@ namespace ui
         viewManipulateRight = ImGui::GetWindowPos().x + windowWidth;
         viewManipulateTop = ImGui::GetWindowPos().y;
         ImGuiWindow *window = ImGui::GetCurrentWindow();
-        gizmoWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
+        gizmoWindowFlags = (ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max)) ? ImGuiWindowFlags_NoMove : 0;
 
         // scene camera
         auto &camera = scene->get_mutable_ref_camera();
-        const float *const cameraView = static_cast<const float *const>(glm::value_ptr(camera->get_view()));
-        const float *const cameraProjection = static_cast<const float *const>(glm::value_ptr(camera->get_projection()));
-
-        // ImGuizmo::ViewManipulate(cameraView, camDistance, ImVec2(viewManipulateRight - 128, viewManipulateTop), ImVec2(128, 128), 0x10101010);
+        float *cameraView = const_cast<float *>(glm::value_ptr(camera->get_view()));
+        float *cameraProjection = const_cast<float *>(glm::value_ptr(camera->get_projection()));
 
         ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
         width_ = viewportPanelSize.x;
@@ -184,10 +111,72 @@ namespace ui
                 transform.set_translation(t)
                     .set_scale(s)
                     .set_rotation(euler);
+                is_hovered_ = false;
+            }
+            if (ImGuizmo::IsOver())
+            {
+                is_hovered_ = false;
             }
         }
+        ImGuizmo::ViewManipulate(cameraView, 8.0f, ImVec2{viewManipulateRight - 128.0f, viewManipulateTop + 16.0f}, ImVec2{128, 128}, ImU32{0x10101010});
 
+        ImGui::PopStyleVar();
+        // ImGui::SetCursorScreenPos({ui_width, start_y});
         ImGui::End();
+
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {55.0f, 65.0f});
+        ImVec2 mode_window_size = {512.0f, 65.0f};
+        ImVec2 mode_window_pos = {viewManipulateRight - windowWidth * 0.5f - mode_window_size.x * 0.5f, viewManipulateTop + height_ - 50.0f};
+        if (height_ - mode_window_size.y < 5.0f || width_ - mode_window_size.x < 5.0f)
+        {
+            mode_window_pos = {-1000.0f, -1000.0f};
+        }
+        ImGui::SetNextWindowSize(mode_window_size);
+        ImGui::SetNextWindowPos(mode_window_pos);
+        // ImGui::SetNextWindowPos();
+        if (ImGui::Begin("Child", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground))
+        {
+
+            ImVec2 btn_size{80.0f, 60.0f};
+
+            if (ImGui::BeginTable("split", 1, ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_NoPadInnerX | ImGuiTableFlags_SizingFixedSame))
+            {
+                ImGui::TableNextColumn();
+                // select
+                ImGui::PushStyleColor(ImGuiCol_Button, {0.4f, 0.4f, 0.4f, 0.8f});
+                ImGui::Button(ICON_MD_NEAR_ME, btn_size);
+                ImGui::SameLine();
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
+                // move
+                {
+                    ImGui::PushFont(io.Fonts->Fonts[ICON_FA]);
+                    ImGui::Button(ICON_FA_ARROWS_UP_DOWN_LEFT_RIGHT, btn_size);
+                    ImGui::PopFont();
+                }
+                ImGui::SameLine();
+                // rotate
+
+                ImGui::Button(ICON_MD_FLIP_CAMERA_ANDROID, btn_size);
+                ImGui::SameLine();
+                // scale
+                ImGui::Button(ICON_MD_PHOTO_SIZE_SELECT_SMALL, btn_size);
+                ImGui::SameLine();
+                // all
+                ImGui::Button(ICON_MD_FORMAT_SHAPES, btn_size);
+                ImGui::PopStyleVar();
+                ImGui::SameLine();
+                // skeleton
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
+                ImGui::Button(ICON_MD_PERSON_OFF, btn_size);
+                ImGui::PopStyleColor();
+
+                ImGui::EndTable();
+                ImGui::PopStyleVar();
+            }
+            ImGui::End();
+        }
+        ImGui::PopStyleVar();
+        ImGui::ShowDemoWindow();
     }
     float SceneLayer::get_width()
     {

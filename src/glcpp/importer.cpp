@@ -38,7 +38,11 @@ namespace glcpp
         fs::path fs_path = fs::u8path(path_);
         if (fs_path.extension() == ".json")
         {
-            sp_animations.push_back(std::make_shared<glcpp::JsonAnimation>(path_.c_str()));
+            std::shared_ptr<glcpp::JsonAnimation> anim = std::make_shared<glcpp::JsonAnimation>(path_.c_str());
+            if (anim && anim->get_type() == AnimationType::Json)
+            {
+                sp_animations.emplace_back(anim);
+            }
             return std::make_pair(sp_model, sp_animations);
         }
         try

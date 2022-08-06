@@ -78,7 +78,7 @@ namespace glcpp
       {
         std::filesystem::path path = std::filesystem::u8path((path_).c_str());
         name_ = path.filename().string();
-        type = AnimationType::Json;
+        type_ = AnimationType::Json;
         Json::Value root;
 #ifndef NDEBUG
         std::cout << "init json: " << path_ << std::endl;
@@ -99,6 +99,7 @@ namespace glcpp
       }
       catch (std::exception &e)
       {
+        type_ = AnimationType::None;
 #ifndef NDEBUG
         std::cout << e.what() << std::endl;
 #endif

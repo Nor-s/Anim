@@ -10,9 +10,10 @@
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
-#include <nfd.h>
 #include "ImFileDialog.h"
 #include <imgui/ImGuizmo.h>
+#include <imgui/icons/icons.h>
+#include <fstream>
 
 namespace ui
 {
@@ -36,7 +37,7 @@ namespace ui
             glGenerateMipmap(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, 0);
 
-            return reinterpret_cast<void *>(tex);
+            return reinterpret_cast<void *>(static_cast<uintptr_t>(tex));
         };
 
         ifd::FileDialog::Instance().DeleteTexture = [](void *tex)
@@ -44,7 +45,6 @@ namespace ui
             GLuint texID = static_cast<GLuint>(reinterpret_cast<uintptr_t>(tex));
             glDeleteTextures(1, &texID);
         };
-        NFD_Init();
         const char *glsl_version = "#version 330";
 
         IMGUI_CHECKVERSION();
@@ -56,18 +56,13 @@ namespace ui
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;     // Enable Docking
         ImGui::StyleColorsLight();
         ImGuiStyle &style = ImGui::GetStyle();
-
-        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-        {
-        }
         style.WindowRounding = 0.0f;
         style.Colors[ImGuiCol_WindowBg].w = 1.0f;
         style.WindowPadding.x = 3.0f;
         style.WindowPadding.y = 3.0f;
         style.FramePadding.y = 1.0f;
         io.Fonts->AddFontFromFileTTF("./resources/font/D2Coding.ttf", 16.0f, NULL, io.Fonts->GetGlyphRangesKorean());
-
-        // Setup Platform/Renderer backends
+        ImGui::LoadInternalIcons(io.Fonts);
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init(glsl_version);
     }
@@ -86,7 +81,7 @@ namespace ui
         ImGui::NewFrame();
         ImGuizmo::SetOrthographic(false); // is perspective
         ImGuizmo::BeginFrame();
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {250.f, 50.f});
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {350.0f, 40.0f});
 
         context_ = UiContext{};
     }
@@ -94,9 +89,7 @@ namespace ui
     void MainLayer::end()
     {
         ImGui::PopStyleVar();
-
         ImGui::Render();
-
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         ImGuiIO &io = ImGui::GetIO();
@@ -128,8 +121,7 @@ namespace ui
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
-        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove;
-        window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
+        window_flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus;
 
         if (dockspace_flags & ImGuiDockNodeFlags_PassthruCentralNode)
             window_flags |= ImGuiWindowFlags_NoBackground;

@@ -1290,6 +1290,9 @@ namespace IMGUIZMO_NAMESPACE
 
       bool hasRSC = Intersects(op, ROTATE_SCREEN);
 
+      drawList->AddCircle(worldToPos(gContext.mModel.v.position, gContext.mViewProjection), 5.0f, IM_COL32(0x00, 0x00, 0x00, 0x80));
+      drawList->AddCircleFilled(worldToPos(gContext.mModel.v.position, gContext.mViewProjection), 4.0f, IM_COL32(0xFF, 0x80, 0x10, 0x80));
+
       for (int axis = 0; axis < 3; axis++)
       {
          if (!Intersects(op, static_cast<OPERATION>(ROTATE_Z >> axis)))

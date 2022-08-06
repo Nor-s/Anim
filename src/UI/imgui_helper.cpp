@@ -1,5 +1,6 @@
 #include "imgui_helper.h"
 #include <imgui/imgui_internal.h>
+#include <iostream>
 
 namespace ui
 {
@@ -20,56 +21,42 @@ namespace ui
         bool is_value_changed = false;
         ImGui::PushID(label);
         ImGui::Columns(2, nullptr, false);
-        ImGui::SetColumnWidth(0, 80.0f);
+        ImGui::SetColumnWidth(0, 90.0f);
 
         ImGui::Text(label);
         ImGui::NextColumn();
 
         ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
-        // X
+
+        const char *button_labels[] = {"X", "Y", "Z"};
+        const char *drag_labels[] = {"##x", "##y", "##z"};
+
+        for (int i = 0; i < 3; i++)
         {
+            auto button_color = glm::vec4{0.0f, 0.0f, 0.0f, 0.5f};
+            auto framebg_color = glm::vec4{0.4f, 0.4f, 0.4f, 0.1f};
+            auto framebg_hovered_color = glm::vec4{0.4f, 0.4f, 0.4f, 0.7f};
+            auto framebg_active_color = glm::vec4{0.5f, 0.5f, 0.5f, 1.0f};
+
+            button_color[i] = framebg_hovered_color[i] = framebg_active_color[i] = framebg_color[i] = 0.9f;
+            ImGui::PushStyleColor(ImGuiCol_Button, IM_COL32(button_color.r * 255, button_color.g * 255, button_color.b * 255, button_color.a * 255));
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, IM_COL32(button_color.r * 255, button_color.g * 255, button_color.b * 255, button_color.a * 255));
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, IM_COL32(button_color.r * 255, button_color.g * 255, button_color.b * 255, button_color.a * 255));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgActive, IM_COL32(framebg_active_color.r * 255, framebg_active_color.g * 255, framebg_active_color.b * 255, framebg_active_color.a * 255));
+            ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, IM_COL32(framebg_hovered_color.r * 255, framebg_hovered_color.g * 255, framebg_hovered_color.b * 255, framebg_hovered_color.a * 255));
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.8f, 0.1f, 0.15f, 1.f});
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.9f, 0.2f, 0.2f, 1.f});
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.8f, 0.1f, 0.15f, 1.f});
-            ImGui::Button("X");
-            ImGui::PopStyleColor(4);
+            ImGui::Button(button_labels[i]);
+            ImGui::PopStyleColor(1);
 
             ImGui::SameLine();
-            is_value_changed |= ImGui::DragFloat("##x", &value.x, step, min, max);
+            is_value_changed |= ImGui::DragFloat(drag_labels[i], &value[i], step, min, max);
             ImGui::PopItemWidth();
-            ImGui::SameLine();
-        }
-
-        // Y
-        {
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.2f, 0.7f, 0.2f, 1.f});
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.3f, 0.8f, 0.3f, 1.f});
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.2f, 0.7f, 0.2f, 1.f});
-            ImGui::Button("Y");
-            ImGui::PopStyleColor(4);
-
-            ImGui::SameLine();
-            is_value_changed |= ImGui::DragFloat("##y", &value.y, step, min, max);
-            ImGui::PopItemWidth();
-            ImGui::SameLine();
-        }
-
-        // Z
-        {
-            // Z
-            ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(255, 255, 255, 255));
-            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.1f, 0.25f, 0.8f, 1.f});
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.2f, 0.35f, 0.9f, 1.f});
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.1f, 0.25f, 0.8f, 1.f});
-            ImGui::Button("Z");
-            ImGui::PopStyleColor(4);
-
-            ImGui::SameLine();
-            is_value_changed |= ImGui::DragFloat("##z", &value.z, step, min, max);
-            ImGui::PopItemWidth();
+            if (i != 3)
+            {
+                ImGui::SameLine();
+            }
+            ImGui::PopStyleColor(5);
         }
 
         ImGui::PopStyleVar();

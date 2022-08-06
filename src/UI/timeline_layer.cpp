@@ -8,6 +8,7 @@
 #include "glcpp/component/animation_component.h"
 
 #include <imgui/imgui.h>
+#include <imgui/imgui_internal.h>
 #include <imgui/imgui_neo_sequencer.h>
 
 #include <iostream>
@@ -32,7 +33,8 @@ namespace ui
         {
             window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
         }
-        ImGui::Begin("Animation", NULL, window_flags);
+
+        ImGui::Begin("Animation");
         {
             if (animation_component && entity->has_bone())
             {
@@ -174,7 +176,7 @@ namespace ui
             else
             {
                 is_hovered_zoom_slider_ = false;
-            }        
+            }
             ImGui::EndNeoSequencer();
         }
 

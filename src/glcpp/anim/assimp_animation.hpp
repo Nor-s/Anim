@@ -57,7 +57,7 @@ namespace glcpp
     private:
         void init_animation(const aiAnimation *animation, const aiScene *scene, const char *path)
         {
-            type = AnimationType::Assimp;
+            type_ = AnimationType::Assimp;
 
             path_ = std::string(path);
             fs::path anim_path = fs::u8path(path_);

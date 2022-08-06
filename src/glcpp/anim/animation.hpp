@@ -53,7 +53,7 @@ namespace glcpp
         }
         const AnimationType &get_type() const
         {
-            return type;
+            return type_;
         }
         virtual void reload()
         {
@@ -98,7 +98,7 @@ namespace glcpp
         int ticks_per_second_{0};
         std::string name_{};
         std::map<std::string, std::unique_ptr<Bone>> name_bone_map_{};
-        AnimationType type{};
+        AnimationType type_{};
         std::string path_{};
     };
 

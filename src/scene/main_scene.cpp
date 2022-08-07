@@ -95,7 +95,7 @@ void MainScene::draw_to_framebuffer()
         shader = resources_->get_mutable_shader("animation").get();
     }
 
-    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     framebuffer_->bind_with_depth(background_color_);
@@ -103,15 +103,10 @@ void MainScene::draw_to_framebuffer()
         grid_shader->use();
         grid_shader->set_mat4("view", camera_->get_view());
         grid_shader->set_mat4("projection", camera_->get_projection());
-
-        if (camera_->get_current_pos().y >= 0)
-        {
-            grid_framebuffer_->draw(*grid_shader);
-        }
+        grid_framebuffer_->draw(*grid_shader);
 
         if (selected_entity_)
         {
-            glEnable(GL_DEPTH_TEST);
             selected_entity_->draw(*shader, camera_->get_view(), camera_->get_projection());
         }
     }

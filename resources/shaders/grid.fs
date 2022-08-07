@@ -4,6 +4,7 @@ out vec4 color;
 uniform mat4 view;
 uniform mat4 projection;
 uniform float width =3.0;
+uniform int scale =100;
 
 
 in vec3 near_vec;
@@ -37,22 +38,20 @@ void main() {
 	float t = -near_vec.y / (far_vec.y-near_vec.y);
 	vec3 R = near_vec + t * (far_vec-near_vec);
 	gl_FragDepth = computeDepth(R);
-    float fading = max(0, (0.5 - LinearizeDepth(gl_FragDepth)*2));
-    float fading1 = max(0, (0.4 - LinearizeDepth(gl_FragDepth)*2));
+    float fading = max(0, (1.0 - LinearizeDepth(gl_FragDepth)));
 
-	color = vec4(vec3(0.35), 0.6);
-	if((mod(int(abs(R.x)),100)< width || mod(int(abs(R.z)),100) < width)) {
+	color = vec4(vec3(0.4), 0.6*fading);
+	if((mod(int(abs(R.x)),scale)< width || mod(int(abs(R.z)),scale) < width)) {
 		color.r = 0.5;
 		color.g = 0.5;
 		color.b = 0.5;
+		color.a = 0.7;
 	}
 	if(abs(int(R.x)) < width) {
 		color.b = 1.0;
-		color.a = 1.0;
 	}
 	if(abs(int(R.z)) < width) {
 		color.r = 1.0;
-		color.a = 1.0;
 	}
 	color.a *= float(t > 0);
 	

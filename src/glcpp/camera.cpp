@@ -40,7 +40,7 @@ namespace glcpp
     void Camera::set_view_and_projection(float aspect)
     {
         // https://stackoverflow.com/questions/17249429/opengl-strange-rendering-behaviour-flickering-faces
-        projection_ = glm::perspective(zoom_, aspect, 1.0f, 10000.0f);
+        projection_ = glm::perspective(zoom_, aspect, 1.0f, 5e3f);
 
         glm::mat4 mat = glm::lookAt(position_, position_ + front_, up_);
         mat = glm::rotate(mat, x_angle_, glm::vec3(1.0f, 0.0f, 0.0f));

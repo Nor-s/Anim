@@ -94,7 +94,7 @@ if(WIN32)
   endif()
 else()
   add_subdirectory(external/imgui/)
-  add_subdirectory(external/assimp2/)
+  add_subdirectory(external/assimp/)
   add_subdirectory(external/glfw/)
 endif()
 

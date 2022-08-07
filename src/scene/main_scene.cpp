@@ -44,7 +44,7 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
 
     framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
     skybox_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
-    grid_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
+    grid_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGBA});
 }
 
 void MainScene::init_pixelate_framebuffer(uint32_t width, uint32_t height)
@@ -94,21 +94,22 @@ void MainScene::draw_to_framebuffer()
     {
         shader = resources_->get_mutable_shader("animation").get();
     }
-
-    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_LINE_SMOOTH);
     glEnable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     framebuffer_->bind_with_depth(background_color_);
     {
         grid_shader->use();
         grid_shader->set_mat4("view", camera_->get_view());
         grid_shader->set_mat4("projection", camera_->get_projection());
-        grid_framebuffer_->draw(*grid_shader);
 
         if (selected_entity_)
         {
             selected_entity_->draw(*shader, camera_->get_view(), camera_->get_projection());
         }
+        grid_framebuffer_->draw(*grid_shader);
     }
     framebuffer_->unbind();
 #ifndef NDEBUG

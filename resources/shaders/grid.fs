@@ -35,29 +35,26 @@ float LinearizeDepth(float depth)
 }
 void main() {
 	float t = -near_vec.y / (far_vec.y-near_vec.y);
-
 	vec3 R = near_vec + t * (far_vec-near_vec);
-
-	if(t<0 )
-	{
-		discard;
-	}
-	if (!(mod(int(abs(R.x)),100)< width || mod(int(abs(R.z)),100) < width)){
-		discard;
-	}
-	
-	float c = 0.5;
-
-	color = vec4(vec3(c), 0.6);
-	if(abs(int(R.x)) < width) {
-		color = vec4(0.2, 0.2, 1.0, 1.0);
-	}
-	if(abs(int(R.z)) < width) {
-		color = vec4(1.0, 0.2, 0.2, 1.0);
-	}
-
 	gl_FragDepth = computeDepth(R);
     float fading = max(0, (0.5 - LinearizeDepth(gl_FragDepth)*2));
+    float fading1 = max(0, (0.4 - LinearizeDepth(gl_FragDepth)*2));
 
+	color = vec4(vec3(0.35), 0.6);
+	if((mod(int(abs(R.x)),100)< width || mod(int(abs(R.z)),100) < width)) {
+		color.r = 0.5;
+		color.g = 0.5;
+		color.b = 0.5;
+	}
+	if(abs(int(R.x)) < width) {
+		color.b = 1.0;
+		color.a = 1.0;
+	}
+	if(abs(int(R.z)) < width) {
+		color.r = 1.0;
+		color.a = 1.0;
+	}
+	color.a *= float(t > 0);
+	
 	color.a *= fading;
 }

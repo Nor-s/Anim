@@ -8,8 +8,8 @@ uniform mat4 view;
 uniform mat4 projection;
 
 
-out vec3 near;
-out vec3 far;
+out vec3 near_vec;
+out vec3 far_vec;
 
 
 vec3 UnprojectPoint(float x, float y, float z, mat4 view1, mat4 projection1) {
@@ -21,7 +21,7 @@ vec3 UnprojectPoint(float x, float y, float z, mat4 view1, mat4 projection1) {
 
 void main() {
     vec3 p = vec3(aPos.x, aPos.y, 0);
-    near = UnprojectPoint(p.x, p.y, 0.0, view, projection).xyz; // unprojecting on the near plane
-    far = UnprojectPoint(p.x, p.y, 1.0, view, projection).xyz; // unprojecting on the far plane
+    near_vec = UnprojectPoint(p.x, p.y, 0.0, view, projection).xyz; // unprojecting on the near plane
+    far_vec = UnprojectPoint(p.x, p.y, 1.0, view, projection).xyz; // unprojecting on the far plane
     gl_Position = vec4(p, 1.0); // using directly the clipped coordinates
 }

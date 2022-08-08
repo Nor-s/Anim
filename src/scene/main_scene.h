@@ -1,13 +1,14 @@
 #ifndef SRC_SCENE_MAIN_SCENE_H
 #define SRC_SCENE_MAIN_SCENE_H
 
-#include <vector>
 #include "scene.hpp"
 
+#include <vector>
 class PixelateFramebuffer;
 namespace glcpp
 {
     class Entity;
+    class Image;
 }
 class MainScene : public Scene
 {
@@ -29,8 +30,7 @@ private:
 
     glm::vec4 background_color_{0.4f, 0.4f, 0.4f, 1.0f};
 
-    std::shared_ptr<glcpp::Framebuffer> skybox_framebuffer_;
-    std::shared_ptr<glcpp::Framebuffer> grid_framebuffer_;
+    std::shared_ptr<glcpp::Image> grid_framebuffer_;
     std::shared_ptr<PixelateFramebuffer> pixelate_framebuffer_;
 
     std::shared_ptr<glcpp::Entity> selected_entity_;

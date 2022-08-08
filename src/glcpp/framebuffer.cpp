@@ -8,20 +8,18 @@
 namespace glcpp
 {
 
-    Framebuffer::Framebuffer(uint32_t width, uint32_t height, GLenum format)
-        : width_(width), height_(height), format_(format)
+    Framebuffer::Framebuffer(uint32_t width, uint32_t height, GLenum format, bool is_msaa)
+        : width_(width), height_(height), format_(format), is_msaa_(is_msaa)
     {
-        create_framebuffer();
-        attach_color_attachment_texture();
-        attach_depth24_stencil8_RBO();
         set_quad_VAO();
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        if (!is_msaa_)
         {
-#ifndef NDEBUG
-            std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-#endif
+            init_framebuffer();
         }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        else
+        {
+            init_framebuffer_with_MSAA();
+        }
     }
 
     Framebuffer::~Framebuffer()
@@ -29,7 +27,7 @@ namespace glcpp
         glDeleteVertexArrays(1, &quad_VAO_);
         glDeleteBuffers(1, &quad_VBO_);
         glDeleteFramebuffers(1, &FBO_);
-        glDeleteTextures(1, &color_texture_id_);
+        glDeleteTextures(1, &screen_texture_id_);
         glDeleteRenderbuffers(1, &d24s8_RBO_);
     }
 
@@ -39,7 +37,7 @@ namespace glcpp
     }
     uint32_t Framebuffer::get_color_texture() const
     {
-        return color_texture_id_;
+        return screen_texture_id_;
     }
     uint32_t Framebuffer::get_width() const
     {
@@ -61,34 +59,42 @@ namespace glcpp
     void Framebuffer::draw(Shader &shader)
     {
         shader.use();
-        glUniform1i(glGetUniformLocation(shader.id_, "texture_diffuse1"), 0);
+        glUniform1i(glGetUniformLocation(shader.id_, "screenTexture"), 0);
         shader.set_vec2("iResolution", glm::vec2(width_, height_));
         glBindVertexArray(quad_VAO_);
-        glBindTexture(GL_TEXTURE_2D, color_texture_id_);
+        glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
 
-    void Framebuffer::create_framebuffer()
+    void Framebuffer::init_framebuffer()
     {
         glGenFramebuffers(1, &FBO_);
         glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
+
+        attach_color_attachment_texture();
+        attach_depth24_stencil8_RBO();
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+#ifndef NDEBUG
+            std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+#endif
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
     void Framebuffer::attach_color_attachment_texture()
     {
-        glGenTextures(1, &color_texture_id_);
-        glBindTexture(GL_TEXTURE_2D, color_texture_id_);
-        // float aniso = 16.0f;
-
-        glTexImage2D(GL_TEXTURE_2D, 0, format_, width_, height_, 0, format_, GL_UNSIGNED_BYTE, nullptr);
-        // glGetFloatv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &aniso);
-        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, aniso);
-        glGenerateMipmap(GL_TEXTURE_2D);
+        glGenTextures(1, &screen_texture_id_);
+        glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_texture_id_, 0);
+        glTexImage2D(GL_TEXTURE_2D, 0, format_, width_, height_, 0, format_, GL_UNSIGNED_BYTE, nullptr);
+
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0);
     }
 
     void Framebuffer::attach_depth24_stencil8_RBO()
@@ -102,6 +108,46 @@ namespace glcpp
 
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, d24s8_RBO_);
     }
+    void Framebuffer::init_framebuffer_with_MSAA()
+    {
+        // configure MSAA framebuffer
+        // --------------------------
+        glGenFramebuffers(1, &FBO_);
+        glBindFramebuffer(GL_FRAMEBUFFER, FBO_);
+        // create a multisampled color attachment texture
+        glGenTextures(1, &msaa_texture_id_);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaa_texture_id_);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples_, GL_RGB, width_, height_, GL_TRUE);
+
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msaa_texture_id_, 0);
+        // create a (also multisampled) renderbuffer object for depth and stencil attachments
+        glGenRenderbuffers(1, &d24s8_RBO_);
+        glBindRenderbuffer(GL_RENDERBUFFER, d24s8_RBO_);
+        glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples_, GL_DEPTH24_STENCIL8, width_, height_);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, d24s8_RBO_);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        // configure second post-processing framebuffer
+        glGenFramebuffers(1, &intermediate_FBO_);
+        glBindFramebuffer(GL_FRAMEBUFFER, intermediate_FBO_);
+        // create a color attachment texture
+        glGenTextures(1, &screen_texture_id_);
+        glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0); // we only need a color buffer
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+            std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
     void Framebuffer::set_quad_VAO()
     {
         glGenVertexArrays(1, &quad_VAO_);
@@ -144,6 +190,13 @@ namespace glcpp
     }
     void Framebuffer::unbind()
     {
+        if (is_msaa_)
+        {
+            // 2. now blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_FBO_);
+            glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 }

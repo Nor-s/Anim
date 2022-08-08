@@ -57,10 +57,10 @@ namespace ui
                 scene->set_size(width_, height_);
             }
             draw_gizmo(scene);
-
-            ImGui::PopStyleVar();
-            ImGui::End();
+            sceneWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
         }
+        ImGui::End();
+        ImGui::PopStyleVar();
 
         draw_mode_window();
     }
@@ -206,8 +206,8 @@ namespace ui
                 ImGui::EndTable();
                 ImGui::PopStyleVar();
             }
-            ImGui::End();
         }
+        ImGui::End();
         ImGui::PopStyleVar();
     }
 

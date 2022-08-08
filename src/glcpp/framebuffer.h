@@ -11,7 +11,7 @@ namespace glcpp
     class Framebuffer
     {
     public:
-        Framebuffer(uint32_t width, uint32_t height, GLenum format = GL_RGB);
+        Framebuffer(uint32_t width, uint32_t height, GLenum format = GL_RGB, bool is_msaa = false);
         virtual ~Framebuffer();
         uint32_t get_fbo() const;
         uint32_t get_color_texture() const;
@@ -27,21 +27,27 @@ namespace glcpp
         void unbind();
 
     private:
-        void create_framebuffer();
+        void init_framebuffer();
+        void init_framebuffer_with_MSAA();
         void attach_color_attachment_texture();
         void attach_depth24_stencil8_RBO();
         void set_quad_VAO();
 
     private:
+        uint32_t width_ = 0;
+        uint32_t height_ = 0;
+        GLenum format_ = GL_RGB;
+        bool is_msaa_ = false;
         uint32_t FBO_ = 0;
-        uint32_t color_texture_id_ = 0;
+        uint32_t intermediate_FBO_ = 0;
+        uint32_t msaa_texture_id_ = 0;
+        uint32_t screen_texture_id_ = 0;
         uint32_t d24s8_RBO_ = 0;
         uint32_t quad_VAO_ = 0;
         uint32_t quad_VBO_ = 0;
-        uint32_t width_;
-        uint32_t height_;
-        GLenum format_;
-        float quad_vertices_[24] = {
+        int samples_ = 8;
+
+        inline static const float quad_vertices_[24] = {
             // positions   // texCoords
             -1.0f, 1.0f, 0.0f, 1.0f,
             -1.0f, -1.0f, 0.0f, 0.0f,

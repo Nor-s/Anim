@@ -7,6 +7,7 @@
 #include <glcpp/model.h>
 #include <glcpp/animator.h>
 #include <glcpp/entity.h>
+#include <glcpp/image.h>
 
 #include <filesystem>
 
@@ -42,9 +43,8 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
 {
     set_size(width, height);
 
-    framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
-    skybox_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB});
-    grid_framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGBA});
+    framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB, true});
+    grid_framebuffer_.reset(new glcpp::Image{width, height, GL_RGBA});
 }
 
 void MainScene::init_pixelate_framebuffer(uint32_t width, uint32_t height)
@@ -119,6 +119,14 @@ void MainScene::draw_to_framebuffer()
     {
         std::cout << "main scene: " << error << std::endl;
     }
+    std::cout << camera_->get_current_pos().y << "\n";
+    std::cout << camera_->get_projection()[3][1] << "\n";
+    // auto cmwvc =
+    // auto unpp = glm::inverse(camera_->get_view()) * glm::inverse(camera_->get_projection()) * glm::vec4(cm.x, cm.y, 1.0f, 1.0f);
+    // unpp.x /= unpp.w;
+    // unpp.y /= unpp.w;
+    // unpp.z /= unpp.w;
+    // std::cout << unpp.x << " " << unpp.y << " " << unpp.z << "\n";
 #endif
 }
 

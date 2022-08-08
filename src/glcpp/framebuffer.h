@@ -25,6 +25,7 @@ namespace glcpp
         void bind_with_depth(const glm::vec4 &color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
         void bind_with_depth_and_stencil(const glm::vec4 &color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
         void unbind();
+        bool error();
 
     private:
         void init_framebuffer();
@@ -45,7 +46,8 @@ namespace glcpp
         uint32_t d24s8_RBO_ = 0;
         uint32_t quad_VAO_ = 0;
         uint32_t quad_VBO_ = 0;
-        int samples_ = 8;
+        int samples_ = 4;
+        bool is_error_ = false;
 
         inline static const float quad_vertices_[24] = {
             // positions   // texCoords

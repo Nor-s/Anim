@@ -15,6 +15,9 @@ namespace fs = std::filesystem;
 
 MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedResources> resources)
 {
+    #ifndef NDEBUG
+    std::cout<<"MainScene()\n";
+    #endif
     if (resources == nullptr)
     {
         resources_ = std::make_shared<SharedResources>();
@@ -44,6 +47,12 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
     set_size(width, height);
 
     framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB, true});
+    if(framebuffer_->error()) {
+        #ifndef NDEBUG
+        std::cout<<"framebuffer error\n";
+        #endif
+        framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB, false});
+    }
     grid_framebuffer_.reset(new glcpp::Image{width, height, GL_RGBA});
 }
 
@@ -119,14 +128,6 @@ void MainScene::draw_to_framebuffer()
     {
         std::cout << "main scene: " << error << std::endl;
     }
-    std::cout << camera_->get_current_pos().y << "\n";
-    std::cout << camera_->get_projection()[3][1] << "\n";
-    // auto cmwvc =
-    // auto unpp = glm::inverse(camera_->get_view()) * glm::inverse(camera_->get_projection()) * glm::vec4(cm.x, cm.y, 1.0f, 1.0f);
-    // unpp.x /= unpp.w;
-    // unpp.y /= unpp.w;
-    // unpp.z /= unpp.w;
-    // std::cout << unpp.x << " " << unpp.y << " " << unpp.z << "\n";
 #endif
 }
 

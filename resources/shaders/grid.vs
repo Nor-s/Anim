@@ -5,6 +5,7 @@
 // https://stackoverflow.com/questions/71520410/how-i-can-apply-antialiasing-to-a-2d-grid-on-a-shader
 // https://opentutorials.org/module/3659/22204
 // https://thebookofshaders.com/05/
+// https://iquilezles.org/articles/filterableprocedurals/
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoords;
 uniform mat4 view;

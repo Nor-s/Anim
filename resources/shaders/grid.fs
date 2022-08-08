@@ -3,12 +3,14 @@
 out vec4 color;
 uniform mat4 view;
 uniform mat4 projection;
-uniform float width =3.0;
+uniform float width =1.0;
 uniform int scale =100;
 
 
 in vec3 near_vec;
 in vec3 far_vec;
+out vec4 frag_color;
+
 
 // computes Z-buffer depth value, and converts the range.
 float computeDepth(vec3 pos) {
@@ -34,26 +36,44 @@ float LinearizeDepth(float depth)
 	float far = ((projection[2][2]-1.0f)*near)/(projection[2][2]+1.0);
     return (2.0 * near * far) / (far + near - z * (far - near))/far;
 }
+
+
 void main() {
 	float t = -near_vec.y / (far_vec.y-near_vec.y);
 	vec3 R = near_vec + t * (far_vec-near_vec);
 	gl_FragDepth = computeDepth(R);
-    float fading = max(0, (1.0 - LinearizeDepth(gl_FragDepth)));
+	float linear_depth = LinearizeDepth(gl_FragDepth);
+    float fading = 1.0-smoothstep(0.0, 1.0, linear_depth);
 
-	color = vec4(vec3(0.4), 0.6*fading);
-	if((mod(int(abs(R.x)),scale)< width || mod(int(abs(R.z)),scale) < width)) {
-		color.r = 0.5;
-		color.g = 0.5;
-		color.b = 0.5;
-		color.a = 0.7;
+	color = vec4(vec3(0.4), 1.0);
+	vec4 grid_color = vec4(0.6, 0.6, 0.6, 1.0);
+	vec4 x_color = vec4(1.0, 0.3, 0.3, 1.0);
+	vec4 z_color = vec4(0.3, 0.3, 1.0, 1.0);
+	if (R.z > 10000.0 || R.z < -10000.0 || R.x < -10000.0, R.x > 10000.0) {
+		discard;
 	}
-	if(abs(int(R.x)) < width) {
-		color.b = 1.0;
-	}
-	if(abs(int(R.z)) < width) {
-		color.r = 1.0;
-	}
-	color.a *= float(t > 0);
-	
+
+	vec2 uv = R.xz;
+  	float half_size = scale / 2.0;
+  	vec2 grid = abs(mod(uv + half_size, scale) - half_size)/ fwidth(uv);
+  	vec2 axis = abs(uv)/ fwidth(uv);
+ 	float line_dist = min(grid.x, grid.y);
+    float ratio = 1.0 -smoothstep(0.0, width, line_dist);
+
+
+	color = mix(color, grid_color, ratio);
+    ratio = 1.0 -smoothstep(0.0, width*2, axis.x );
+	color = mix(color, x_color, ratio);
+    ratio = 1.0 -smoothstep(0.0, width*2, axis.y);
+	color = mix(color, z_color, ratio);
+
+
+	vec3 camera_pos = vec3(inverse(view) * vec4(0.0, 0.0, 0.0, 1.0));
+	vec3 viewDir = normalize(camera_pos - R*0.6);
+	vec3 projvec = vec3(viewDir.x, 0, viewDir.z);
+	float cos_val = dot(projvec, viewDir);
+	float mix_cos = mix(1.0, 0.0, cos_val);
+
+	fading *= mix_cos ;
 	color.a *= fading;
 }

@@ -10,6 +10,7 @@ uniform int scale =100;
 in vec3 near_vec;
 in vec3 far_vec;
 out vec4 frag_color;
+#define linearstep(p0, p1, v) (clamp(((v) - (p0)) / abs((p1) - (p0)), 0.0, 1.0))
 
 
 // computes Z-buffer depth value, and converts the range.
@@ -43,10 +44,10 @@ void main() {
 	vec3 R = near_vec + t * (far_vec-near_vec);
 	gl_FragDepth = computeDepth(R);
 	float linear_depth = LinearizeDepth(gl_FragDepth);
-    float fading = 1.0-smoothstep(0.0, 1.0, linear_depth);
+    float fading = 1.0-smoothstep(0.0, 1., linear_depth);
 
-	color = vec4(vec3(0.4), 1.0);
-	vec4 grid_color = vec4(0.6, 0.6, 0.6, 1.0);
+	color = vec4(vec3(0.1), 0.5);
+	vec4 grid_color = vec4(0.6, 0.6, 0.6, 0.5);
 	vec4 x_color = vec4(1.0, 0.3, 0.3, 1.0);
 	vec4 z_color = vec4(0.3, 0.3, 1.0, 1.0);
 	if (R.z > 10000.0 || R.z < -10000.0 || R.x < -10000.0, R.x > 10000.0) {
@@ -60,20 +61,22 @@ void main() {
  	float line_dist = min(grid.x, grid.y);
     float ratio = 1.0 -smoothstep(0.0, width, line_dist);
 
-
 	color = mix(color, grid_color, ratio);
     ratio = 1.0 -smoothstep(0.0, width*2, axis.x );
 	color = mix(color, x_color, ratio);
     ratio = 1.0 -smoothstep(0.0, width*2, axis.y);
 	color = mix(color, z_color, ratio);
 
-
 	vec3 camera_pos = vec3(inverse(view) * vec4(0.0, 0.0, 0.0, 1.0));
-	vec3 viewDir = normalize(camera_pos - R*0.6);
-	vec3 projvec = vec3(viewDir.x, 0, viewDir.z);
-	float cos_val = dot(projvec, viewDir);
-	float mix_cos = mix(1.0, 0.0, cos_val);
+	vec3 view_dir = (camera_pos - R);
+	float dist = length(view_dir);
+	view_dir/=dist;
+	float angle = view_dir.y;
+	angle = 1.0 - abs(angle);
+	angle*=angle;
+    float fade = 1.0 - angle * angle;
+    fade *= 1.0 - smoothstep(0.0, 10000.0/2.0, dist - 10000.0/2.0);
 
-	fading *= mix_cos ;
-	color.a *= fading;
+	// fading *= mix(0.0, 1.0, angle);
+	color.a*= fade* fading;
 }

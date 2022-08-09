@@ -66,6 +66,8 @@ namespace glcpp
         name_ = directory_.filename().string();
         process_node(root_node_, scene->mRootNode, scene);
         textures_loaded_.clear();
+        process_armature(root_node_, armature_, nullptr);
+        printf("END_loadmodel\n");
     }
 
     void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
@@ -148,24 +150,6 @@ namespace glcpp
                 vertex.set_bitangent(glm::vec3{
                     mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z});
             }
-#ifndef NDEBUG
-            for (int j = 0; j < AI_MAX_NUMBER_OF_COLOR_SETS; j++)
-            {
-                // if mesh has vertex colours for specifc colour set...
-                if (mesh->HasVertexColors(j))
-                {
-                    //...for all the colours in that set
-                    printf("%s: mesh->mColors[%i][%i]: [%f, %f, %f, %f]\n",
-                           mesh->mName.C_Str(),
-                           j,
-                           i,
-                           mesh->mColors[j][i].r,
-                           mesh->mColors[j][i].g,
-                           mesh->mColors[j][i].b,
-                           mesh->mColors[j][i].a);
-                }
-            }
-#endif
 
             vertices.push_back(vertex);
         }
@@ -243,6 +227,7 @@ namespace glcpp
                 bone_info_map[bone_name] = new_bone_info;
                 bone_id = bone_count;
                 bone_count++;
+                std::cout << ("bone_name: " + bone_name + " bone_id: " + std::to_string(bone_id)) << "\n";
             }
             else
             {
@@ -365,7 +350,10 @@ namespace glcpp
         if (!*id)
             glGenTextures(1, id);
         glBindTexture(GL_TEXTURE_2D, *id);
-
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
         unsigned char *image_data = nullptr;
         int width = 0, height = 0, components_per_pixel;
         if (texture->mHeight == 0)
@@ -395,13 +383,7 @@ namespace glcpp
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
         }
 
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
         glGenerateMipmap(GL_TEXTURE_2D);
-
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         stbi_image_free(image_data);
@@ -409,14 +391,34 @@ namespace glcpp
 }
 namespace glcpp
 {
+    glm::mat4 tmp_mat = glm::mat4(1.0);
     void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform)
     {
         shader.use();
+        shader.set_mat4("armature", glm::mat4(1.0f));
         shader.set_mat4("projection", projection);
         shader.set_mat4("view", view);
         shader.set_mat4("model", transform);
-        for (unsigned int i = 0; i < meshes_.size(); i++)
-            meshes_[i].draw(shader);
+        tmp_mat = transform;
+        // draw(shader);
+        shader.set_mat4("model", glm::translate(transform, glm::vec3(200.0f, 0.0f, 000.0f)));
+        draw(shader);
+        draw_armature(*armature_, shader, view, projection, glm::mat4(1.0));
+    }
+    void Model::draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform)
+    {
+        glm::mat4 world = transform * armature.initial_transformation;
+        glm::mat4 tmp = glm::scale(world, glm::vec3(armature.get_scale()));
+        shader.set_mat4("armature", tmp);
+        armature.armature->draw(shader, view, projection, tmp_mat);
+
+        for (int i = 0; i < armature.childrens.size(); i++)
+        {
+            if (armature.childrens[i])
+            {
+                draw_armature(*(armature.childrens[i]), shader, view, projection, world);
+            }
+        }
     }
 
     void Model::draw(Shader &shader)
@@ -458,8 +460,56 @@ namespace glcpp
     {
         return root_node_;
     }
+    ArmatureNode *Model::get_mutable_armature()
+    {
+        return armature_.get();
+    }
     const std::string &Model::get_name() const
     {
         return name_;
     }
+}
+
+namespace glcpp
+{
+    // process only one armature
+    void Model::process_armature(const std::shared_ptr<ModelNode> &model_node, std::shared_ptr<ArmatureNode> &armature, ArmatureNode *parent_armature)
+    {
+        unsigned int child_size = model_node->childrens.size();
+        auto bone = bone_info_map_.find(model_node->name);
+
+        if (parent_armature && bone == bone_info_map_.end())
+        {
+            return;
+        }
+        if (bone != bone_info_map_.end())
+        {
+            printf("begin-----%s (%d)\n", bone->first.c_str(), bone->second.id);
+            armature.reset(new ArmatureNode(model_node->initial_transformation, model_node->name, bone->second.id));
+            if (parent_armature)
+            {
+                glm::vec4 world = armature->initial_transformation * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+                parent_armature->set_scale(glm::distance(world, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+                armature->set_scale(parent_armature->get_scale());
+            }
+            printf("end-----%s\n", bone->first.c_str());
+        }
+        for (int i = 0; i < child_size; i++)
+        {
+            if (armature)
+            {
+                std::shared_ptr<ArmatureNode> arm = nullptr;
+                process_armature(model_node->childrens[i], arm, armature.get());
+                if (arm && armature)
+                {
+                    armature->childrens.push_back(arm);
+                }
+            }
+            else
+            {
+                process_armature(model_node->childrens[i], armature, parent_armature);
+            }
+        }
+    }
+
 }

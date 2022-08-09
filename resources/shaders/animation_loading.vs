@@ -9,6 +9,7 @@ layout (location = 6) in vec4 weights;
 
 
 uniform mat4 model;
+uniform mat4 armature;
 uniform mat4 view;
 uniform mat4 projection;
 
@@ -21,6 +22,7 @@ out vec3 FragPos;
 
 void main()
 {
+    vec4 pos = armature * vec4(aPos, 1.0f);
     vec4 totalPosition = vec4(0.0f);
     vec4 totalFragPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
@@ -33,11 +35,11 @@ void main()
             continue;
         if(boneIds[i] >=MAX_BONES) 
         {
-            totalPosition = vec4(aPos,1.0f);
+            totalPosition = pos;
             totalNormal = aNormal;
             break;
         }
-        vec4 localPosition = finalBonesMatrices[boneIds[i]] * vec4(aPos,1.0f);
+        vec4 localPosition = finalBonesMatrices[boneIds[i]] * pos;
         mat3 bonemat3 = mat3(finalBonesMatrices[boneIds[i]]);
         vec3 localNormal = bonemat3 * aNormal;
         totalNormal += localNormal * weights[i];
@@ -49,9 +51,9 @@ void main()
    }
 	
     mat4 viewModel = view * model;
-    gl_Position =  projection * viewModel * totalPosition;
+    gl_Position =  projection * viewModel *totalPosition;
 
     TexCoords = aTexCoords;
     Normal = mat3(model)* totalNormal;
-    FragPos = vec3(model * finalBonesMatrices[maxId] * vec4(aPos,1.0f));
+    FragPos = vec3(model * finalBonesMatrices[maxId] * pos);
 }

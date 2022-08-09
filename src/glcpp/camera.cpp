@@ -69,15 +69,15 @@ namespace glcpp
     void Camera::process_mouse_scroll(float yoffset)
     {
         glm::vec3 delta = front_ * movement_sensitivity_ * 0.1f;
-        if (yoffset > 0 && position_.z + delta.z > 0.0f)
+        if (yoffset > 0 && position_.z + delta.z >= 0.0f)
             position_ += delta;
-        if (yoffset < 0 && position_.z - delta.z > 0.0f)
+        if (yoffset < 0 && position_.z - delta.z >= 0.0f)
             position_ -= delta;
     }
 
     void Camera::process_mouse_scroll_press(float yoffset, float xoffset, float deltaTime)
     {
-        float velocity = movement_sensitivity_ * deltaTime * 0.5f;
+        float velocity = movement_sensitivity_ * deltaTime;
         position_ += up_ * velocity * yoffset;
         position_ -= right_ * velocity * xoffset;
     }

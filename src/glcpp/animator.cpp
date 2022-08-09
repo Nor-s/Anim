@@ -68,17 +68,19 @@ namespace glcpp
     void Animator::calculate_bone_transform(const Model *model, const ModelNode *node, Animation *animation, const glm::mat4 &parentTransform)
     {
         const std::string &node_name = node->name;
-        // 모델의 바인딩포즈 렌더링
-        glm::mat4 global_transformation = parentTransform * node->initial_transformation;
+        glm::mat4 global_transformation = parentTransform;
+
+        // 바인딩 포즈
+        global_transformation *= node->initial_transformation;
 
         // 애니메이션
         auto bone = animation->find_bone(node_name);
         if (bone != nullptr)
         {
+            // 애니메이션 포즈
             global_transformation *= bone->get_local_transform(current_time_, factor_);
         }
         // FK
-
         auto bone_info = model->get_pointer_bone_info(node_name);
         if (bone_info && bone_info->id < MAX_BONE_NUM)
         {

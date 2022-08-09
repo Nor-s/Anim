@@ -1,9 +1,10 @@
 #include "transform_component.h"
+#include "utility.hpp"
+
 #include <iostream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
@@ -14,35 +15,6 @@ namespace glcpp
         glm::mat4 rotation = glm::toMat4(glm::quat(rotation_));
 
         return glm::translate(glm::mat4(1.0f), translation_) * rotation * glm::scale(glm::mat4(1.0f), scale_);
-        // const float c3 = glm::cos(rotation_.z);
-        // const float s3 = glm::sin(rotation_.z);
-        // const float c2 = glm::cos(rotation_.x);
-        // const float s2 = glm::sin(rotation_.x);
-        // const float c1 = glm::cos(rotation_.y);
-        // const float s1 = glm::sin(rotation_.y);
-        // return
-
-        //     {
-
-        //         {
-        //             scale_.x * (c1 * c3 + s1 * s2 * s3),
-        //             scale_.x * (c2 * s3),
-        //             scale_.x * (c1 * s2 * s3 - c3 * s1),
-        //             0.0f,
-        //         },
-        //         {
-        //             scale_.y * (c3 * s1 * s2 - c1 * s3),
-        //             scale_.y * (c2 * c3),
-        //             scale_.y * (c1 * c3 * s2 + s1 * s3),
-        //             0.0f,
-        //         },
-        //         {
-        //             scale_.z * (c2 * s1),
-        //             scale_.z * (-s2),
-        //             scale_.z * (c1 * c2),
-        //             0.0f,
-        //         },
-        //         {translation_.x, translation_.y, translation_.z, 1.0f}};
     }
     const glm::vec3 &TransformComponent::get_translation() const
     {
@@ -67,10 +39,25 @@ namespace glcpp
 
         return *this;
     }
+    TransformComponent &TransformComponent::set_scale(float scale)
+    {
+        set_scale(glm::vec3{scale, scale, scale});
+        return *this;
+    }
+
     TransformComponent &TransformComponent::set_rotation(const glm::vec3 &vec)
     {
         rotation_ = vec;
 
         return *this;
     }
+    TransformComponent &TransformComponent::set_transform(const glm::mat4 &mat)
+    {
+        auto [t, r, s] = DecomposeTransform(mat);
+        translation_ = t;
+        rotation_ = glm::eulerAngles(r);
+        scale_ = s;
+        return *this;
+    }
+
 }

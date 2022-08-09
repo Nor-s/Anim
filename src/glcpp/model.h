@@ -12,6 +12,7 @@
 #include <string>
 
 #include "component/transform_component.h"
+#include "glcpp/armature.h"
 
 #include "mesh.h"
 
@@ -55,6 +56,32 @@ namespace glcpp
             childrens.clear();
         }
     };
+    struct ArmatureNode
+    {
+        glm::mat4 initial_transformation;
+        std::string name;
+        std::vector<std::shared_ptr<ArmatureNode>> childrens;
+        std::shared_ptr<Armature> armature = nullptr;
+        ArmatureNode(const glm::mat4 &initial_transform, const std::string &node_name,  int id)
+            : initial_transformation(initial_transform), name(node_name)
+        {
+            armature.reset(new Armature(id));
+            armature->get_mutable_transform().set_transform(initial_transformation);
+        }
+        ~ArmatureNode()
+        {
+            childrens.clear();
+            armature = nullptr;
+        }
+        void set_scale(float scale)
+        {
+            armature->set_scale(scale);
+        }
+        float get_scale()
+        {
+            return armature->get_scale();
+        }
+    };
 
     /**
      * load_model => process_node => process_mesh(mesh... vertices, indices, textures...)
@@ -68,12 +95,15 @@ namespace glcpp
 
         void draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform);
         void draw(Shader &shader);
+        void draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform);
 
         const std::map<std::string, BoneInfo> &get_bone_info_map() const;
         const BoneInfo *get_pointer_bone_info(const std::string &bone_name) const;
         std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
         const ModelNode *get_root_node() const;
+        ArmatureNode *get_mutable_armature();
+
         std::shared_ptr<ModelNode> &get_mutable_root_node();
         void get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node);
         void get_ai_root_node_for_anim(aiNode *ai_node);
@@ -106,14 +136,17 @@ namespace glcpp
          */
         void process_bone(aiMesh *mesh, const aiScene *scene, std::vector<Vertex> &vertices);
 
+        void process_armature(const std::shared_ptr<ModelNode> &model_node, std::shared_ptr<ArmatureNode> &armature, ArmatureNode *parent_armature);
+
         std::vector<Texture> load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                     std::string typeName);
         std::shared_ptr<ModelNode> root_node_;
+        std::shared_ptr<ArmatureNode> armature_;
         std::vector<Mesh> meshes_;
         std::map<std::string, BoneInfo> bone_info_map_;
-        std::filesystem::path directory_;
+        std::filesystem::path directory_{};
         std::vector<Texture> textures_loaded_;
-        std::string name_;
+        std::string name_{};
         int bone_count_ = 0;
         int node_count_ = 0;
     };

@@ -13,6 +13,7 @@ set(GLCPP_SRC
     glcpp/component/component.hpp
     glcpp/component/transform_component.cpp
     glcpp/component/animation_component.cpp
+    glcpp/component/OBB_component.cpp
     glcpp/utility.hpp
     glcpp/anim/bone.hpp
     glcpp/anim/animation.hpp
@@ -21,6 +22,7 @@ set(GLCPP_SRC
     glcpp/animator.cpp
     glcpp/entity.cpp
     glcpp/image.cpp
+    glcpp/armature.cpp
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})

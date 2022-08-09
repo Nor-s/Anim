@@ -10,12 +10,14 @@ namespace glcpp
     {
     public:
         glm::mat4 get_mat4() const;
-        const glm::vec3& get_translation() const;
-        const glm::vec3& get_rotation() const;
-        const glm::vec3& get_scale() const;
-        TransformComponent& set_translation(const glm::vec3& vec);
-        TransformComponent& set_scale(const glm::vec3& vec);
-        TransformComponent& set_rotation(const glm::vec3& vec);
+        const glm::vec3 &get_translation() const;
+        const glm::vec3 &get_rotation() const;
+        const glm::vec3 &get_scale() const;
+        TransformComponent &set_translation(const glm::vec3 &vec);
+        TransformComponent &set_scale(const glm::vec3 &vec);
+        TransformComponent &set_scale(float scale);
+        TransformComponent &set_rotation(const glm::vec3 &vec);
+        TransformComponent &set_transform(const glm::mat4 &mat);
 
     private:
         glm::vec3 translation_{0.0f, 0.0f, 0.0f};

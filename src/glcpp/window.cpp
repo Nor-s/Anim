@@ -4,7 +4,7 @@ namespace glcpp
 {
     Window::Window(uint32_t width, uint32_t height, std::string title)
         : width_(width), height_(height), title_(title)
-    {            
+    {
         init_glfw();
     }
     Window::~Window()
@@ -12,7 +12,7 @@ namespace glcpp
         if (handle_)
         {
 #ifndef NDEBUG
-            std::cout << "Window::~Window"<<std::endl;
+            std::cout << "Window::~Window" << std::endl;
 #endif
             destroy_window();
         }
@@ -63,9 +63,8 @@ namespace glcpp
     void Window::destroy_window()
     {
         glfwDestroyWindow(handle_);
-        glfwTerminate();        
+        glfwTerminate();
         handle_ = nullptr;
-
     }
     void Window::wait_events()
     {
@@ -161,9 +160,8 @@ namespace glcpp
     }
     std::pair<int, int> Window::get_framebuffer_size() const
     {
-        std::pair<int, int> size{0,0};
+        std::pair<int, int> size{0, 0};
         glfwGetFramebufferSize(handle_, &size.first, &size.second);
-        //set_size(static_cast<uint32_t>(size.first), static_cast<uint32_t>(size.second));
         return size;
     }
     void Window::update_window()

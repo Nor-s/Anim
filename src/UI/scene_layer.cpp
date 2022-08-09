@@ -202,6 +202,13 @@ namespace ui
                 {
                     current_gizmo_operation_ = ImGuizmo::OPERATION::NONE;
                 }
+                if (is_univ_mode_ && !(is_rotate_mode_ && is_scale_mode_ && is_translate_mode_))
+                {
+                    is_univ_mode_ = false;
+                    is_rotate_mode_ = !is_rotate_mode_;
+                    is_scale_mode_ = !is_scale_mode_;
+                    is_translate_mode_ = !is_translate_mode_;
+                }
 
                 ImGui::EndTable();
                 ImGui::PopStyleVar();

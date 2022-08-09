@@ -22,7 +22,7 @@ namespace glcpp
         float time;
         float get_time(float factor = 1.0f)
         {
-            return (float)static_cast<uint32_t>(roundf(time * factor));
+            return time * factor; // (float)static_cast<uint32_t>(roundf(time * factor));
         }
     };
 
@@ -32,7 +32,7 @@ namespace glcpp
         float time;
         float get_time(float factor = 1.0f)
         {
-            return (float)static_cast<uint32_t>(roundf(time * factor));
+            return time * factor; //(float)static_cast<uint32_t>(roundf(time * factor));
         }
     };
 
@@ -42,7 +42,7 @@ namespace glcpp
         float time;
         float get_time(float factor = 1.0f)
         {
-            return (float)static_cast<uint32_t>(roundf(time * factor));
+            return time * factor; //(float)static_cast<uint32_t>(roundf(time * factor));
         }
     };
 
@@ -150,8 +150,8 @@ namespace glcpp
 
         int get_position_index(float animation_time)
         {
-
-            for (int index = 0; index < num_positions_ - 1; ++index)
+            int size = num_positions_ - 1;
+            for (int index = 0; index < size; ++index)
             {
                 if (animation_time < positions_[index + 1].get_time(factor_))
                 {
@@ -159,12 +159,13 @@ namespace glcpp
                     return index;
                 }
             }
-            return -1;
+            return size;
         }
 
-        int get_totation_index(float animation_time)
+        int get_rotation_index(float animation_time)
         {
-            for (int index = 0; index < num_rotations_ - 1; ++index)
+            int size = num_rotations_ - 1;
+            for (int index = 0; index < size; ++index)
             {
                 if (animation_time < rotations_[index + 1].get_time(factor_))
                 {
@@ -172,13 +173,13 @@ namespace glcpp
                     return index;
                 }
             }
-            return -1;
+            return size;
         }
 
         int GetScaleIndex(float animation_time)
         {
-
-            for (int index = 0; index < num_scales_ - 1; ++index)
+            int size = num_scales_ - 1;
+            for (int index = 0; index < size; ++index)
             {
                 if (animation_time < scales_[index + 1].get_time(factor_))
                 {
@@ -186,7 +187,7 @@ namespace glcpp
                     return index;
                 }
             }
-            return -1;
+            return size;
         }
 
         std::vector<float> &get_mutable_time_list()
@@ -356,21 +357,18 @@ namespace glcpp
             float scaleFactor = 0.0f;
             float midWayLength = animation_time - last_time_stamp;
             float framesDiff = next_time_stamp - last_time_stamp;
+            if (last_time_stamp == next_time_stamp || framesDiff < 0.0f)
+            {
+                return 1.0;
+            }
             scaleFactor = midWayLength / framesDiff;
             return scaleFactor;
         }
 
         glm::mat4 interpolate_position(float animation_time)
         {
-            if (1 == num_positions_)
-                return glm::translate(glm::mat4(1.0f), positions_[0].position);
-
             int p0Index = get_position_index(animation_time);
-            if (p0Index == -1)
-            {
-                return glm::mat4(1.0f);
-            }
-            int p1Index = 0;
+            int p1Index = num_positions_ - 1;
             // for nested frame
             auto it = time_positions_map_.find(positions_[p0Index].time);
             it++;
@@ -385,18 +383,13 @@ namespace glcpp
 
         glm::mat4 interpolate_rotation(float animation_time)
         {
-            if (1 == num_rotations_)
-            {
-                auto rotation = glm::normalize(rotations_[0].orientation);
-                return glm::toMat4(rotation);
-            }
-
-            int p0Index = get_totation_index(animation_time);
-            if (p0Index == -1)
-            {
-                return glm::mat4(1.0f);
-            }
-            int p1Index = p0Index + 1;
+            int p0Index = get_rotation_index(animation_time);
+            int p1Index = num_rotations_ - 1;
+            // for nested frame
+            auto it = time_rotations_map_.find(rotations_[p0Index].time);
+            it++;
+            if (it != time_rotations_map_.end())
+                p1Index = it->second;
             float scaleFactor = get_scale_factor(rotations_[p0Index].get_time(factor_),
                                                  rotations_[p1Index].get_time(factor_), animation_time);
             glm::quat finalRotation = glm::slerp(rotations_[p0Index].orientation, rotations_[p1Index].orientation, scaleFactor);
@@ -406,15 +399,13 @@ namespace glcpp
 
         glm::mat4 interpolate_scaling(float animation_time)
         {
-            if (1 == num_scales_)
-                return glm::scale(glm::mat4(1.0f), scales_[0].scale);
-
             int p0Index = GetScaleIndex(animation_time);
-            if (p0Index == -1)
-            {
-                return glm::mat4(1.0f);
-            }
-            int p1Index = p0Index + 1;
+            int p1Index = num_scales_ - 1;
+            // for nested frame
+            auto it = time_scales_map_.find(scales_[p0Index].time);
+            it++;
+            if (it != time_scales_map_.end())
+                p1Index = it->second;
             float scaleFactor = get_scale_factor(scales_[p0Index].get_time(factor_),
                                                  scales_[p1Index].get_time(factor_), animation_time);
             glm::vec3 finalScale = glm::mix(scales_[p0Index].scale, scales_[p1Index].scale, scaleFactor);

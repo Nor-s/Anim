@@ -34,7 +34,7 @@ namespace ui
             window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
         }
 
-        ImGui::Begin("Animation");
+        ImGui::Begin("Animation", 0, window_flags);
         {
             if (animation_component && entity->has_bone())
             {

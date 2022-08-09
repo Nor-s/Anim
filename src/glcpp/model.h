@@ -62,7 +62,7 @@ namespace glcpp
         std::string name;
         std::vector<std::shared_ptr<ArmatureNode>> childrens;
         std::shared_ptr<Armature> armature = nullptr;
-        ArmatureNode(const glm::mat4 &initial_transform, const std::string &node_name,  int id)
+        ArmatureNode(const glm::mat4 &initial_transform, const std::string &node_name, int id)
             : initial_transformation(initial_transform), name(node_name)
         {
             armature.reset(new Armature(id));
@@ -89,7 +89,6 @@ namespace glcpp
     class Model
     {
     public:
-        Model(const char *path);
         Model(const char *path, const aiScene *scene);
         ~Model();
 

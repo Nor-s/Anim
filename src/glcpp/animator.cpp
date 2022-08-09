@@ -36,22 +36,16 @@ namespace glcpp
 
         if (!is_stop)
         {
+            float time = current_time + fps * dt;
             if (dt <= 0)
             {
+                time = 0.0f;
+            }
+            current_time = fmod(time, duration);
+            if (time > duration)
+            {
+                is_stop = !is_loop;
                 current_time = 0.0f;
-            }
-            else
-            {
-                current_time += fps * dt;
-            }
-            if (current_time > duration && !is_loop)
-            {
-                current_time = duration - 0.01f;
-                is_stop = true;
-            }
-            else
-            {
-                current_time = fmod(current_time, duration);
             }
         }
         current_time_ = current_time;

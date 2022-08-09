@@ -117,7 +117,7 @@ namespace ui
                 is_hovered_ = false;
             }
         }
-        ImGuizmo::ViewManipulate(cameraView, 8.0f, ImVec2{scene_window_right_ - 128.0f, scene_window_top_ + 16.0f}, ImVec2{128, 128}, ImU32{0x10101010});
+        ImGuizmo::ViewManipulate(cameraView, 8.0f, ImVec2{scene_window_right_ - 128.0f, scene_window_top_ + 16.0f}, ImVec2{128, 128}, ImU32{0x00000000});
     }
     void SceneLayer::draw_mode_window()
     {

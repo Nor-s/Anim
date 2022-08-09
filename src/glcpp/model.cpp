@@ -22,11 +22,6 @@ namespace glcpp
         load_model(path, scene);
     }
 
-    Model::Model(const char *path)
-    {
-        load_model(path);
-    }
-
     Model::~Model()
     {
         root_node_.reset();

@@ -12,12 +12,18 @@ Animating tool
 
 ![](/screenshot/2022-0805.gif)
 
+### **08/10**
+
+-   skeleton visualization, imguizmo bar, change grid
+
+![](/screenshot/2022-08-10.gif)
+
 ## **TODO**
 
 -   ~~Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)~~
     -   Change: NFD to IFD
--   model picking
--   visualize bone
+-   model picking, bone picking
+-   ~~visualize skeleton~~
 -   mp2mm: increased accuracy
 -   refactor export
 
@@ -70,6 +76,10 @@ conda env create -f mp_gui_build.yaml
 
 -   jsoncpp: https://github.com/open-source-parsers/jsoncpp
 
+-   font(icon)
+    -   https://github.com/juliettef/IconFontCppHeaders
+    -   https://github.com/tanluteam/imgui
+
 ## **Reference**
 
 -   [learnopengl](https://learnopengl.com/)
@@ -80,17 +90,23 @@ conda env create -f mp_gui_build.yaml
 
 -   [skeleton animation: ogldev](https://ogldev.org/www/tutorial38/tutorial38.html)
 
--   [grid shader 1](http://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/)
-
--   [grid shader 2](https://github.com/martin-pr/possumwood/wiki/Infinite-ground-plane-using-GLSL-shaders)
-
 -   [blur shader](https://www.shadertoy.com/view/Xltfzj)
+
+-   grid shader
+
+    -   [grid shader 1](http://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/)
+
+    -   [grid shader 2](https://github.com/martin-pr/possumwood/wiki/Infinite-ground-plane-using-GLSL-shaders)
+
+    -   [grid shader 3](https://github.com/blender/blender/blob/594f47ecd2d5367ca936cf6fc6ec8168c2b360d0/source/blender/draw/engines/overlay/shaders/grid_frag.glsl)
 
 ### **Resources**
 
 -   model: https://www.mixamo.com/#/?page=1&type=Character
     -   https://github.com/JoeyDeVries/LearnOpenGL/tree/master/resources/objects
--   font: https://github.com/naver/d2codingfont/wiki/Open-Font-License
+-   font
+    -   https://github.com/naver/d2codingfont/wiki/Open-Font-License
+    -   https://github.com/juliettef/IconFontCppHeaders
 -   skybox: https://www.cleanpng.com/free/skybox.html
     -   https://opengameart.org/content/forest-skyboxes
     -   https://www.humus.name/index.php?page=Textures

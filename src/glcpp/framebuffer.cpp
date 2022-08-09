@@ -24,11 +24,16 @@ namespace glcpp
 
     Framebuffer::~Framebuffer()
     {
+
         glDeleteVertexArrays(1, &quad_VAO_);
         glDeleteBuffers(1, &quad_VBO_);
         glDeleteFramebuffers(1, &FBO_);
         glDeleteTextures(1, &screen_texture_id_);
         glDeleteRenderbuffers(1, &d24s8_RBO_);
+        if (is_msaa_) {
+            glDeleteFramebuffers(1, &intermediate_FBO_);
+            glDeleteTextures(1, &msaa_texture_id_);
+        }
     }
 
     uint32_t Framebuffer::get_fbo() const

@@ -11,6 +11,11 @@ namespace glcpp
         set_quad_VAO();
         init_texture();
     }
+    Image::~Image() {
+        glDeleteVertexArrays(1, &quad_VAO_);
+        glDeleteBuffers(1, &quad_VBO_);
+        glDeleteTextures(1, &texture_);
+    }
     void Image::draw(Shader &shader)
     {
         shader.use();

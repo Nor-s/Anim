@@ -15,9 +15,9 @@ namespace fs = std::filesystem;
 
 MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedResources> resources)
 {
-    #ifndef NDEBUG
-    std::cout<<"MainScene()\n";
-    #endif
+#ifndef NDEBUG
+    std::cout << "MainScene()\n";
+#endif
     if (resources == nullptr)
     {
         resources_ = std::make_shared<SharedResources>();
@@ -28,6 +28,8 @@ MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<SharedReso
     }
     init_shader();
     init_framebuffer(width, height);
+    grid_framebuffer_.reset(new glcpp::Image{100, 100, GL_RGBA});
+
     init_camera();
     selected_entity_ = std::make_shared<glcpp::Entity>();
 }
@@ -47,13 +49,13 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
     set_size(width, height);
 
     framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB, true});
-    if(framebuffer_->error()) {
-        #ifndef NDEBUG
-        std::cout<<"framebuffer error\n";
-        #endif
+    if (framebuffer_->error())
+    {
+#ifndef NDEBUG
+        std::cout << "framebuffer error\n";
+#endif
         framebuffer_.reset(new glcpp::Framebuffer{width, height, GL_RGB, false});
     }
-    grid_framebuffer_.reset(new glcpp::Image{width, height, GL_RGBA});
 }
 
 void MainScene::init_pixelate_framebuffer(uint32_t width, uint32_t height)
@@ -103,7 +105,7 @@ void MainScene::draw_to_framebuffer()
     {
         shader = resources_->get_mutable_shader("animation").get();
     }
-    glEnable(GL_CULL_FACE);
+    // glEnable(GL_CULL_FACE);
     glEnable(GL_LINE_SMOOTH);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);

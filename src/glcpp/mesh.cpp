@@ -9,6 +9,9 @@ namespace glcpp
     {
         setup_mesh();
     }
+    // TODO: delete buffer
+    Mesh::~Mesh() = default;
+
     void Mesh::draw(Shader &shader)
     {
         // bind appropriate textures

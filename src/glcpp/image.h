@@ -12,7 +12,7 @@ namespace glcpp
     {
     public:
         Image(uint32_t width, uint32_t height, GLenum format = GL_RGB);
-        ~Image() = default;
+        ~Image();
         void draw(Shader &shader);
 
     private:

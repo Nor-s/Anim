@@ -64,11 +64,13 @@ void main()
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 norm = normalize(Normal);
 
+    // diffuse shading
     vec3 result = vec3(0.0);
 
     result += CalcDirLight(dir_lights[0], norm, viewDir, mat_diffuse);
     FragColor = vec4(result, 1.0);
 
-    // for bone id debug
+    // for  debug
     // FragColor = vec4(tmp/52.0, 0.0, 0.0, 1.0);
+    // FragColor = vec4(vec3(diff), 1.0);
 }

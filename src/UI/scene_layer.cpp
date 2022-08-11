@@ -41,6 +41,9 @@ namespace ui
         float height = (float)scene->get_mutable_framebuffer()->get_height();
         // draw scene window
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
+        // ImGuiWindowClass window_class;
+        // window_class.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
+        // ImGui::SetNextWindowClass(&window_class);
         if (ImGui::Begin(title, 0, sceneWindowFlags | ImGuiWindowFlags_NoScrollbar))
         {
             scene_pos_ = ImGui::GetWindowPos();
@@ -123,7 +126,7 @@ namespace ui
     {
         ImGuiIO &io = ImGui::GetIO();
         ImVec2 mode_window_size = {512.0f, 65.0f};
-        ImVec2 mode_window_pos = {scene_window_right_ - width_ * 0.5f - mode_window_size.x * 0.5f, scene_window_top_ + height_ - 50.0f};
+        ImVec2 mode_window_pos = {scene_window_right_ - width_ * 0.5f - mode_window_size.x * 0.5f, scene_window_top_ + height_ - 70.0f};
         if (height_ - mode_window_size.y < 5.0f || width_ - mode_window_size.x < 5.0f)
         {
             mode_window_pos = {-1000.0f, -1000.0f};

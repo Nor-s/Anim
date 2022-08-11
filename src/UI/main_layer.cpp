@@ -81,14 +81,12 @@ namespace ui
         ImGui::NewFrame();
         ImGuizmo::SetOrthographic(false); // is perspective
         ImGuizmo::BeginFrame();
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {350.0f, 40.0f});
 
         context_ = UiContext{};
     }
 
     void MainLayer::end()
     {
-        ImGui::PopStyleVar();
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

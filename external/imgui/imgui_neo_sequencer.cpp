@@ -144,8 +144,10 @@ namespace ImGui
 		}
 		context.FinalCurrentFrame = *frame;
 
-		if (!ItemAdd(pointerRect, 0))
-			return;
+		// if (!ItemAdd(pointerRect, 0))
+		// {
+		// 	return;
+		// }
 
 		context.CurrentFrameColor = GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_FramePointer);
 
@@ -646,6 +648,7 @@ namespace ImGui
 			groupBBMin,
 			groupBBMin + labelSize};
 		const ImGuiID arrowID = window->GetID(generateID());
+
 		const auto addArrowRes = ItemAdd(arrowBB, arrowID);
 		if (addArrowRes)
 		{

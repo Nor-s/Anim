@@ -96,7 +96,7 @@ namespace ImGui
 
         if (isGroup)
         {
-            RenderArrow(drawList, c, IM_COL32_WHITE, isOpen ? ImGuiDir_Down : ImGuiDir_Right);
+            RenderArrow(drawList, c, IM_COL32_BLACK, isOpen ? ImGuiDir_Down : ImGuiDir_Right);
             c.x += size.y + imStyle.ItemSpacing.x;
         }
 

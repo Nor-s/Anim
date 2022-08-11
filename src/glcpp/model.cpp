@@ -27,41 +27,13 @@ namespace glcpp
         root_node_.reset();
     }
 
-    void Model::load_model(const char *path)
-    {
-        Assimp::Importer import;
-        unsigned int assimp_read_flag = aiProcess_Triangulate |
-                                        aiProcess_GenUVCoords |
-                                        aiProcess_OptimizeMeshes |
-                                        aiProcess_ValidateDataStructure |
-                                        aiProcess_GenNormals |
-                                        aiProcess_CalcTangentSpace;
-        assimp_read_flag |= aiProcess_LimitBoneWeights;
-        assimp_read_flag |= aiProcess_JoinIdenticalVertices;
-
-        import.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
-        const aiScene *scene = import.ReadFile(path, assimp_read_flag);
-
-        // aiProcess_MakeLeftHanded;
-        if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
-        {
-            root_node_ = nullptr;
-
-#ifndef NDEBUG
-            std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
-#endif
-            return;
-        }
-        load_model(path, scene);
-    }
-
     void Model::load_model(const char *path, const aiScene *scene)
     {
         directory_ = std::filesystem::u8path(path);
         name_ = directory_.filename().string();
         process_node(root_node_, scene->mRootNode, scene);
         textures_loaded_.clear();
-        process_armature(root_node_, armature_, nullptr);
+        process_armature(root_node_, armature_, nullptr, 0);
         printf("END_loadmodel\n");
     }
 
@@ -386,7 +358,6 @@ namespace glcpp
 }
 namespace glcpp
 {
-    glm::mat4 tmp_mat = glm::mat4(1.0);
     void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform)
     {
         shader.use();
@@ -394,24 +365,22 @@ namespace glcpp
         shader.set_mat4("projection", projection);
         shader.set_mat4("view", view);
         shader.set_mat4("model", transform);
-        tmp_mat = transform;
         // draw(shader);
         shader.set_mat4("model", glm::translate(transform, glm::vec3(200.0f, 0.0f, 000.0f)));
         draw(shader);
-        draw_armature(*armature_, shader, view, projection, glm::mat4(1.0));
+        draw_armature(*armature_, shader, view, projection, transform, 1.0f);
     }
-    void Model::draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform)
+
+    void Model::draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &world, float depth)
     {
-        glm::mat4 world = transform * armature.initial_transformation;
-        glm::mat4 tmp = glm::scale(world, glm::vec3(armature.get_scale()));
-        shader.set_mat4("armature", tmp);
-        armature.armature->draw(shader, view, projection, tmp_mat);
+        glm::mat4 final_mat = glm::mat4(1.0); // parent_transform * armature.initial_transformation;
+        armature.armature->draw(shader, view, projection, world, depth);
 
         for (int i = 0; i < armature.childrens.size(); i++)
         {
             if (armature.childrens[i])
             {
-                draw_armature(*(armature.childrens[i]), shader, view, projection, world);
+                draw_armature(*(armature.childrens[i]), shader, view, projection, world, depth * 0.8);
             }
         }
     }
@@ -468,7 +437,7 @@ namespace glcpp
 namespace glcpp
 {
     // process only one armature
-    void Model::process_armature(const std::shared_ptr<ModelNode> &model_node, std::shared_ptr<ArmatureNode> &armature, ArmatureNode *parent_armature)
+    void Model::process_armature(const std::shared_ptr<ModelNode> &model_node, std::shared_ptr<ArmatureNode> &armature, ArmatureNode *parent_armature, int child_num)
     {
         unsigned int child_size = model_node->childrens.size();
         auto bone = bone_info_map_.find(model_node->name);
@@ -477,24 +446,28 @@ namespace glcpp
         {
             return;
         }
+        auto transform = model_node->initial_transformation;
+        glm::vec4 relateive_pos = transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        if (parent_armature)
+        {
+            parent_armature->armature->set_scale(child_num, glm::distance(relateive_pos, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+            parent_armature->armature->set_rotation_with_target(child_num, glm::vec3(relateive_pos.x, relateive_pos.y, relateive_pos.z));
+        }
         if (bone != bone_info_map_.end())
         {
-            printf("begin-----%s (%d)\n", bone->first.c_str(), bone->second.id);
-            armature.reset(new ArmatureNode(model_node->initial_transformation, model_node->name, bone->second.id));
+            armature.reset(new ArmatureNode(glm::inverse(bone->second.get_offset()), model_node->name, bone->second.id));
             if (parent_armature)
             {
-                glm::vec4 world = armature->initial_transformation * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-                parent_armature->set_scale(glm::distance(world, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
-                armature->set_scale(parent_armature->get_scale());
+                armature->armature->set_scale(0, parent_armature->armature->get_scale());
+                armature->armature->set_rotation(0, parent_armature->armature->get_quat());
             }
-            printf("end-----%s\n", bone->first.c_str());
         }
         for (int i = 0; i < child_size; i++)
         {
             if (armature)
             {
                 std::shared_ptr<ArmatureNode> arm = nullptr;
-                process_armature(model_node->childrens[i], arm, armature.get());
+                process_armature(model_node->childrens[i], arm, armature.get(), i);
                 if (arm && armature)
                 {
                     armature->childrens.push_back(arm);
@@ -502,7 +475,7 @@ namespace glcpp
             }
             else
             {
-                process_armature(model_node->childrens[i], armature, parent_armature);
+                process_armature(model_node->childrens[i], armature, parent_armature, i);
             }
         }
     }

@@ -49,6 +49,8 @@ namespace glcpp
         {
             Assimp::Importer importer;
             importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
+            importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 128);
+            importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 100.0f);
             const aiScene *scene = importer.ReadFile(path_.c_str(), assimp_flag_);
             sp_model = import_model(scene);
             sp_animations = import_animation(scene);
@@ -92,10 +94,10 @@ namespace glcpp
                        aiProcess_SortByPType |
                        aiProcess_EmbedTextures |
                        aiProcess_ValidateDataStructure |
+                       aiProcess_GlobalScale |
                        aiProcess_GenNormals |
                        aiProcess_CalcTangentSpace |
-                       aiProcess_LimitBoneWeights |
-                       aiProcess_PopulateArmatureData;
+                       aiProcess_LimitBoneWeights;
     }
     std::shared_ptr<glcpp::Model> Importer::import_model(const aiScene *scene)
     {

@@ -58,28 +58,19 @@ namespace glcpp
     };
     struct ArmatureNode
     {
-        glm::mat4 initial_transformation;
         std::string name;
         std::vector<std::shared_ptr<ArmatureNode>> childrens;
         std::shared_ptr<Armature> armature = nullptr;
         ArmatureNode(const glm::mat4 &initial_transform, const std::string &node_name, int id)
-            : initial_transformation(initial_transform), name(node_name)
+            : name(node_name)
         {
             armature.reset(new Armature(id));
-            armature->get_mutable_transform().set_transform(initial_transformation);
+            armature->get_mutable_transform().set_transform(initial_transform);
         }
         ~ArmatureNode()
         {
             childrens.clear();
             armature = nullptr;
-        }
-        void set_scale(float scale)
-        {
-            armature->set_scale(scale);
-        }
-        float get_scale()
-        {
-            return armature->get_scale();
         }
     };
 
@@ -94,7 +85,7 @@ namespace glcpp
 
         void draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform);
         void draw(Shader &shader);
-        void draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform);
+        void draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &world, float depth);
 
         const std::map<std::string, BoneInfo> &get_bone_info_map() const;
         const BoneInfo *get_pointer_bone_info(const std::string &bone_name) const;
@@ -109,7 +100,6 @@ namespace glcpp
         const std::string &get_name() const;
 
     private:
-        void load_model(const char *path);
         void load_model(const char *path, const aiScene *scene);
         /**
          * @brief 루트노드를 처음에 입력받아, 자식노드들을 순회하면서 메쉬들을 찾음
@@ -135,7 +125,7 @@ namespace glcpp
          */
         void process_bone(aiMesh *mesh, const aiScene *scene, std::vector<Vertex> &vertices);
 
-        void process_armature(const std::shared_ptr<ModelNode> &model_node, std::shared_ptr<ArmatureNode> &armature, ArmatureNode *parent_armature);
+        void process_armature(const std::shared_ptr<ModelNode> &model_node, std::shared_ptr<ArmatureNode> &armature, ArmatureNode *parent_armature, int child_num);
 
         std::vector<Texture> load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                     std::string typeName);

@@ -1,7 +1,6 @@
 #include "text_edit_layer.h"
 
 #include "imgui/imgui.h"
-#include <nfd.h>
 #include <filesystem>
 #include <fstream>
 
@@ -105,26 +104,26 @@ namespace ui
                     {
                         *p_open = false;
                     }
-                    if (ImGui::MenuItem("Open"))
-                    {
-                        nfdchar_t *outPath;
-                        nfdfilteritem_t filterItem[1] = {{"file", "glsl,json"}};
-                        nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
+                    // if (ImGui::MenuItem("Open"))
+                    // {
+                    //     nfdchar_t *outPath;
+                    //     nfdfilteritem_t filterItem[1] = {{"file", "glsl,json"}};
+                    //     nfdresult_t result = NFD_OpenDialog(&outPath, filterItem, 1, NULL);
 
-                        if (result == NFD_OKAY)
-                        {
-                            open(outPath);
-                            NFD_FreePath(outPath);
-                        }
-                        else if (result == NFD_CANCEL)
-                        {
-                        }
-                        else
-                        {
-                        }
+                    //     if (result == NFD_OKAY)
+                    //     {
+                    //         open(outPath);
+                    //         NFD_FreePath(outPath);
+                    //     }
+                    //     else if (result == NFD_CANCEL)
+                    //     {
+                    //     }
+                    //     else
+                    //     {
+                    //     }
 
-                        NFD_Quit();
-                    }
+                    //     NFD_Quit();
+                    // }
                     ImGui::EndMenu();
                 }
                 if (ImGui::BeginMenu("Edit"))

@@ -63,7 +63,7 @@ int main(int argc, char **argv)
     auto lib_path = python_path / "Lib";
     auto dll_path = python_path / "DLLs";
     auto site_path = lib_path / "site-packages";
-    auto app_path = exe_path / "app";
+    auto app_path = exe_path / "py_module";
 
     const std::wstring pythonPath = lib_path.wstring() + L";" +
                                     dll_path.wstring() + L";" +
@@ -97,14 +97,14 @@ int main(int argc, char **argv)
         std::cout << "============Impossssssssodule..." << std::endl;
 
         std::cout << "1. Initializing class..." << std::endl;
-        const auto example = py::module::import("app.example");
+        const auto example = py::module::import("py_module.example");
         std::cout << "2 Initializing class..." << std::endl;
         const auto myClass = example.attr("MediapipeManager");
         auto instance = myClass();
         std::cout << "3 Initializing class..." << std::endl;
         const auto pose = instance.attr("get_pose")();
         std::cout << "4 Initializing class..." << std::endl;
-        const auto exam = py::module::import("app.mptest");
+        const auto exam = py::module::import("py_module.mptest");
         std::cout << "5 Initializing class..." << std::endl;
         exam.attr("execc")();
         std::cout << "6 Initializing class..." << std::endl;

@@ -38,16 +38,26 @@ endif()
 
 
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR}/bin)
-# if (APPLE)
+file(COPY py_module DESTINATION ${CMAKE_BINARY_DIR}/bin)
+file(COPY imgui.ini DESTINATION ${CMAKE_BINARY_DIR}/bin)
+message("==========================================================")
+if (APPLE)
 #   execute_process(COMMAND sh "install_mp2mm.sh"
 #     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-# else()
-#   execute_process(COMMAND cmd /C install_mp2mm.bat
-#     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-# endif()
-# file(COPY ${CMAKE_CURRENT_LIST_DIR}/dist/mp2mm DESTINATION ${CMAKE_BINARY_DIR}/bin)
+else()
+  message("Build python")
+  execute_process(COMMAND cmd /C ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_python.bat
+    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+endif()
+if (NOT EXISTS ${CMAKE_BINARY_DIR}/bin/python/python.exe)
+  file(COPY ${CMAKE_CURRENT_LIST_DIR}/python DESTINATION ${CMAKE_BINARY_DIR}/bin)
+  file(COPY ${CMAKE_CURRENT_LIST_DIR}/python/python310.dll DESTINATION ${CMAKE_BINARY_DIR}/bin)
+  file(COPY ${CMAKE_CURRENT_LIST_DIR}/python/python3.dll DESTINATION ${CMAKE_BINARY_DIR}/bin)
+endif()
 
-message(STATUS "Compiler")
+message("==========================================================")
+
+message("Compiler")
 message(STATUS " - ID       \t: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS " - Version  \t: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS " - Path     \t: ${CMAKE_CXX_COMPILER}")
@@ -92,19 +102,32 @@ else()
   add_subdirectory(external/glfw/)
 endif()
 
-message("NFD")
-add_subdirectory(external/nfd)
 message("jsoncpp")
 add_subdirectory(external/jsoncpp)
 message("GLM")
 add_subdirectory(external/glm/)
 
+message("Python")
+set(Python3_ROOT_DIR ${CMAKE_BINARY_DIR}/bin/python/)
+find_package(Python3 3.10 EXACT COMPONENTS Interpreter Development REQUIRED)
+GET_TARGET_PROPERTY(\_lib Python3::Python IMPORTED_IMPLIB)
+MESSAGE(STATUS "Python3::Python ${\_lib}")
+GET_TARGET_PROPERTY(\_lib Python3::Python IMPORTED_IMPLIB_DEBUG)
+MESSAGE(STATUS "Python3::Python (Debug) ${\_lib}")
+GET_TARGET_PROPERTY(\_lib Python3::Python IMPORTED_IMPLIB_RELEASE)
+MESSAGE(STATUS "Python3::Python (Release) ${\_lib}")
+
+message("pybind11")
+add_subdirectory(external/pybind11)
+message(STATUS "Found pybind11 v${pybind11_VERSION}: ${pybind11_INCLUDE_DIRS} ${pybind11_DEFINITIONS} ${pybind11_LIBRARIES}")
+message("==========================================================")
 
 add_subdirectory(src)
 add_dependencies (imgui glfw)
 add_dependencies(STB_IMAGE imgui)
 
 # python
-add_subdirectory(extern)
+
+
 
 

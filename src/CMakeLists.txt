@@ -27,7 +27,7 @@ set(GLCPP_SRC
 
 add_library(glcpp STATIC ${GLCPP_SRC})
 
-set(LIBs STB_IMAGE imgui glad nfd jsoncpp_static)
+set(LIBs STB_IMAGE imgui glad  jsoncpp_static)
 
 
 if(MSVC)
@@ -51,9 +51,15 @@ else()
     target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm::glm -ldl -lpthread)
 endif()
 
+message("==========================================================")
+# python
+add_executable(py cpython/main.cpp)
+target_link_libraries(py PRIVATE Python3::Python pybind11::embed)
 
 
-add_executable(pixel3D 
+message("==========================================================")
+
+add_executable(Anim 
 ./main.cpp 
 ./pixelate_framebuffer.cpp 
  
@@ -74,22 +80,17 @@ add_executable(pixel3D
 )
 
 if(MSVC)
-  message("------------------MSVC")
-  target_compile_options(pixel3D PUBLIC   "/utf-8")#  target_link_options(pixel3D PUBLIC "/INCREMENTAL")
+  target_compile_options(Anim PUBLIC   "/utf-8")#  target_link_options(Anim PUBLIC "/INCREMENTAL")
   if (CMAKE_BUILD_TYPE  MATCHES Release)
-     message("--------------release")
-      target_link_options(pixel3D PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+      target_link_options(Anim PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
   endif()
-  target_link_libraries(pixel3D  glcpp)
+  target_link_libraries(Anim  glcpp)
 elseif(WIN32)
-    message("------------------GCC or...")
-    target_compile_options(pixel3D  PRIVATE -Wall -Werror -std=c++17 -static)
-    target_link_libraries(pixel3D  glcpp)
-    target_include_directories(pixel3D  PUBLIC ./)
+    target_compile_options(Anim  PRIVATE -Wall -Werror -std=c++17 -static)
+    target_link_libraries(Anim  glcpp)
+    target_include_directories(Anim  PUBLIC ./)
 else()
-   message("------------------APPLE")
-    target_link_libraries(pixel3D  glcpp)
+    target_link_libraries(Anim  glcpp)
 endif()
 
-
-
+message("==========================================================")

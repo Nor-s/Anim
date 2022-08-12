@@ -14,10 +14,10 @@
 	path = external/ImFileDialog
 	url = https://github.com/dfranx/ImFileDialog.git
 [submodule "extern/pybind11"]
-	path = extern/pybind11
+	path = external/pybind11
 	url = https://github.com/pybind/pybind11.git
 	branch = stable
 [submodule "extern/cpython"]
 	path = external/cpython
 	url = https://github.com/python/cpython.git
-	branch = 3.9
+	branch = 3.10

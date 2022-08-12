@@ -13,3 +13,9 @@ dist/
 resources/models/
 
 *.fbx
+
+mp2mm/
+
+out/
+
+python/

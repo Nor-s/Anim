@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.21)
-
+# cmake_minimum_required(VERSION 3.12...3.15)
 message("Using CMake version ${CMAKE_VERSION}")
 if(APPLE)
   find_program(CCACHE_PROGRAM ccache)
@@ -37,22 +37,15 @@ if(APPLE)
 endif()
 
 
-
-# set(CMAKE_BUILD_TYPE Debug)
-set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
-
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR}/bin)
-if (APPLE)
-  execute_process(COMMAND sh "install_mp2mm.sh"
-    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-else()
-  execute_process(COMMAND cmd /C install_mp2mm.bat
-    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-endif()
-file(COPY ${CMAKE_CURRENT_LIST_DIR}/dist/mp2mm DESTINATION ${CMAKE_BINARY_DIR}/bin)
+# if (APPLE)
+#   execute_process(COMMAND sh "install_mp2mm.sh"
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+# else()
+#   execute_process(COMMAND cmd /C install_mp2mm.bat
+#     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
+# endif()
+# file(COPY ${CMAKE_CURRENT_LIST_DIR}/dist/mp2mm DESTINATION ${CMAKE_BINARY_DIR}/bin)
 
 message(STATUS "Compiler")
 message(STATUS " - ID       \t: ${CMAKE_CXX_COMPILER_ID}")
@@ -69,9 +62,6 @@ if(WIN32)
   option(ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR OFF)
 endif()
 set(ASSIMP_BUILD_ZLIB ON)
-#option(ASSIMP_INSTALL ON)
-# option(ASSIMP_BUILD_ASSIMP_VIEW OFF)
-# option(ASSIMP_BUILD_ALL_EXPORTERS_BY_DEFAULT ON)
 
 message("GLAD")
 add_subdirectory(external/glad/)
@@ -79,6 +69,10 @@ message("STB")
 add_library(STB_IMAGE "external/stb/stb_image.cpp")
 
 
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 if(WIN32)
   message("GLFW")
   add_subdirectory(external/glfw/)
@@ -109,4 +103,8 @@ add_subdirectory(external/glm/)
 add_subdirectory(src)
 add_dependencies (imgui glfw)
 add_dependencies(STB_IMAGE imgui)
+
+# python
+add_subdirectory(extern)
+
 

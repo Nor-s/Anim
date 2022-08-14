@@ -56,6 +56,56 @@ message("==========================================================")
 add_executable(py cpython/main.cpp)
 target_link_libraries(py PRIVATE Python3::Python pybind11::embed)
 
+# new
+set(test_src
+    graphics/mesh.cpp
+    graphics/opengl/gl_shader.cpp
+    graphics/opengl/gl_mesh.cpp
+
+    graphics/shader.h
+    graphics/mesh.h
+    graphics/opengl/gl_shader.h
+    graphics/opengl/gl_mesh.h
+
+    util/log.h
+    util/utility.cpp
+    util/utility.h
+
+    entity/entity.cpp
+    entity/entity.h
+    entity/components/component.h
+    entity/components/transform_component.cpp
+    entity/components/transform_component.h
+
+    entity/components/renderable/mesh_component.cpp
+    entity/components/renderable/mesh_component.h
+
+    resources/importer.cpp
+    resources/importer.h
+    resources/model.cpp
+    resources/model.h
+    resources/shared_resources.cpp
+    resources/shared_resources.h
+
+    animation/animator.cpp
+    animation/animation.cpp
+    animation/json_animation.cpp
+    animation/assimp_animation.cpp
+    animation/bone.cpp
+
+    animation/animator.h
+    animation/animation.h
+    animation/assimp_animation.h
+    animation/json_animation.h
+    animation/bone.h
+)
+add_library(test STATIC ${test_src})
+
+
+target_compile_options(test PUBLIC  "/utf-8")
+target_link_libraries(test PUBLIC ${LIBs} glm assimp::assimp)
+target_include_directories(test PUBLIC ./ ./entity/ ./entity/components/ ./entity/components/renderable ./graphics ./graphics/opengl  ../ ${CMAKE_HOME_DIRECTORY}/external)
+
 
 message("==========================================================")
 

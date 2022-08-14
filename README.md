@@ -21,11 +21,14 @@ Animating tool
 ## **TODO**
 
 -   ~~Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)~~
-    -   Change: NFD to IFD
--   model picking, bone picking
+    -   ~~Change: NFD to IFD~~
 -   ~~visualize skeleton~~
--   mp2mm: increased accuracy
--   refactor export
+-   model picking, bone picking
+-   Refactor export
+-   Add IK mode
+-   Add compute shader for animation
+-   Add retargeting
+-   Add import multi model
 
 ## **build**
 
@@ -39,19 +42,6 @@ Animating tool
  cmake .. -G Ninja
  Ninja
 ```
-
-### mp2mm python module (mp_gui_build.yaml)
-
-```
-conda env create -f mp_gui_build.yaml
-```
-
--   pyqt5
--   mediapipe
--   pafy
--   pyglm
--   youtube-dl==2020.12.2
--   pyinstaller
 
 ## **External**
 
@@ -72,13 +62,16 @@ conda env create -f mp_gui_build.yaml
 
 -   stb: https://github.com/nothings/stb
 
--   nfd(extended): https://github.com/btzy/nativefiledialog-extended
-
 -   jsoncpp: https://github.com/open-source-parsers/jsoncpp
 
 -   font(icon)
+
     -   https://github.com/juliettef/IconFontCppHeaders
     -   https://github.com/tanluteam/imgui
+
+-   cpython
+
+-   pybind11
 
 ## **Reference**
 

@@ -11,12 +11,14 @@
 #include <vector>
 #include <filesystem>
 
-#include "shader.h"
-#include "utility.hpp"
-#include "component/animation_component.h"
+#include "../graphics/shader.h"
+#include "../util/utility.h"
+#include "../graphics/opengl/gl_mesh.h"
+#include "../util/log.h"
 
-namespace glcpp
+namespace anim
 {
+    using namespace gl;
     Model::Model(const char *path, const aiScene *scene)
     {
         load_model(path, scene);
@@ -33,8 +35,6 @@ namespace glcpp
         name_ = directory_.filename().string();
         process_node(root_node_, scene->mRootNode, scene);
         textures_loaded_.clear();
-        process_armature(root_node_, armature_, nullptr, 0);
-        printf("END_loadmodel\n");
     }
 
     void Model::process_node(std::shared_ptr<ModelNode> &model_node, aiNode *ai_node, const aiScene *scene)
@@ -50,17 +50,12 @@ namespace glcpp
         model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
                                        model_name,
                                        ai_node->mNumChildren));
-
-        std::cout << ai_node->mName.C_Str() << " = " << ai_node->mNumMeshes << std::endl;
-
-        // process all the node's meshes (if any)
         for (unsigned int i = 0; i < ai_node->mNumMeshes; i++)
         {
             aiMesh *mesh = scene->mMeshes[ai_node->mMeshes[i]];
-            meshes_.emplace_back(process_mesh(mesh, scene));
-            break;
+            model_node->meshes.emplace_back(process_mesh(mesh, scene));
         }
-        // then do the same for each of its children
+
         for (unsigned int i = 0; i < ai_node->mNumChildren; i++)
         {
             process_node(model_node->childrens[i], ai_node->mChildren[i], scene);
@@ -70,7 +65,7 @@ namespace glcpp
     void Model::get_ai_node_for_anim(aiNode *ai_node, ModelNode *model_node, aiNode *parent_ai_node)
     {
         ai_node->mName = aiString(model_node->name.c_str());
-        ai_node->mTransformation = GlmMatToAiMat(model_node->initial_transformation);
+        ai_node->mTransformation = GlmMatToAiMat(model_node->relative_transformation);
         ai_node->mParent = parent_ai_node;
         ai_node->mNumChildren = model_node->childrens.size();
         ai_node->mChildren = new aiNode *[ai_node->mNumChildren];
@@ -87,15 +82,14 @@ namespace glcpp
         get_ai_node_for_anim(ai_root_node, root_node_.get(), NULL);
     }
 
-    Mesh Model::process_mesh(aiMesh *mesh, const aiScene *scene)
+    std::shared_ptr<GLMesh> Model::process_mesh(aiMesh *mesh, const aiScene *scene)
     {
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
         std::vector<Texture> textures;
         MaterialProperties mat_properties;
-#ifndef NDEBUG
-        std::cout << mesh->mName.C_Str() << std::endl;
-#endif
+
+        LOG(mesh->mName.C_Str());
 
         // process vertex
         for (unsigned int i = 0; i < mesh->mNumVertices; i++)
@@ -171,9 +165,7 @@ namespace glcpp
         std::vector<Texture> heightMaps = load_material_textures(material, scene, aiTextureType_AMBIENT, "texture_height");
         textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
 
-        std::cout << vertices.size() << " " << indices.size() << " " << textures.size() << std::endl;
-
-        return Mesh(vertices, indices, textures, mat_properties);
+        return std::make_shared<GLMesh>(vertices, indices, textures, mat_properties);
     }
 
     void Model::process_bone(aiMesh *mesh, const aiScene *scene, std::vector<Vertex> &vertices)
@@ -361,41 +353,8 @@ namespace glcpp
         stbi_image_free(image_data);
     }
 }
-namespace glcpp
+namespace anim
 {
-    void Model::draw(Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &transform)
-    {
-        shader.use();
-        shader.set_mat4("armature", glm::mat4(1.0f));
-        shader.set_mat4("projection", projection);
-        shader.set_mat4("view", view);
-        shader.set_mat4("model", transform);
-        // draw(shader);
-        shader.set_mat4("model", glm::translate(transform, glm::vec3(200.0f, 0.0f, 000.0f)));
-        draw(shader);
-        // draw_armature(*armature_, shader, view, projection, transform, 1.0f);
-    }
-
-    void Model::draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &world, float depth)
-    {
-        glm::mat4 final_mat = glm::mat4(1.0); // parent_transform * armature.initial_transformation;
-        armature.armature->draw(shader, view, projection, world, depth);
-
-        for (int i = 0; i < armature.childrens.size(); i++)
-        {
-            if (armature.childrens[i])
-            {
-                draw_armature(*(armature.childrens[i]), shader, view, projection, world, depth * 0.8);
-            }
-        }
-    }
-
-    void Model::draw(Shader &shader)
-    {
-        for (unsigned int i = 0; i < meshes_.size(); i++)
-            meshes_[i].draw(shader);
-    }
-
     std::map<std::string, BoneInfo> &Model::get_mutable_bone_info_map()
     {
         return bone_info_map_;
@@ -429,60 +388,8 @@ namespace glcpp
     {
         return root_node_;
     }
-    ArmatureNode *Model::get_mutable_armature()
-    {
-        return armature_.get();
-    }
     const std::string &Model::get_name() const
     {
         return name_;
     }
-}
-
-namespace glcpp
-{
-    // process only one armature
-    void Model::process_armature(const std::shared_ptr<ModelNode> &model_node, std::shared_ptr<ArmatureNode> &armature, ArmatureNode *parent_armature, int child_num)
-    {
-        unsigned int child_size = model_node->childrens.size();
-        auto bone = bone_info_map_.find(model_node->name);
-
-        if (parent_armature && bone == bone_info_map_.end())
-        {
-            return;
-        }
-        auto transform = model_node->initial_transformation;
-        glm::vec4 relateive_pos = transform * glm::vec4(0.0f, 0.0f, 0.0f, 1.0f);
-        if (parent_armature)
-        {
-            parent_armature->armature->set_scale(child_num, glm::distance(relateive_pos, glm::vec4(0.0f, 0.0f, 0.0f, 1.0f)));
-            parent_armature->armature->set_rotation_with_target(child_num, glm::vec3(relateive_pos.x, relateive_pos.y, relateive_pos.z));
-        }
-        if (bone != bone_info_map_.end())
-        {
-            armature.reset(new ArmatureNode(glm::inverse(bone->second.get_offset()), model_node->name, bone->second.id));
-            if (parent_armature)
-            {
-                armature->armature->set_scale(0, parent_armature->armature->get_scale());
-                armature->armature->set_rotation(0, parent_armature->armature->get_quat());
-            }
-        }
-        for (int i = 0; i < child_size; i++)
-        {
-            if (armature)
-            {
-                std::shared_ptr<ArmatureNode> arm = nullptr;
-                process_armature(model_node->childrens[i], arm, armature.get(), i);
-                if (arm && armature)
-                {
-                    armature->childrens.push_back(arm);
-                }
-            }
-            else
-            {
-                process_armature(model_node->childrens[i], armature, parent_armature, i);
-            }
-        }
-    }
-
 }

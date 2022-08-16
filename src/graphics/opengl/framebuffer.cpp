@@ -1,11 +1,8 @@
 #include "framebuffer.h"
-#define GL_TEXTURE_MAX_ANISOTROPY_EXT 0x84FE
-#define GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT 0x84FF
-
 #include <iostream>
-#include "shader.h"
+#include "../shader.h"
 
-namespace glcpp
+namespace anim
 {
 
     Framebuffer::Framebuffer(uint32_t width, uint32_t height, GLenum format, bool is_msaa)
@@ -24,13 +21,13 @@ namespace glcpp
 
     Framebuffer::~Framebuffer()
     {
-
         glDeleteVertexArrays(1, &quad_VAO_);
         glDeleteBuffers(1, &quad_VBO_);
         glDeleteFramebuffers(1, &FBO_);
         glDeleteTextures(1, &screen_texture_id_);
         glDeleteRenderbuffers(1, &d24s8_RBO_);
-        if (is_msaa_) {
+        if (is_msaa_)
+        {
             glDeleteFramebuffers(1, &intermediate_FBO_);
             glDeleteTextures(1, &msaa_texture_id_);
         }
@@ -64,7 +61,7 @@ namespace glcpp
     void Framebuffer::draw(Shader &shader)
     {
         shader.use();
-        glUniform1i(glGetUniformLocation(shader.id_, "screenTexture"), 0);
+        glUniform1i(glGetUniformLocation(shader.get_id(), "screenTexture"), 0);
         shader.set_vec2("iResolution", glm::vec2(width_, height_));
         glBindVertexArray(quad_VAO_);
         glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
@@ -133,7 +130,8 @@ namespace glcpp
         glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, d24s8_RBO_);
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
             std::cout << "ERROR::FRAMEBUFFER::MSAA Framebuffer is not complete!" << std::endl;
             is_error_ = true;
         }
@@ -150,7 +148,8 @@ namespace glcpp
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0); // we only need a color buffer
 
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
             std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
             is_error_ = true;
         }
@@ -208,7 +207,8 @@ namespace glcpp
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
-    bool Framebuffer::error() {
+    bool Framebuffer::error()
+    {
         return is_error_;
     }
 }

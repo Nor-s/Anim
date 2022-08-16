@@ -16,7 +16,7 @@ namespace anim
         // activate the shader
         virtual void use() = 0;
         // utility uniform functions
-        virtual const unsigned int get_id() const;
+        virtual const unsigned int get_id() const = 0;
         virtual void set_bool(const std::string &name, bool value) const = 0;
         virtual void set_int(const std::string &name, int value) const = 0;
         virtual void set_float(const std::string &name, float value) const = 0;

@@ -90,10 +90,15 @@ namespace anim
 
     public:
         // Mesh::Mesh() = default;
-        Mesh::Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices, const std::vector<Texture> &textures, const MaterialProperties &mat_properties);
+        Mesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices, const std::vector<Texture> &textures, const MaterialProperties &mat_properties);
+        Mesh(const std::vector<Vertex> &vertices);
         // virtual ~Mesh();
         virtual ~Mesh() = default;
         virtual void draw(Shader &shader) = 0;
+        MaterialProperties &get_mutable_mat_properties()
+        {
+            return mat_properties_;
+        }
 
     protected:
         std::vector<Vertex> vertices_;

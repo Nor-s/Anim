@@ -2,11 +2,11 @@
 #include "imgui_helper.h"
 
 #include "scene/scene.hpp"
-#include "glcpp/framebuffer.h"
+#include "graphics/opengl/framebuffer.h"
 #include "glcpp/camera.h"
-#include "glcpp/entity.h"
-#include "glcpp/utility.hpp"
-#include "glcpp/component/transform_component.h"
+#include "entity/entity.h"
+#include <util/utility.h>
+#include "entity/components/transform_component.h"
 
 #include <memory>
 
@@ -90,8 +90,8 @@ namespace ui
 
         if (!is_select_mode_ && selected_entity)
         {
-            auto &transform = selected_entity->get_mutable_transform();
-            glm::mat4 object_matrix = transform.get_mat4();
+            auto &transform = selected_entity->get_world_transformation();
+            glm::mat4 object_matrix = transform;
             float *object_mat_ptr = static_cast<float *>(glm::value_ptr(object_matrix));
 
             ImGuizmo::Manipulate(cameraView,
@@ -103,16 +103,16 @@ namespace ui
                                  useSnap ? &snap[0] : NULL);
             if (ImGuizmo::IsUsing())
             {
-                auto [tt, r, s] = glcpp::DecomposeTransform(glm::make_mat4(object_mat_ptr));
+                auto [o_tt, o_r, o_s] = anim::DecomposeTransform(transform);
+                auto [tt, r, s] = anim::DecomposeTransform(glm::make_mat4(object_mat_ptr));
 
-                glm::vec3 t = glm::abs(transform.get_translation() - tt);
+                glm::vec3 t = glm::abs(o_tt - tt);
                 if (!(t.x > 500.0f || t.y > 500.0f || t.z > 500.0f))
                 {
+                    glm::vec3 o_euler = glm::eulerAngles(o_r);
                     glm::vec3 euler = glm::eulerAngles(r);
 
-                    transform.set_translation(tt)
-                        .set_scale(s)
-                        .set_rotation(euler);
+                    selected_entity->get_mutable_local_transformation().set_translation(tt - o_tt).set_scale(s - o_s).set_rotation(euler - o_euler);
                 }
             }
             if (ImGuizmo::IsOver())

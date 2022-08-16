@@ -25,8 +25,8 @@ namespace anim
         Animation(const char *file_path);
         virtual ~Animation() = default;
         Bone *find_bone(const std::string &name);
-        inline float get_ticks_per_second();
-        inline float get_duration();
+        float get_ticks_per_second();
+        float get_duration();
         const std::string &get_name() const;
         const char *get_path() const;
         const std::map<std::string, std::unique_ptr<Bone>> &get_name_bone_map() const;

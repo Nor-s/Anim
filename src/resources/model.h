@@ -5,8 +5,9 @@
 #include <assimp/scene.h>
 
 #include <filesystem>
-#include <map>
+#include <unordered_map>
 #include <string>
+#include "shared_resources.h"
 
 #include "../entity/components/transform_component.h"
 
@@ -15,12 +16,7 @@
 
 namespace anim
 {
-    class Entity;
-    class Shader;
-    namespace gl
-    {
-        class GLMesh;
-    }
+    class Mesh;
     // can't load "../"
     unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, const aiScene *scene);
     void LoadMemory(const aiTexture *texture, unsigned int *id);
@@ -43,12 +39,13 @@ namespace anim
     };
     struct ModelNode
     {
-        glm::mat4 relative_transformation;
-        std::string name;
+        glm::mat4 relative_transformation{};
+        std::string name{};
+        bool has_bone{false};
         std::vector<std::shared_ptr<ModelNode>> childrens;
-        std::vector<std::shared_ptr<gl::GLMesh>> meshes;
+        std::vector<std::shared_ptr<Mesh>> meshes;
         ModelNode(const glm::mat4 &initial_transform, const std::string &node_name, unsigned int num_children)
-            : relative_transformation(initial_transform), name(node_name)
+            : relative_transformation(initial_transform), name(node_name), has_bone(false)
         {
             childrens.resize(num_children);
         }
@@ -62,17 +59,20 @@ namespace anim
      */
     class Model
     {
+
     public:
+        friend void SharedResources::convert_to_entity(std::shared_ptr<Entity> &, std::shared_ptr<Model> &, const std::shared_ptr<ModelNode> &, Entity *);
+
         Model(const char *path, const aiScene *scene);
         ~Model();
 
         // void draw_armature(ArmatureNode &armature, Shader &shader, const glm::mat4 &view, const glm::mat4 &projection, const glm::mat4 &world, float depth);
 
-        const std::map<std::string, BoneInfo> &get_bone_info_map() const;
+        const std::unordered_map<std::string, BoneInfo> &get_bone_info_map() const;
+        std::unordered_map<std::string, BoneInfo> &get_mutable_bone_info_map();
         const BoneInfo *get_pointer_bone_info(const std::string &bone_name) const;
-        std::map<std::string, BoneInfo> &get_mutable_bone_info_map();
         int &get_mutable_bone_count();
-        const ModelNode *get_root_node() const;
+        const std::shared_ptr<ModelNode> &get_root_node() const;
         // ArmatureNode *get_mutable_armature();
 
         std::shared_ptr<ModelNode> &get_mutable_root_node();
@@ -96,7 +96,7 @@ namespace anim
          * @param scene
          * @return Mesh
          */
-        std::shared_ptr<gl::GLMesh> process_mesh(aiMesh *mesh, const aiScene *scene);
+        std::shared_ptr<Mesh> process_mesh(aiMesh *mesh, const aiScene *scene);
         /**
          * @brief bone_info_map_에 bone 데이터를 넣고, vertex에 영향을 주는 bone과 그의 영향(가중치)을 집어넣음
          *
@@ -111,7 +111,7 @@ namespace anim
         std::vector<Texture> load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                     std::string typeName);
         std::shared_ptr<ModelNode> root_node_;
-        std::map<std::string, BoneInfo> bone_info_map_;
+        std::unordered_map<std::string, BoneInfo> bone_info_map_;
         std::filesystem::path directory_{};
         std::vector<Texture> textures_loaded_;
         std::string name_{};

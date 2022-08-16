@@ -6,8 +6,11 @@ in vec3 Normal;
 in vec3 FragPos;
 
 uniform sampler2D texture_diffuse1;
-uniform vec3 viewPos = vec3(0.0, 0.0, 0.0);
-
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
 struct Material
 {
     vec3 ambient;
@@ -60,7 +63,7 @@ void main()
         mat_diffuse = texture_color.rgb;
     }
 
-
+    vec3 viewPos =  vec3(inverse(view) * vec4(0.0, 0.0, 0.0, 1.0));
     vec3 viewDir = normalize(viewPos - FragPos);
     vec3 norm = normalize(Normal);
 

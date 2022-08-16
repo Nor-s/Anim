@@ -19,7 +19,6 @@ namespace anim
     public:
         Importer();
         ~Importer() = default;
-        std::shared_ptr<Entity> import(SharedResources *shared_resources, const char *path);
         std::pair<std::shared_ptr<Model>, std::vector<std::shared_ptr<Animation>>> read_file(const char *path);
 
     private:

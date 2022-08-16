@@ -20,15 +20,17 @@ Animating tool
 
 ## **TODO**
 
--   ~~Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)~~
-    -   ~~Change: NFD to IFD~~
--   ~~visualize skeleton~~
+-   python script
 -   model picking, bone picking
--   Refactor export
--   Add IK mode
--   Add compute shader for animation
--   Add retargeting
--   Add import multi model
+-   export glft2
+-   IK edit mode
+-   compute shader for animation
+-   retargeting
+-   import multi model
+-   Z ordering
+-   undo, redo
+-   Fix camera movement
+-   edit keyframe
 
 ## **build**
 

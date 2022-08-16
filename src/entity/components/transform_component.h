@@ -1,12 +1,13 @@
 #ifndef ANIM_ENTITY_COMPONENT_TRANSFORM_COMPONENT_H
 #define ANIM_ENTITY_COMPONENT_TRANSFORM_COMPONENT_H
 
+#include "component.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 namespace anim
 {
-    class TransformComponent
+    class TransformComponent : public ComponentBase<TransformComponent>
     {
     public:
         glm::mat4 get_mat4() const;
@@ -24,6 +25,5 @@ namespace anim
         glm::vec3 scale_{1.f, 1.f, 1.f};
         glm::vec3 rotation_{0.0f, 0.0f, 0.0f};
     };
-
 }
 #endif

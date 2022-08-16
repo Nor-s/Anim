@@ -1,11 +1,11 @@
-#ifndef GLCPP_IMAGE_H
-#define GLCPP_IMAGE_H
+#ifndef ANIM_GRAPHICS_OPENGL_IMAGE_H
+#define ANIM_GRAPHICS_OPENGL_IMAGE_H
 
 #include <glad/glad.h>
 #include <glm/glm.hpp>
 #include <string>
 
-namespace glcpp
+namespace anim
 {
     class Shader;
     class Image

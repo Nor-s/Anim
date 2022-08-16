@@ -6,11 +6,12 @@
 #include "UI/main_layer.h"
 #include "scene/scene.hpp"
 #include "scene/main_scene.h"
-#include "scene/shared_resources.h"
-#include "glcpp/model.h"
-#include "glcpp/entity.h"
-#include "glcpp/component/animation_component.h"
+#include "resources/shared_resources.h"
 #include "glcpp/exporter.h"
+#include "entity/entity.h"
+#include "entity/components/component.h"
+#include "entity/components/animation_component.h"
+#include "util/log.h"
 
 namespace fs = std::filesystem;
 
@@ -49,7 +50,6 @@ void App::init_window(uint32_t width, uint32_t height, const std::string &title)
 }
 void App::init_callback()
 {
-    //    window_->set_framebuffer_size_callback(framebuffer_size_callback);
     window_->set_scroll_callback(scroll_callback);
     window_->set_mouse_button_callback(mouse_btn_callback);
     window_->set_cursor_pos_callback(mouse_callback);
@@ -66,7 +66,7 @@ void App::init_ui()
 }
 void App::init_shared_resources()
 {
-    shared_resources_ = std::make_shared<SharedResources>();
+    shared_resources_ = std::make_shared<anim::SharedResources>();
 }
 void App::init_scene(uint32_t width, uint32_t height)
 {
@@ -91,13 +91,13 @@ void App::loop()
 
             this->draw_scene();
 
-            auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+            // auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
 
-            ui_->draw_model_properties(scenes_[current_scene_idx_].get());
+            // ui_->draw_model_properties(scenes_[current_scene_idx_].get());
 
-            ui_->draw_hierarchy_layer(entity);
+            // ui_->draw_hierarchy_layer(entity);
 
-            ui_->draw_timeline(scenes_[current_scene_idx_].get());
+            // ui_->draw_timeline(scenes_[current_scene_idx_].get());
 
             ui_->end();
         }
@@ -110,7 +110,6 @@ void App::update()
     update_window();
     update_time();
     update_resources();
-    process_buttons();
 }
 void App::update_window()
 {
@@ -125,7 +124,7 @@ void App::update_window()
 void App::update_time()
 {
     auto &ui_context = ui_->get_context();
-    auto &time_context = ui_context.timeline_context;
+    // auto &time_context = ui_context.timeline_context;
     float current_time = static_cast<float>(glfwGetTime());
     frames_++;
     if (current_time - start_time_ >= 1.0)
@@ -138,113 +137,24 @@ void App::update_time()
     last_frame_ = current_time;
     for (auto &scene : scenes_)
     {
-        if (ui_context.timeline_context.is_clicked_play_all)
-        {
-            scene->set_delta_time(-delta_frame_);
-        }
-        else
-        {
-            scene->set_delta_time(delta_frame_);
-        }
-    }
-    auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
-    if (entity->has_animation_component())
-    {
-        auto animation_component = entity->get_mutable_pointer_animation_component();
-        animation_component->set_custom_tick_per_second(time_context.tps);
-        animation_component->set_fps(time_context.fps);
-
-        if (time_context.is_clicked_play)
-        {
-            animation_component->play();
-        }
-        if (time_context.is_clicked_stop)
-        {
-            animation_component->stop();
-        }
+        // if (ui_context.timeline_context.is_clicked_play_all)
+        // {
+        //     scene->set_delta_time(-delta_frame_);
+        // }
+        // else
+        // {
+        //     scene->set_delta_time(delta_frame_);
+        // }
     }
 }
 void App::update_resources()
 {
-    auto &shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
-    auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
-    auto &ui_context = ui_->get_context();
-    auto &menu_context = ui_context.menu_context;
-    auto &time_context = ui_context.timeline_context;
-    auto &properties_context = ui_context.properties_context;
-    if (menu_context.clicked_import_model)
-    {
-        import_model_or_animation(menu_context.path.c_str());
-    }
-    else
-    {
-        int current_animation_idx = entity->get_animation_id();
-        int animation_idx[2] = {properties_context.animation_idx, time_context.animation_idx};
-        for (int i = 0; i < 2; i++)
-        {
-            if (animation_idx[i] >= 0 && animation_idx[i] != current_animation_idx)
-            {
-#ifndef NDEBUG
-                std::cout << "animation id: " << animation_idx[i] << " <-> " << entity->get_model_id() << std::endl;
-#endif
-                auto animation = shared_resources->get_mutable_animation(animation_idx[i]);
-                entity->set_animation_component(animation, animation_idx[i]);
-                break;
-            }
-        }
-        if (properties_context.model_idx >= 0 && properties_context.model_idx != entity->get_model_id())
-        {
-#ifndef NDEBUG
-            std::cout << "model id: " << properties_context.model_idx << " <-> " << entity->get_model_id() << std::endl;
-#endif
-            auto model = shared_resources->get_mutable_model(properties_context.model_idx);
-            entity->set_model(model, properties_context.model_idx);
-            export_model_to_json(model.get());
-        }
-    }
-    if (menu_context.clicked_export_animation)
-    {
-        // TODO: Implement
-    }
 }
 void App::import_model_or_animation(const char *const path)
 {
-    auto &shared_resources = scenes_[current_scene_idx_]->get_mutable_ref_shared_resources();
-    auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+    shared_resources_->import(path);
+}
 
-    std::pair<bool, bool> result = shared_resources->add_model_or_animation_by_path(path);
-    if (result.first)
-    {
-#ifndef NDEBUG
-        std::cout << "import model\n";
-#endif
-        auto model = shared_resources->back_mutable_model();
-        entity->set_model(model, shared_resources->get_models_size() - 1);
-        export_model_to_json(model.get());
-    }
-
-    if (result.second)
-    {
-#ifndef NDEBUG
-        std::cout << "import animation\n";
-#endif
-        auto animation = shared_resources->back_mutable_animation();
-        entity->set_animation_component(animation, shared_resources_->get_animations_size() - 1);
-    }
-}
-void App::export_model_to_json(glcpp::Model *model)
-{
-    glcpp::Exporter exporter;
-    exporter.to_json(model, "model.json");
-}
-void App::process_buttons()
-{
-    auto &time_context = ui_->get_context().timeline_context;
-    if (time_context.is_clicked_mp2mm)
-    {
-        mp2mm_.open();
-    }
-}
 void App::pre_draw()
 {
     process_input(window_->get_handle());

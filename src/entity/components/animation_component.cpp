@@ -1,8 +1,8 @@
 #include "animation_component.h"
 
-#include "anim/animation.hpp"
+#include "animation/animation.h"
 
-namespace glcpp
+namespace anim
 {
     AnimationComponent::AnimationComponent(std::shared_ptr<Animation> animation)
     {

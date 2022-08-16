@@ -8,9 +8,12 @@
 // https://iquilezles.org/articles/filterableprocedurals/
 layout (location = 0) in vec2 aPos;
 layout (location = 1) in vec2 aTexCoords;
-uniform mat4 view;
-uniform mat4 projection;
 
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
 
 out vec3 near_vec;
 out vec3 far_vec;

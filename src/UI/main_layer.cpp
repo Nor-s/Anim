@@ -98,14 +98,6 @@ namespace ui
             ImGui::RenderPlatformWindowsDefault();
             glfwMakeContextCurrent(backup_current_context);
         }
-#ifndef NDEBUG
-
-        auto error = glGetError();
-        if (error != GL_NO_ERROR)
-        {
-            std::cout << "ImGui Render: " << error << std::endl;
-        }
-#endif
     }
 
     void MainLayer::draw_dock(float fps)
@@ -187,19 +179,19 @@ namespace ui
         scene_layer_map_[title]->draw(title.c_str(), scene);
     }
 
-    void MainLayer::draw_model_properties(Scene *scene)
-    {
-        property_layer_.draw(context_.properties_context, scene);
-    }
+    // void MainLayer::draw_model_properties(Scene *scene)
+    // {
+    //     property_layer_.draw(context_.properties_context, scene);
+    // }
 
-    void MainLayer::draw_hierarchy_layer(glcpp::Entity *entity)
-    {
-        hierarchy_layer_.draw(entity);
-    }
-    void MainLayer::draw_timeline(Scene *scene)
-    {
-        timeline_layer_.draw(scene, context_.timeline_context);
-    }
+    // void MainLayer::draw_hierarchy_layer(anim::Entity *entity)
+    // {
+    //     hierarchy_layer_.draw(entity);
+    // }
+    // void MainLayer::draw_timeline(Scene *scene)
+    // {
+    //     timeline_layer_.draw(scene, context_.timeline_context);
+    // }
 
     bool MainLayer::is_scene_layer_hovered(const std::string &title)
     {

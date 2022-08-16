@@ -18,8 +18,8 @@ namespace anim
         else
             return &(*(iter->second));
     }
-    inline float Animation::get_ticks_per_second() { return ticks_per_second_; }
-    inline float Animation::get_duration() { return duration_; }
+    float Animation::get_ticks_per_second() { return ticks_per_second_; }
+    float Animation::get_duration() { return duration_; }
     const std::string &Animation::get_name() const
     {
         return name_;

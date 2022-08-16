@@ -1,12 +1,13 @@
-#ifndef GLCPP_COMPONENT_ANIMATION_COMPONENT_HPP
-#define GLCPP_COMPONENT_ANIMATION_COMPONENT_HPP
+#ifndef ANIM_ENTITY_COMPONENT_ANIMATION_COMPONENT_H
+#define ANIM_ENTITY_COMPONENT_ANIMATION_COMPONENT_H
 
+#include "component.h"
 #include <memory>
 
-namespace glcpp
+namespace anim
 {
     class Animation;
-    class AnimationComponent
+    class AnimationComponent : public ComponentBase<AnimationComponent>
     {
     public:
         AnimationComponent() = default;
@@ -37,7 +38,7 @@ namespace glcpp
         float get_tps() const;
 
     private:
-        std::shared_ptr<Animation> animation_;
+        std::shared_ptr<Animation> animation_{nullptr};
         float current_time_ = 0.0f;
         float fps_ = 24.0f;
         float custom_ticks_per_second_ = 24.0f;

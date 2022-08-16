@@ -7,9 +7,77 @@ using namespace anim;
 
 namespace anim::gl
 {
+    static std::unique_ptr<Mesh> CreateBiPyramid()
+    {
+        const float position[24 * 3] = {
+            // positions
+            // front bottom
+            -0.12f, 0.2f, 0.12f,
+            0.0f, 0.0f, 0.0f,
+            0.12f, 0.2f, 0.12f,
+            // right
+            0.12f, 0.2f, 0.12f,
+            0.0f, 0.0f, 0.0f,
+            0.12f, 0.2f, -0.12f,
+            // left
+            -0.12f, 0.2f, -0.12f,
+            0.0f, 0.0f, 0.0f,
+            -0.12f, 0.2f, 0.12f,
+            // back
+            0.12f, 0.2f, -0.12f,
+            0.0f, 0.0f, 0.0f,
+            -0.12f, 0.2f, -0.12f,
+
+            // front top
+
+            0.12f, 0.2f, 0.12f,
+            0.0f, 1.0f, 0.0f,
+            -0.12f, 0.2f, 0.12f,
+            // right
+            0.12f, 0.2f, -0.12f,
+            0.0f, 1.0f, 0.0f,
+            0.12f, 0.2f, 0.12f,
+            // left
+            -0.12f, 0.2f, 0.12f,
+            0.0f, 1.0f, 0.0f,
+            -0.12f, 0.2f, -0.12f,
+            // back
+            -0.12f, 0.2f, -0.12f,
+            0.0f, 1.0f, 0.0f,
+            0.12f, 0.2f, -0.12f};
+        float normal[72]{0.0f};
+        for (int i = 0; i < 72; i += 9)
+        {
+            glm::vec3 a{position[i], position[i + 1], position[i + 2]};
+            glm::vec3 b{position[i + 3], position[i + 4], position[i + 5]};
+            glm::vec3 c{position[i + 6], position[i + 7], position[i + 8]};
+            glm::vec3 normal_v = glm::normalize(glm::cross(b - a, c - a));
+            normal[i] = normal_v.x;
+            normal[i + 1] = normal_v.y;
+            normal[i + 2] = normal_v.z;
+            normal[i + 3] = normal_v.x;
+            normal[i + 4] = normal_v.y;
+            normal[i + 5] = normal_v.z;
+            normal[i + 6] = normal_v.x;
+            normal[i + 7] = normal_v.y;
+            normal[i + 8] = normal_v.z;
+        }
+        std::vector<Vertex> vertices;
+        for (int i = 0; i < 72; i += 3)
+        {
+            Vertex vert{};
+            vert.set_position({position[i], position[i + 1], position[i + 2]});
+            vert.set_normal({normal[i], normal[i + 1], normal[i + 2]});
+            vertices.push_back(vert);
+        }
+
+        return std::make_unique<GLMesh>(vertices);
+    }
+
     GLMesh::GLMesh(const std::vector<Vertex> &vertices, const std::vector<unsigned int> &indices, const std::vector<Texture> &textures, const MaterialProperties &mat_properties)
         : Mesh(vertices, indices, textures, mat_properties)
     {
+        init_buffer();
     }
     // TODO: delete buffer
     GLMesh::~GLMesh()
@@ -52,22 +120,38 @@ namespace anim::gl
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures_[i].id);
         }
+        // draw mesh
+        glBindVertexArray(VAO_);
+        if (indices_.size() > 0)
+        {
+            glDrawElements(GL_TRIANGLES, static_cast<unsigned int>(indices_.size()), GL_UNSIGNED_INT, 0);
+        }
+        else
+        {
+            glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
+        }
+        glBindVertexArray(0);
+
+        // always good practice to set everything back to defaults once configured.
+        glActiveTexture(GL_TEXTURE0);
     }
 
     void GLMesh::init_buffer()
     {
         glGenVertexArrays(1, &VAO_);
         glGenBuffers(1, &VBO_);
-        glGenBuffers(1, &EBO_);
 
         glBindVertexArray(VAO_);
         glBindBuffer(GL_ARRAY_BUFFER, VBO_);
 
         glBufferData(GL_ARRAY_BUFFER, vertices_.size() * sizeof(Vertex), &vertices_[0], GL_STATIC_DRAW);
-
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int),
-                     &indices_[0], GL_STATIC_DRAW);
+        if (indices_.size() > 0)
+        {
+            glGenBuffers(1, &EBO_);
+            glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_);
+            glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices_.size() * sizeof(unsigned int),
+                         &indices_[0], GL_STATIC_DRAW);
+        }
 
         glEnableVertexAttribArray(0);
         // vertex position

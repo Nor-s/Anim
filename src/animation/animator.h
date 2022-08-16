@@ -8,18 +8,18 @@ namespace anim
 {
     const unsigned int MAX_BONE_NUM = 128;
 
-    // class Model;
-    // class Shader;
-    // class Animation;
-    // struct ModelNode;
-    // class Entity;
+    class Model;
+    class Shader;
+    class Animation;
+    class Entity;
+    class AnimationComponent;
 
     class Animator
     {
     public:
-        Animator() = default;
-        // void update_animation(float dt, Entity *entity, Shader *shader);
-        // void calculate_bone_transform(const Model *model, const ModelNode *node, Animation *animation, const glm::mat4 &parentTransform);
+        Animator();
+        void update_animation(float dt, AnimationComponent *animation, Entity *root, Shader *shader);
+        void calculate_bone_transform(Entity *entity, Animation *animation, const glm::mat4 &parentTransform);
 
     private:
         std::vector<glm::mat4> final_bone_matrices_;

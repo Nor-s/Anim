@@ -1,30 +1,22 @@
 #include "hierarchy_layer.h"
 
-#include "glcpp/model.h"
-#include "glcpp/entity.h"
-#include "glcpp/anim/animation.hpp"
-#include "glcpp/anim/bone.hpp"
-#include "glcpp/component/animation_component.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include "../entity/entity.h"
 
 namespace ui
 {
     HierarchyLayer::HierarchyLayer() = default;
     HierarchyLayer::~HierarchyLayer() = default;
-    void HierarchyLayer::draw(glcpp::Entity *entity)
+    void HierarchyLayer::draw(anim::Entity *entity)
     {
         static const char *selected_node_name = nullptr;
-        auto model = entity->get_mutable_model();
         ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
         int node_count = 0;
         ImGui::Begin("Hierarchy");
         {
-            if (model)
+            if (entity)
             {
-                auto root_node = model->get_root_node();
-                auto animation = entity->get_mutable_pointer_animation_component();
                 auto node_name = dfs(root_node, node_flags, node_count);
                 if (node_name)
                 {
@@ -42,11 +34,11 @@ namespace ui
         }
         ImGui::End();
     }
-    void HierarchyLayer::draw_selected_node(const char *node_name, glcpp::Animation *animation)
+    void HierarchyLayer::draw_selected_node(const char *node_name, anim::Animation *animation)
     {
         ImGui::BeginChild("Bone property", {0, 100}, true);
         ImGui::Text("%s", node_name);
-        glcpp::Bone *bone = animation->find_bone(node_name);
+        anim::Bone *bone = animation->find_bone(node_name);
         if (bone)
         {
             glm::vec3 *p_pos = bone->get_mutable_pointer_recently_used_position();
@@ -77,7 +69,7 @@ namespace ui
         ImGui::EndChild();
     }
 
-    const char *HierarchyLayer::dfs(const glcpp::ModelNode *node, const ImGuiTreeNodeFlags &node_flags, int &count)
+    const char *HierarchyLayer::dfs(const anim::ModelNode *node, const ImGuiTreeNodeFlags &node_flags, int &count)
     {
         static int selected_idx = 0;
         const char *selected_node = nullptr;

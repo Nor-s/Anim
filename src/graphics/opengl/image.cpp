@@ -1,8 +1,8 @@
 #include "image.h"
 #include <iostream>
-#include "shader.h"
+#include "../shader.h"
 
-namespace glcpp
+namespace anim
 {
 
     Image::Image(uint32_t width, uint32_t height, GLenum format)
@@ -11,7 +11,8 @@ namespace glcpp
         set_quad_VAO();
         init_texture();
     }
-    Image::~Image() {
+    Image::~Image()
+    {
         glDeleteVertexArrays(1, &quad_VAO_);
         glDeleteBuffers(1, &quad_VBO_);
         glDeleteTextures(1, &texture_);
@@ -19,7 +20,7 @@ namespace glcpp
     void Image::draw(Shader &shader)
     {
         shader.use();
-        glUniform1i(glGetUniformLocation(shader.id_, "texture_diffuse1"), 0);
+        glUniform1i(glGetUniformLocation(shader.get_id(), "texture_diffuse1"), 0);
         shader.set_vec2("iResolution", glm::vec2(width_, height_));
         glBindVertexArray(quad_VAO_);
         glBindTexture(GL_TEXTURE_2D, texture_);

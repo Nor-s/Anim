@@ -4,11 +4,10 @@
 #include <memory>
 #include <imgui/imgui.h>
 
-namespace glcpp
+namespace anim
 {
     class Model;
     class Animation;
-    struct ModelNode;
     class Entity;
 }
 
@@ -19,11 +18,11 @@ namespace ui
     public:
         HierarchyLayer();
         ~HierarchyLayer();
-        void draw(glcpp::Entity *model);
+        void draw(anim::Entity *model);
 
     private:
-        void draw_selected_node(const char *node_name, glcpp::Animation *animation);
-        const char *dfs(const glcpp::ModelNode *anim_node, const ImGuiTreeNodeFlags &node_flags, int &count);
+        void draw_selected_node(const char *node_name, anim::Animation *animation);
+        const char *dfs(const anim::ModelNode *anim_node, const ImGuiTreeNodeFlags &node_flags, int &count);
     };
 
 }

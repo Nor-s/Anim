@@ -7,10 +7,13 @@ layout (location = 4) in vec3 bitangent;
 layout (location = 5) in ivec4 boneIds; // because MAX_BONE_INFLUENCE == 4
 layout (location = 6) in vec4 weights;
 
-
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
 uniform mat4 model;
-uniform mat4 view;
-uniform mat4 projection;
+
 
 out vec2 TexCoords;
 out vec3 Normal;

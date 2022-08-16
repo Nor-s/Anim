@@ -8,7 +8,6 @@
 #include "../animation/assimp_animation.h"
 #include "model.h"
 #include "../util/log.h"
-#include "shared_resources.h"
 
 namespace fs = std::filesystem;
 
@@ -26,18 +25,6 @@ namespace anim
                        aiProcess_CalcTangentSpace |
                        aiProcess_LimitBoneWeights)
     {
-    }
-
-    std::shared_ptr<Entity> Importer::import(SharedResources *shared_resource, const char *path)
-    {
-        std::shared_ptr<Entity> entity = nullptr;
-        auto [model, animations] = read_file(path);
-
-        if (model)
-        {
-        }
-
-        return entity;
     }
 
     std::pair<std::shared_ptr<Model>, std::vector<std::shared_ptr<Animation>>> Importer::read_file(const char *path)

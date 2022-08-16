@@ -14,8 +14,8 @@
 #include "../graphics/shader.h"
 #include "../util/utility.h"
 #include "../graphics/opengl/gl_mesh.h"
+#include "../graphics/mesh.h"
 #include "../util/log.h"
-
 namespace anim
 {
     using namespace gl;
@@ -54,6 +54,7 @@ namespace anim
         {
             aiMesh *mesh = scene->mMeshes[ai_node->mMeshes[i]];
             model_node->meshes.emplace_back(process_mesh(mesh, scene));
+            model_node->has_bone = mesh->HasBones();
         }
 
         for (unsigned int i = 0; i < ai_node->mNumChildren; i++)
@@ -82,7 +83,7 @@ namespace anim
         get_ai_node_for_anim(ai_root_node, root_node_.get(), NULL);
     }
 
-    std::shared_ptr<GLMesh> Model::process_mesh(aiMesh *mesh, const aiScene *scene)
+    std::shared_ptr<Mesh> Model::process_mesh(aiMesh *mesh, const aiScene *scene)
     {
         std::vector<Vertex> vertices;
         std::vector<unsigned int> indices;
@@ -140,7 +141,6 @@ namespace anim
         mat_properties.diffuse.y = color.g;
         mat_properties.diffuse.z = color.b;
 
-        std::cout << mat_properties.diffuse.x << " " << mat_properties.diffuse.y << " " << mat_properties.diffuse.z << std::endl;
         material->Get(AI_MATKEY_COLOR_SPECULAR, color);
         mat_properties.specular.x = color.r;
         mat_properties.specular.y = color.g;
@@ -191,7 +191,7 @@ namespace anim
                 bone_info_map[bone_name] = new_bone_info;
                 bone_id = bone_count;
                 bone_count++;
-                std::cout << ("bone_name: " + bone_name + " bone_id: " + std::to_string(bone_id)) << "\n";
+                LOG("- - bone_name: " + bone_name + " bone_id: " + std::to_string(bone_id));
             }
             else
             {
@@ -217,9 +217,7 @@ namespace anim
     std::vector<Texture> Model::load_material_textures(aiMaterial *mat, const aiScene *scene, aiTextureType type,
                                                        std::string typeName)
     {
-#ifndef NDEBUG
-        std::cout << "LoadMaterialTextures: " << (int)type << " " << mat->GetTextureCount(type) << std::endl;
-#endif
+        LOG("LoadMaterialTextures: " + std::to_string((int)type) + " " + std::to_string(mat->GetTextureCount(type)));
         std::vector<Texture> textures;
         for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
         {
@@ -250,9 +248,8 @@ namespace anim
 
     unsigned int TextureFromFile(const char *path, const std::filesystem::path &directory, const aiScene *scene)
     {
-#ifndef NDEBUG
-        std::cout << "TextureFromFile:: " << path << std::endl;
-#endif
+        LOG("TextureFromFile:: " + std::string(path));
+
         std::string filename(path);
         size_t idx = filename.find_first_of("/\\");
         if (filename[0] == '.' || idx == 0)
@@ -295,10 +292,7 @@ namespace anim
             }
             else
             {
-#ifndef NDEBUG
-                std::cout << "Texture failed to load at path: "
-                          << ":" << path << "\n";
-#endif
+                LOG("- - Texture failed to load at path: " + std::string(path));
             }
         }
         stbi_image_free(data);
@@ -308,9 +302,7 @@ namespace anim
 
     void LoadMemory(const aiTexture *texture, unsigned int *id)
     {
-#ifndef NDEBUG
-        std::cout << "LoadMemory" << std::endl;
-#endif
+        LOG("LoadMemory");
         if (!*id)
             glGenTextures(1, id);
         glBindTexture(GL_TEXTURE_2D, *id);
@@ -355,12 +347,12 @@ namespace anim
 }
 namespace anim
 {
-    std::map<std::string, BoneInfo> &Model::get_mutable_bone_info_map()
+    std::unordered_map<std::string, BoneInfo> &Model::get_mutable_bone_info_map()
     {
         return bone_info_map_;
     }
 
-    const std::map<std::string, BoneInfo> &Model::get_bone_info_map() const
+    const std::unordered_map<std::string, BoneInfo> &Model::get_bone_info_map() const
     {
         return bone_info_map_;
     }
@@ -380,9 +372,9 @@ namespace anim
         return bone_count_;
     }
 
-    const ModelNode *Model::get_root_node() const
+    const std::shared_ptr<ModelNode> &Model::get_root_node() const
     {
-        return root_node_.get();
+        return root_node_;
     }
     std::shared_ptr<ModelNode> &Model::get_mutable_root_node()
     {

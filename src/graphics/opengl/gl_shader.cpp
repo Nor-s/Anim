@@ -9,6 +9,7 @@ namespace anim::gl
 {
     GLShader::GLShader(const char *vertex_path, const char *fragment_path, const char *geometry_path)
     {
+        LOG("GLShader()");
         // 1. retrieve the vertex/fragment source code from filePath
         std::string vertex_code;
         std::string fragment_code;
@@ -91,6 +92,8 @@ namespace anim::gl
 
     GLShader::~GLShader()
     {
+        LOG("~GLShader()");
+
         glDeleteProgram(id_);
     }
     // activate the shader

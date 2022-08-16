@@ -1,8 +1,11 @@
 #version 330 core
 
 out vec4 color;
-uniform mat4 view;
-uniform mat4 projection;
+layout (std140) uniform Matrices
+{
+    mat4 projection;
+    mat4 view;
+};
 uniform float width =2.0;
 uniform int scale =100;
 

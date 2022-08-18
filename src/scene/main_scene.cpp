@@ -46,7 +46,6 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
 void MainScene::init_camera()
 {
     camera_ = std::make_shared<glcpp::Camera>(glm::vec3(0.0f, 100.0f, 500.0f));
-    resources_->set_ubo_projection(camera_->get_projection());
 }
 
 void MainScene::pre_draw()
@@ -54,6 +53,8 @@ void MainScene::pre_draw()
     update_framebuffer();
     camera_->set_view_and_projection(framebuffer_->get_aspect());
     resources_->set_ubo_view(camera_->get_view());
+    resources_->set_ubo_projection(camera_->get_projection());
+
     draw_to_framebuffer();
 }
 
@@ -81,7 +82,7 @@ void MainScene::draw_to_framebuffer()
     framebuffer_->unbind();
 #ifndef NDEBUG
     auto error = glGetError();
-    anim::LOG("main scene: " + std::to_string(error), error != GL_NO_ERROR);
+    anim::LOG("main scene: " + std::to_string((int)error), error == GL_NO_ERROR);
 #endif
 }
 

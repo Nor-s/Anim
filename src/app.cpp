@@ -11,6 +11,7 @@
 #include "entity/entity.h"
 #include "entity/components/component.h"
 #include "entity/components/animation_component.h"
+#include "animation/animator.h"
 #include "util/log.h"
 
 namespace fs = std::filesystem;
@@ -71,12 +72,13 @@ void App::init_shared_resources()
 void App::init_scene(uint32_t width, uint32_t height)
 {
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
+    import_model_or_animation("C:\\Users\\No\\Downloads\\Capoeira.fbx"); //"./resources/models/ybot.fbx");
     import_model_or_animation("./resources/models/ybot.fbx");
     import_model_or_animation("./anim.json");
 }
 void App::loop()
 {
-    glfwSwapInterval(0);
+    // glfwSwapInterval(0);
     start_time_ = static_cast<float>(glfwGetTime());
 
     while (!window_->should_close())
@@ -91,25 +93,23 @@ void App::loop()
 
             this->draw_scene();
 
-            // auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+            ui_->draw_component_layer(scenes_[current_scene_idx_].get());
 
-            // ui_->draw_model_properties(scenes_[current_scene_idx_].get());
+            ui_->draw_hierarchy_layer(scenes_[current_scene_idx_].get());
 
-            // ui_->draw_hierarchy_layer(entity);
-
-            // ui_->draw_timeline(scenes_[current_scene_idx_].get());
+            ui_->draw_timeline(scenes_[current_scene_idx_].get());
 
             ui_->end();
         }
-
         post_draw();
+
+        post_update();
     }
 }
 void App::update()
 {
     update_window();
     update_time();
-    update_resources();
 }
 void App::update_window()
 {
@@ -123,8 +123,6 @@ void App::update_window()
 }
 void App::update_time()
 {
-    auto &ui_context = ui_->get_context();
-    // auto &time_context = ui_context.timeline_context;
     float current_time = static_cast<float>(glfwGetTime());
     frames_++;
     if (current_time - start_time_ >= 1.0)
@@ -135,20 +133,57 @@ void App::update_time()
     }
     delta_frame_ = current_time - last_frame_;
     last_frame_ = current_time;
-    for (auto &scene : scenes_)
+    shared_resources_->set_dt(delta_frame_);
+}
+void App::post_update()
+{
+    process_timeline_context();
+    process_menu_context();
+}
+void App::process_timeline_context()
+{
+    auto &ui_context = ui_->get_context();
+    auto &time_context = ui_context.timeline_context;
+    auto animator = shared_resources_->get_mutable_animator();
+    if (time_context.is_current_frame_changed)
     {
-        // if (ui_context.timeline_context.is_clicked_play_all)
-        // {
-        //     scene->set_delta_time(-delta_frame_);
-        // }
-        // else
-        // {
-        //     scene->set_delta_time(delta_frame_);
-        // }
+        animator->set_current_time(static_cast<float>(time_context.current_frame));
+    }
+    animator->set_fps(time_context.fps);
+    animator->set_end_time(static_cast<float>(time_context.end_frame));
+
+    animator->set_is_stop(time_context.is_stop);
+
+    if (time_context.is_clicked_play)
+    {
+        animator->set_is_stop(false);
+        animator->set_direction(false);
+    }
+    if (time_context.is_clicked_play_back)
+    {
+        animator->set_is_stop(false);
+        animator->set_direction(true);
+    }
+    animator->set_is_recording(time_context.is_recording);
+    if (time_context.is_clicked_bone)
+    {
+        auto current_selected_entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+        auto new_selected_entity = current_selected_entity->find(time_context.clicked_bone_name);
+        if (new_selected_entity)
+        {
+            scenes_[current_scene_idx_]->set_selected_entity(new_selected_entity);
+        }
     }
 }
-void App::update_resources()
+
+void App::process_menu_context()
 {
+    auto &ui_context = ui_->get_context();
+    auto &menu_context = ui_context.menu_context;
+    if (menu_context.clicked_import_model)
+    {
+        shared_resources_->import(menu_context.path.c_str());
+    }
 }
 void App::import_model_or_animation(const char *const path)
 {

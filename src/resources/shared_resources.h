@@ -25,11 +25,16 @@ namespace anim
         void add_entity(std::shared_ptr<Model> &model);
         void add_animations(const std::vector<std::shared_ptr<Animation>> &animations);
         void add_shader(const std::string &name, const char *vs_path, const char *fs_path);
-        void convert_to_entity(std::shared_ptr<Entity> &entity, std::shared_ptr<Model> &model, const std::shared_ptr<ModelNode> &model_node, Entity *parent_entity);
+        void convert_to_entity(std::shared_ptr<Entity> &entity,
+                               std::shared_ptr<Model> &model,
+                               const std::shared_ptr<ModelNode> &model_node,
+                               Entity *parent_entity, int child_num, Entity *root_entity);
         void update();
         void set_ubo_projection(const glm::mat4 &projection);
         void set_ubo_view(const glm::mat4 &view);
         void set_dt(float dt);
+        std::shared_ptr<Entity> &get_mutable_entities();
+        const std::vector<std::shared_ptr<Animation>> &get_animations() const;
 
     private:
         void init_animator();

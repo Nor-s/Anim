@@ -6,7 +6,9 @@
 #include "glcpp/camera.h"
 #include "entity/entity.h"
 #include <util/utility.h>
-#include "entity/components/transform_component.h"
+#include <entity/components/renderable/mesh_component.h>
+#include <entity/components/renderable/armature_component.h>
+#include <entity/components/transform_component.h>
 
 #include <memory>
 
@@ -28,7 +30,7 @@ namespace ui
           scene_window_right_(0.0f),
           scene_window_top_(0.0f),
           scene_pos_(0.0f, 0.0f),
-          current_gizmo_mode_(ImGuizmo::LOCAL),
+          current_gizmo_mode_(ImGuizmo::WORLD),
           current_gizmo_operation_(ImGuizmo::OPERATION::NONE)
     {
     }
@@ -41,12 +43,10 @@ namespace ui
         float height = (float)scene->get_mutable_framebuffer()->get_height();
         // draw scene window
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0f, 0.0f});
-        // ImGuiWindowClass window_class;
-        // window_class.DockNodeFlagsOverrideSet = ImGuiDockNodeFlags_NoTabBar;
-        // ImGui::SetNextWindowClass(&window_class);
         if (ImGui::Begin(title, 0, sceneWindowFlags | ImGuiWindowFlags_NoScrollbar))
         {
             scene_pos_ = ImGui::GetWindowPos();
+            scene_cursor_y_ = ImGui::GetCursorPosY();
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             width_ = viewportPanelSize.x;
             height_ = viewportPanelSize.y;
@@ -86,7 +86,7 @@ namespace ui
         auto &camera = scene->get_mutable_ref_camera();
         float *cameraView = const_cast<float *>(glm::value_ptr(camera->get_view()));
         float *cameraProjection = const_cast<float *>(glm::value_ptr(camera->get_projection()));
-        auto *selected_entity = scene->get_mutable_selected_entity();
+        auto selected_entity = scene->get_mutable_selected_entity();
 
         if (!is_select_mode_ && selected_entity)
         {
@@ -103,16 +103,12 @@ namespace ui
                                  useSnap ? &snap[0] : NULL);
             if (ImGuizmo::IsUsing())
             {
-                auto [o_tt, o_r, o_s] = anim::DecomposeTransform(transform);
-                auto [tt, r, s] = anim::DecomposeTransform(glm::make_mat4(object_mat_ptr));
-
-                glm::vec3 t = glm::abs(o_tt - tt);
-                if (!(t.x > 500.0f || t.y > 500.0f || t.z > 500.0f))
+                auto delta = glm::inverse(transform) * glm::make_mat4(object_mat_ptr);
+                delta = selected_entity->get_local() * delta;
+                selected_entity->set_local(delta);
+                if (auto armature = selected_entity->get_component<anim::ArmatureComponent>(); armature)
                 {
-                    glm::vec3 o_euler = glm::eulerAngles(o_r);
-                    glm::vec3 euler = glm::eulerAngles(r);
-
-                    selected_entity->get_mutable_local_transformation().set_translation(tt - o_tt).set_scale(s - o_s).set_rotation(euler - o_euler);
+                    armature->add_and_replace_bone();
                 }
             }
             if (ImGuizmo::IsOver())
@@ -125,8 +121,9 @@ namespace ui
     void SceneLayer::draw_mode_window()
     {
         ImGuiIO &io = ImGui::GetIO();
-        ImVec2 mode_window_size = {512.0f, 65.0f};
-        ImVec2 mode_window_pos = {scene_window_right_ - width_ * 0.5f - mode_window_size.x * 0.5f, scene_window_top_ + height_ - 70.0f};
+        ImVec2 mode_window_size = {512.0f, 50.0f};
+        ImVec2 mode_window_pos = {scene_window_right_ - width_ * 0.5f - mode_window_size.x * 0.5f, scene_cursor_y_ + height_ - 40.0f};
+
         if (height_ - mode_window_size.y < 5.0f || width_ - mode_window_size.x < 5.0f)
         {
             mode_window_pos = {-1000.0f, -1000.0f};
@@ -135,10 +132,12 @@ namespace ui
         ImGui::SetNextWindowSize(mode_window_size);
         ImGui::SetNextWindowPos(mode_window_pos);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {55.0f, 65.0f});
+        ImGui::PushStyleColor(ImGuiCol_Button, {0.3f, 0.3f, 0.3f, 0.8f});
+        ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 1.0f, 1.0f, 1.0f});
         if (ImGui::Begin("Child", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground))
         {
 
-            ImVec2 btn_size{80.0f, 60.0f};
+            ImVec2 btn_size{80.0f, 45.0f};
 
             if (ImGui::BeginTable("split", 1, ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_NoPadInnerX | ImGuiTableFlags_SizingFixedSame))
             {
@@ -195,7 +194,7 @@ namespace ui
                 ImGui::PopStyleVar();
                 ImGui::SameLine();
                 // skeleton
-                static bool is_selected = false;
+                bool &is_selected = anim::MeshComponent::isActivate;
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
                 ToggleButton(ICON_MD_PERSON_OFF, &is_selected, btn_size);
 
@@ -218,6 +217,8 @@ namespace ui
             }
         }
         ImGui::End();
+        ImGui::PopStyleColor();
+        ImGui::PopStyleColor();
         ImGui::PopStyleVar();
     }
 

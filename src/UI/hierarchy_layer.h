@@ -6,10 +6,9 @@
 
 namespace anim
 {
-    class Model;
-    class Animation;
     class Entity;
 }
+class Scene;
 
 namespace ui
 {
@@ -18,11 +17,11 @@ namespace ui
     public:
         HierarchyLayer();
         ~HierarchyLayer();
-        void draw(anim::Entity *model);
+        void draw(Scene *scene);
 
     private:
-        void draw_selected_node(const char *node_name, anim::Animation *animation);
-        const char *dfs(const anim::ModelNode *anim_node, const ImGuiTreeNodeFlags &node_flags, int &count);
+        anim::Entity *draw_tree_node(anim::Entity *entity_node, const ImGuiTreeNodeFlags &node_flags, int depth = 0);
+        int selected_id_{-2};
     };
 
 }

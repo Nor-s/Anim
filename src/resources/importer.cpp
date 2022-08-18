@@ -16,7 +16,7 @@ namespace anim
     Importer::Importer()
         : assimp_flag_(aiProcess_Triangulate |
                        aiProcess_GenUVCoords |
-                       aiProcess_OptimizeGraph |
+                       //    aiProcess_OptimizeGraph |
                        aiProcess_OptimizeMeshes |
                        aiProcess_SortByPType |
                        aiProcess_EmbedTextures |
@@ -52,7 +52,7 @@ namespace anim
             const aiScene *scene = importer.ReadFile(path_.c_str(), assimp_flag_);
 
             model = import_model(scene);
-            // animations = import_animation(scene);
+            animations = import_animation(scene);
             if (model == nullptr && animations.size() == 0)
             {
                 LOG("ERROR::IMPORTER::NULL " + std::string(importer.GetErrorString()));

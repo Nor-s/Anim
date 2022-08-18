@@ -4,12 +4,13 @@
 #include <memory>
 
 namespace anim
-{
+{      
+    typedef int* TypeID;
     class Component
     {
     public:
         virtual ~Component() = default;
-        virtual int get_type() const = 0;
+        virtual TypeID  get_type() const = 0;
         virtual void update() = 0;
     };
 
@@ -19,13 +20,11 @@ namespace anim
     public:
         virtual ~ComponentBase() = default;
         virtual void update(){};
-        static int type;
-        int get_type() const override { return T::type; }
+        static TypeID type;
+        TypeID get_type() const override { return T::type; }
     };
+    template <typename T> TypeID ComponentBase<T>::type((TypeID)&T::type);
 
-    static int componentTypeNum = 0;
-    template <typename T>
-    int ComponentBase<T>::type(componentTypeNum++);
 }
 
 #endif

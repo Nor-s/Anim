@@ -105,7 +105,6 @@ namespace anim
         {
             if (animation_time < positions_[index + 1].get_time(factor_))
             {
-                recently_used_position_idx_ = index;
                 return index;
             }
         }
@@ -119,21 +118,19 @@ namespace anim
         {
             if (animation_time < rotations_[index + 1].get_time(factor_))
             {
-                recently_used_rotation_idx_ = index;
                 return index;
             }
         }
         return size;
     }
 
-    int Bone::GetScaleIndex(float animation_time)
+    int Bone::get_scale_index(float animation_time)
     {
         int size = num_scales_ - 1;
         for (int index = 0; index < size; ++index)
         {
             if (animation_time < scales_[index + 1].get_time(factor_))
             {
-                recently_used_scale_idx_ = index;
                 return index;
             }
         }
@@ -317,6 +314,7 @@ namespace anim
     glm::mat4 Bone::interpolate_position(float animation_time)
     {
         int p0Index = get_position_index(animation_time);
+        recently_used_position_idx_ = p0Index;
         int p1Index = num_positions_ - 1;
         // for nested frame
         auto it = time_positions_map_.find(positions_[p0Index].time);
@@ -333,6 +331,7 @@ namespace anim
     glm::mat4 Bone::interpolate_rotation(float animation_time)
     {
         int p0Index = get_rotation_index(animation_time);
+        recently_used_rotation_idx_ = p0Index;
         int p1Index = num_rotations_ - 1;
         // for nested frame
         auto it = time_rotations_map_.find(rotations_[p0Index].time);
@@ -348,7 +347,8 @@ namespace anim
 
     glm::mat4 Bone::interpolate_scaling(float animation_time)
     {
-        int p0Index = GetScaleIndex(animation_time);
+        int p0Index = get_scale_index(animation_time);
+        recently_used_scale_idx_ = p0Index;
         int p1Index = num_scales_ - 1;
         // for nested frame
         auto it = time_scales_map_.find(scales_[p0Index].time);
@@ -360,4 +360,22 @@ namespace anim
         glm::vec3 finalScale = glm::mix(scales_[p0Index].scale, scales_[p1Index].scale, scaleFactor);
         return glm::scale(glm::mat4(1.0f), finalScale);
     }
+    void Bone::replace_key_frame(const glm::mat4 &transform, float time)
+    {
+        auto [t, r, s] = DecomposeTransform(transform);
+        float time_stamp = time * factor_;
+        if (recently_used_position_idx_ > -1 && positions_[recently_used_position_idx_].get_time() == time_stamp)
+        {
+            positions_[recently_used_position_idx_].position = t;
+        }
+        if (recently_used_rotation_idx_ > -1 && rotations_[recently_used_rotation_idx_].get_time() == time_stamp)
+        {
+            rotations_[recently_used_rotation_idx_].orientation = r;
+        }
+        if (recently_used_scale_idx_ > -1 && scales_[recently_used_scale_idx_].get_time() == time_stamp)
+        {
+            scales_[recently_used_scale_idx_].scale = s;
+        }
+    }
+
 }

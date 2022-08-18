@@ -6,8 +6,8 @@
 
 namespace anim::gl
 {
-
-    static std::unique_ptr<Mesh> CreateBiPyramid();
+    // TODO: Refactor Create function
+    std::unique_ptr<Mesh> CreateBiPyramid();
     class GLMesh : public anim::Mesh
     {
     public:

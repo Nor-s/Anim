@@ -13,6 +13,7 @@
 
 #include "../graphics/mesh.h"
 #include <memory.h>
+#include "../util/log.h"
 
 namespace anim
 {
@@ -51,7 +52,9 @@ namespace anim
         }
         ~ModelNode()
         {
+            LOG("~ModelNode: " + name);
             childrens.clear();
+            meshes.clear();
         }
     };
     /**
@@ -61,7 +64,10 @@ namespace anim
     {
 
     public:
-        friend void SharedResources::convert_to_entity(std::shared_ptr<Entity> &, std::shared_ptr<Model> &, const std::shared_ptr<ModelNode> &, Entity *);
+        friend void SharedResources::convert_to_entity(std::shared_ptr<Entity> &entity,
+                                                       std::shared_ptr<Model> &model,
+                                                       const std::shared_ptr<ModelNode> &model_node,
+                                                       Entity *parent_entity, int child_num, Entity *root_entity);
 
         Model(const char *path, const aiScene *scene);
         ~Model();

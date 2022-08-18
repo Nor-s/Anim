@@ -10,6 +10,7 @@ namespace anim
     class TransformComponent : public ComponentBase<TransformComponent>
     {
     public:
+     
         glm::mat4 get_mat4() const;
         const glm::vec3 &get_translation() const;
         const glm::vec3 &get_rotation() const;

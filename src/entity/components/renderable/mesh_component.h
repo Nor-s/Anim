@@ -15,7 +15,8 @@ namespace anim
     class MeshComponent : public ComponentBase<MeshComponent>
     {
     public:
-        MeshComponent() = default;
+        static inline bool isActivate = false;
+        static inline bool isWireframe = false;
         ~MeshComponent() = default;
         void update() override;
 

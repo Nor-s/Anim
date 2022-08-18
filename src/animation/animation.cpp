@@ -1,8 +1,10 @@
 #include "animation.h"
+#include "bone.h"
 #include <string>
 #include <map>
 #include <filesystem>
 #include <iostream>
+#include <util/log.h>
 
 namespace anim
 {
@@ -18,7 +20,7 @@ namespace anim
         else
             return &(*(iter->second));
     }
-    float Animation::get_ticks_per_second() { return ticks_per_second_; }
+    float Animation::get_fps() { return fps_; }
     float Animation::get_duration() { return duration_; }
     const std::string &Animation::get_name() const
     {
@@ -52,7 +54,7 @@ namespace anim
         std::string anim_name = p.filename().string();
         ai_anim->mName = aiString(anim_name);
         ai_anim->mDuration = static_cast<double>(duration_);
-        ai_anim->mTicksPerSecond = static_cast<double>(ticks_per_second_);
+        ai_anim->mTicksPerSecond = static_cast<double>(fps_);
         unsigned int size = name_bone_map_.size();
         aiNodeAnim **tmp_anim = new aiNodeAnim *[size];
 
@@ -77,4 +79,29 @@ namespace anim
         }
         delete[] tmp_anim;
     }
+    void Animation::set_id(int id)
+    {
+        id_ = id;
+    }
+    const int Animation::get_id() const
+    {
+        return id_;
+    }
+    void Animation::add_and_replace_bone(const std::string &name, const glm::mat4 &transform, float time)
+    {
+        auto bone = find_bone(name);
+        if (bone)
+        {
+            bone->replace_key_frame(transform, time);
+        }
+        else
+        {
+            LOG("bone not found: " + name);
+            // name_bone_map_[name] = std::make_unique<Bone>();
+            // bone = name_bone_map_[name].get();
+            // bone->set_name(name);
+            // bone->replace_key_frame(transform, time);
+        }
+    }
+
 }

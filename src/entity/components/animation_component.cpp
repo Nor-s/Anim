@@ -4,23 +4,20 @@
 
 namespace anim
 {
-    AnimationComponent::AnimationComponent(std::shared_ptr<Animation> animation)
-    {
-        set_animation(animation);
-    }
+
     void AnimationComponent::init_animation()
     {
-        if (animation_->get_ticks_per_second() >= 120)
+        if (animation_->get_fps() >= 120)
         {
-            custom_ticks_per_second_ = 24.0f;
+            custom_ticks_per_second_ = 30.0f;
         }
         else
         {
-            custom_ticks_per_second_ = animation_->get_ticks_per_second();
+            custom_ticks_per_second_ = animation_->get_fps();
         }
-        current_time_ = 0.0f;
-        fps_ = custom_ticks_per_second_;
-        is_stop_ = false;
+        // current_time_ = 0.0f;
+        // is_stop_ = false;
+        fps_ = animation_->get_fps();
     }
     void AnimationComponent::play()
     {
@@ -79,7 +76,7 @@ namespace anim
 
     float AnimationComponent::get_origin_current_time(float time)
     {
-        auto origin_ticks_per_second = animation_->get_ticks_per_second();
+        auto origin_ticks_per_second = animation_->get_fps();
         return time * origin_ticks_per_second / get_mutable_custom_tick_per_second();
     }
 
@@ -103,7 +100,7 @@ namespace anim
 
     float AnimationComponent::get_ticks_per_second_factor() const
     {
-        return custom_ticks_per_second_ / animation_->get_ticks_per_second();
+        return custom_ticks_per_second_ / animation_->get_fps();
     }
 
     const uint32_t AnimationComponent::get_custom_duration() const

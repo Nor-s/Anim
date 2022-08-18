@@ -7,6 +7,7 @@
 
 #include "components/component.h"
 #include "components/transform_component.h"
+#include "../util/log.h"
 namespace anim
 {
 
@@ -20,19 +21,23 @@ namespace anim
         template <class T>
         T *add_component();
         void update();
+        Entity *find(const std::string &name);
+        Entity *find(Entity *entity, const std::string &name);
+
         void set_name(const std::string &name);
         void add_children(std::shared_ptr<Entity> &children);
+        void set_sub_child_num(int num);
         const std::string &get_name()
         {
             return name_;
         }
-        const glm::mat4 get_local_transformation()
+        const glm::mat4 &get_local() const
         {
-            return local_transform_.get_mat4();
+            return local_;
         }
-        TransformComponent &get_mutable_local_transformation()
+        void set_local(const glm::mat4 &local)
         {
-            return local_transform_;
+            local_ = local;
         }
         std::vector<std::shared_ptr<Entity>> &get_mutable_children()
         {
@@ -42,18 +47,39 @@ namespace anim
         {
             world_ = world;
         }
-        const glm::mat4 &get_world_transformation()
+        const glm::mat4 &get_world_transformation() const
         {
             return world_;
+        }
+        void set_parent(Entity *entity)
+        {
+            parent_ = entity;
+        }
+        void set_root(Entity *entity)
+        {
+            root_ = entity;
+        }
+        Entity *get_mutable_parent()
+        {
+            return parent_;
+        }
+        Entity *get_mutable_root()
+        {
+            return root_;
+        }
+        int get_id()
+        {
+            return id_;
         }
 
     private:
         std::string name_{};
         Entity *parent_ = nullptr;
+        Entity *root_ = nullptr;
         std::vector<std::shared_ptr<Component>> components_{};
         std::vector<std::shared_ptr<Entity>> children_{};
-        TransformComponent local_transform_{};
         glm::mat4 world_{1.0f};
+        glm::mat4 local_{1.0f};
         int id_{-1};
     };
 
@@ -63,7 +89,9 @@ namespace anim
         for (auto &component : components_)
         {
             if (component->get_type() == T::type)
+            {
                 return static_cast<T *>(component.get());
+            }
         }
         return nullptr;
     }

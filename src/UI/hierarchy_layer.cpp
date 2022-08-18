@@ -3,105 +3,102 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
 #include "../entity/entity.h"
-
+#include "../scene/scene.hpp"
+#include <imgui/icons/icons.h>
+#include <entity/components/pose_component.h>
+#include <entity/components/renderable/armature_component.h>
+#include <entity/components/renderable/mesh_component.h>
 namespace ui
 {
     HierarchyLayer::HierarchyLayer() = default;
     HierarchyLayer::~HierarchyLayer() = default;
-    void HierarchyLayer::draw(anim::Entity *entity)
+    void HierarchyLayer::draw(Scene *scene)
     {
-        static const char *selected_node_name = nullptr;
         ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-        int node_count = 0;
+        auto &entities = scene->get_mutable_ref_shared_resources()->get_mutable_entities();
+        auto selected_entity = scene->get_mutable_selected_entity();
+        selected_id_ = -2;
+        if (selected_entity)
+        {
+            selected_id_ = selected_entity->get_id();
+        }
         ImGui::Begin("Hierarchy");
         {
-            if (entity)
+            if (entities)
             {
-                auto node_name = dfs(root_node, node_flags, node_count);
-                if (node_name)
+                auto selected_node = draw_tree_node(entities.get(), node_flags);
+                if (selected_node)
                 {
-                    selected_node_name = node_name;
+                    scene->set_selected_entity(selected_node);
                 }
-                if (selected_node_name && animation)
-                {
-                    draw_selected_node(selected_node_name, animation->get_mutable_animation());
-                }
-            }
-            else
-            {
-                ImGui::Text("No model selected");
             }
         }
         ImGui::End();
     }
-    void HierarchyLayer::draw_selected_node(const char *node_name, anim::Animation *animation)
-    {
-        ImGui::BeginChild("Bone property", {0, 100}, true);
-        ImGui::Text("%s", node_name);
-        anim::Bone *bone = animation->find_bone(node_name);
-        if (bone)
-        {
-            glm::vec3 *p_pos = bone->get_mutable_pointer_recently_used_position();
-            glm::quat *p_quat = bone->get_mutable_pointer_recently_used_rotation();
-            glm::vec3 *p_scale = bone->get_mutable_pointer_recently_used_scale();
-            if (p_pos)
-            {
-                ImGui::SliderFloat3("position", &(*p_pos)[0], -10.0f, 10.0f);
-            }
-            if (p_quat)
-            {
-                auto before_quat = *p_quat;
-                ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
-                if (before_quat != *p_quat)
-                {
-                    *p_quat = glm::normalize(*p_quat);
-                }
-            }
-            if (p_scale)
-            {
-                ImGui::SliderFloat3("scale", &(*p_scale)[0], 10.0f, -10.0f);
-            }
-        }
-        else
-        {
-            ImGui::Text("Can't find bone");
-        }
-        ImGui::EndChild();
-    }
 
-    const char *HierarchyLayer::dfs(const anim::ModelNode *node, const ImGuiTreeNodeFlags &node_flags, int &count)
+    anim::Entity *HierarchyLayer::draw_tree_node(anim::Entity *entity_node, const ImGuiTreeNodeFlags &node_flags, int depth)
     {
-        static int selected_idx = 0;
-        const char *selected_node = nullptr;
         auto selected_flags = node_flags;
-        count++;
-        if (selected_idx == count)
+        anim::Entity *selected_entity = nullptr;
+        auto &childrens = entity_node->get_mutable_children();
+        if (selected_id_ == entity_node->get_id())
         {
             selected_flags |= ImGuiTreeNodeFlags_Selected;
         }
-        if (node->childrens.size() == 0)
+        if (childrens.size() == 0)
         {
             selected_flags |= ImGuiTreeNodeFlags_Leaf;
         }
-        bool node_open = ImGui::TreeNodeEx(node->name.c_str(), selected_flags);
+        if (depth < 2)
+        {
+            selected_flags |= ImGuiTreeNodeFlags_DefaultOpen;
+        }
+        std::string label = "";
+
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+        if (entity_node->get_component<anim::PoseComponent>())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, {0.2f, 0.4f, 0.8f, 1.0f});
+            ImGui::Text(ICON_MD_SETTINGS_ACCESSIBILITY);
+        }
+        else if (entity_node->get_component<anim::ArmatureComponent>())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, {0.2f, 0.8f, 0.8f, 1.0f});
+            ImGui::Text(ICON_MD_LINK);
+        }
+        else if (entity_node->get_component<anim::MeshComponent>())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, {0.8f, 0.8f, 0.2f, 1.0f});
+            ImGui::Text(ICON_MD_VIEW_IN_AR);
+        }
+        else
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, {0.1f, 0.1f, 0.1f, 1.0f});
+            ImGui::Text(ICON_MD_LIST);
+        }
+        ImGui::PopStyleColor();
+        ImGui::SameLine();
+        ImGui::PopStyleVar();
+        label = entity_node->get_name() + "##" + std::to_string(entity_node->get_id());
+        bool node_open = ImGui::TreeNodeEx(label.c_str(), selected_flags);
+
         if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         {
-            selected_idx = count;
-            selected_node = node->name.c_str();
+            selected_entity = entity_node;
         }
 
         if (node_open)
         {
-            for (size_t i = 0; i < node->childrens.size(); i++)
+            for (size_t i = 0; i < childrens.size(); i++)
             {
-                const char *selected_child_node = dfs(node->childrens[i].get(), node_flags, count);
+                anim::Entity *selected_child_node = draw_tree_node(childrens[i].get(), node_flags, depth + 1);
                 if (selected_child_node != nullptr)
                 {
-                    selected_node = selected_child_node;
+                    selected_entity = selected_child_node;
                 }
             }
             ImGui::TreePop();
         }
-        return selected_node;
+        return selected_entity;
     }
 }

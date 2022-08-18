@@ -24,7 +24,7 @@ private:
     void update_framebuffer();
     void draw_to_framebuffer();
 
-    glm::vec4 background_color_{0.4f, 0.4f, 0.4f, 1.0f};
+    glm::vec4 background_color_{0.3f, 0.3f, 0.3f, 1.0f};
 
     std::shared_ptr<anim::Image> grid_framebuffer_;
 };

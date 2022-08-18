@@ -179,19 +179,19 @@ namespace ui
         scene_layer_map_[title]->draw(title.c_str(), scene);
     }
 
-    // void MainLayer::draw_model_properties(Scene *scene)
-    // {
-    //     property_layer_.draw(context_.properties_context, scene);
-    // }
+    void MainLayer::draw_component_layer(Scene *scene)
+    {
+        component_layer_.draw(context_.component_context, scene);
+    }
 
-    // void MainLayer::draw_hierarchy_layer(anim::Entity *entity)
-    // {
-    //     hierarchy_layer_.draw(entity);
-    // }
-    // void MainLayer::draw_timeline(Scene *scene)
-    // {
-    //     timeline_layer_.draw(scene, context_.timeline_context);
-    // }
+    void MainLayer::draw_hierarchy_layer(Scene *scene)
+    {
+        hierarchy_layer_.draw(scene);
+    }
+    void MainLayer::draw_timeline(Scene *scene)
+    {
+        timeline_layer_.draw(scene, context_.timeline_context);
+    }
 
     bool MainLayer::is_scene_layer_hovered(const std::string &title)
     {

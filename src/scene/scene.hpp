@@ -15,8 +15,8 @@ namespace glcpp
 }
 namespace anim
 {
-    class Framebuffer;
     class Entity;
+    class Framebuffer;
 }
 
 class Scene
@@ -58,6 +58,10 @@ public:
     {
         delta_time_ = dt;
         resources_->set_dt(delta_time_);
+    }
+    void set_selected_entity(anim::Entity *entity)
+    {
+        selected_entity_ = entity;
     }
 
 protected:

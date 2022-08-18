@@ -35,7 +35,6 @@ public:
     void update();
     void update_window();
     void update_time();
-    void update_resources();
 
     void pre_draw();
     void draw_scene();
@@ -67,6 +66,9 @@ private:
     void init_ui();
     void init_shared_resources();
     void init_scene(uint32_t width, uint32_t height);
+    void post_update();
+    void process_menu_context();
+    void process_timeline_context();
 
     void import_model_or_animation(const char *const path);
     std::shared_ptr<anim::SharedResources> shared_resources_;

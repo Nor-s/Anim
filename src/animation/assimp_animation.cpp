@@ -22,7 +22,7 @@ namespace anim
         fs::path anim_path = fs::u8path(path_);
         name_ = anim_path.filename().string();
         duration_ = animation->mDuration;
-        ticks_per_second_ = animation->mTicksPerSecond;
+        fps_ = animation->mTicksPerSecond;
         process_bones(animation, scene->mRootNode);
     }
     void AssimpAnimation::process_bones(const aiAnimation *animation, const aiNode *root_node)

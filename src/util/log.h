@@ -1,3 +1,6 @@
+#ifndef ANIM_UTIL_LOG_H
+#define ANIM_UTIL_LOG_H
+
 #include <iostream>
 #include <string>
 
@@ -13,3 +16,5 @@ namespace anim
 #endif
     }
 }
+
+#endif

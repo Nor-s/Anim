@@ -37,6 +37,7 @@ namespace ui
         ImVec2 scene_pos_{0.0f, 0.0f};
         ImGuizmo::MODE current_gizmo_mode_;
         ImGuizmo::OPERATION current_gizmo_operation_;
+        float scene_cursor_y_{0.0f};
     };
 }
 

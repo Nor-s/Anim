@@ -15,7 +15,7 @@
 #include "../util/utility.h"
 #include "../graphics/opengl/gl_mesh.h"
 #include "../graphics/mesh.h"
-#include "../util/log.h"
+
 namespace anim
 {
     using namespace gl;
@@ -26,7 +26,7 @@ namespace anim
 
     Model::~Model()
     {
-        root_node_.reset();
+        root_node_ = nullptr;
     }
 
     void Model::load_model(const char *path, const aiScene *scene)

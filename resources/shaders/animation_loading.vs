@@ -13,7 +13,6 @@ layout (std140) uniform Matrices
     mat4 view;
 };
 uniform mat4 model;
-uniform mat4 armature;
 
 
 const int MAX_BONES = 128;
@@ -25,8 +24,8 @@ out vec3 FragPos;
 
 void main()
 {
-    vec4 pos = armature * vec4(aPos, 1.0f);
-    vec3 norm = mat3(armature) *aNormal;
+    vec4 pos = vec4(aPos, 1.0f);
+    vec3 norm = aNormal;
     vec4 totalPosition = vec4(0.0f);
     vec4 totalFragPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);

@@ -7,7 +7,7 @@ using namespace anim;
 
 namespace anim::gl
 {
-    static std::unique_ptr<Mesh> CreateBiPyramid()
+    std::unique_ptr<Mesh> CreateBiPyramid()
     {
         const float position[24 * 3] = {
             // positions
@@ -78,7 +78,14 @@ namespace anim::gl
         : Mesh(vertices, indices, textures, mat_properties)
     {
         init_buffer();
+
     }
+    GLMesh::GLMesh(const std::vector<Vertex>& vertices) 
+        : Mesh(vertices)
+    {
+        init_buffer();
+    }
+
     // TODO: delete buffer
     GLMesh::~GLMesh()
     {

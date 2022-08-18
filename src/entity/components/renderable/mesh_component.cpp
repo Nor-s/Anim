@@ -6,6 +6,10 @@ namespace anim
 {
     void MeshComponent::update()
     {
+        if (isActivate)
+        {
+            return;
+        }
         shader_->use();
         shader_->set_mat4("model", entity_->get_world_transformation());
         // apply transformation

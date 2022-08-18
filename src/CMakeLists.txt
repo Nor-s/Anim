@@ -1,28 +1,10 @@
 # opengl library wrapper
 set(GLCPP_SRC
     glcpp/window.cpp
-    # glcpp/shader.cpp
-    # glcpp/mesh.cpp
-    # glcpp/model.cpp
     glcpp/camera.cpp
-    # glcpp/cubemap.cpp
-    # glcpp/framebuffer.cpp
     glcpp/application.hpp
-    # glcpp/importer.cpp
+    # glcpp/cubemap.cpp
     # glcpp/exporter.cpp
-    # glcpp/component/component.hpp
-    # glcpp/component/transform_component.cpp
-    # glcpp/component/animation_component.cpp
-    # glcpp/component/OBB_component.cpp
-    # glcpp/utility.hpp
-    # glcpp/anim/bone.hpp
-    # glcpp/anim/animation.hpp
-    # glcpp/anim/assimp_animation.hpp
-    # glcpp/anim/json_animation.hpp
-    # glcpp/animator.cpp
-    # glcpp/entity.cpp
-    # glcpp/image.cpp
-    # glcpp/armature.cpp
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
@@ -130,12 +112,12 @@ message("==========================================================")
 add_executable(Anim 
 ./main.cpp 
  
-# ./UI/hierarchy_layer.cpp
-# ./UI/model_property_layer.cpp
+./UI/hierarchy_layer.cpp
+./UI/component_layer.cpp
 ./UI/scene_layer.cpp
 ./UI/scene_layer.h
-# ./UI/text_edit_layer.cpp
-# ./UI/timeline_layer.cpp
+./UI/text_edit_layer.cpp
+./UI/timeline_layer.cpp
 ./UI/main_layer.cpp
 ./UI/main_layer.h
 ./UI/imgui_helper.cpp

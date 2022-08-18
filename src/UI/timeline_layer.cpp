@@ -1,17 +1,25 @@
 #include "timeline_layer.h"
 #include "text_edit_layer.h"
-#include "scene/shared_resources.h"
 #include "scene/scene.hpp"
-#include "glcpp/entity.h"
-#include "glcpp/anim/bone.hpp"
-#include "glcpp/anim/animation.hpp"
-#include "glcpp/component/animation_component.h"
 
 #include <imgui/imgui.h>
 #include <imgui/imgui_internal.h>
 #include <imgui/imgui_neo_sequencer.h>
+#include <imgui/icons/icons.h>
+
+#include <entity/entity.h>
+#include <resources/shared_resources.h>
+#include <animation/animation.h>
+#include <animation/animator.h>
+#include <animation/bone.h>
+#include <entity/components/pose_component.h>
+#include <entity/components/animation_component.h>
+
+#include "imgui_helper.h"
 
 #include <iostream>
+
+using namespace anim;
 
 namespace ui
 {
@@ -24,10 +32,8 @@ namespace ui
 
     void TimelineLayer::draw(Scene *scene, TimelineContext &context)
     {
+        init_context(context, scene);
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
-        auto entity = scene->get_mutable_selected_entity();
-        auto resources = scene->get_mutable_shared_resources().get();
-        auto animation_component = entity->get_mutable_pointer_animation_component();
 
         if (is_hovered_zoom_slider_)
         {
@@ -36,181 +42,156 @@ namespace ui
 
         ImGui::Begin("Animation", 0, window_flags);
         {
-            if (animation_component && entity->has_bone())
+            draw_animator_status(context);
+            ImGui::BeginChild("##Timeline", ImVec2(0, 0), false, window_flags);
             {
-                draw_play_all_button(context);
-                ImGui::SameLine();
-                draw_play_and_stop_button(context);
-                ImGui::SameLine();
-                draw_mp2mm(context);
-                ImGui::SameLine();
-                draw_animation_list(context, resources, entity);
-                ImGui::SameLine();
-                draw_input_box(context, animation_component);
-                ImGui::SameLine();
-                draw_animation_option_button(animation_component);
-                draw_sequencer(context, animation_component);
+                draw_sequencer(context);
             }
-            else
-            {
-                ImGui::Text("can't find bone");
-            }
+            ImGui::EndChild();
         }
         ImGui::End();
     }
-
-    void TimelineLayer::draw_play_all_button(TimelineContext &context)
+    inline void TimelineLayer::init_context(TimelineContext &context, Scene *scene)
     {
-        if (ImGui::Button("All play"))
+        scene_ = scene;
+        entity_ = scene->get_mutable_selected_entity();
+        if (entity_)
         {
-            context.is_clicked_play_all = true;
-            context.is_clicked_play = true;
+            entity_ = entity_->get_mutable_root();
+        }
+        resources_ = scene->get_mutable_shared_resources().get();
+        animator_ = resources_->get_mutable_animator();
+        context.fps = animator_->get_fps();
+        context.start_frame = static_cast<int>(animator_->get_start_time());
+        context.end_frame = static_cast<int>(animator_->get_end_time());
+        context.current_frame = static_cast<int>(animator_->get_current_time());
+        context.is_recording = animator_->get_is_recording();
+        context.is_stop = animator_->get_is_stop();
+        if (!context.is_stop)
+        {
+            context.is_forward = (animator_->get_direction() > 0.0f) ? true : false;
+            context.is_backward = !context.is_forward;
         }
     }
 
-    void TimelineLayer::draw_play_and_stop_button(TimelineContext &context)
+    void TimelineLayer::draw_animator_status(TimelineContext &context)
     {
-        if (ImGui::Button("play"))
-        {
-            context.is_clicked_play = true;
-        }
+        ImGuiIO &io = ImGui::GetIO();
+
+        ImVec2 button_size(40.0f, 0.0f);
+        ImVec2 small_button_size(32.0f, 0.0f);
+        const float item_spacing = ImGui::GetStyle().ItemSpacing.x;
+        float width = ImGui::GetContentRegionAvail().x;
+
+        ImGui::PushItemWidth(30.0f);
+        DragFloatProperty(ICON_MD_SPEED, context.fps, 1.0f, 1.0f, 300.0f);
+
         ImGui::SameLine();
 
-        if (ImGui::Button("stop"))
+        auto current_cursor = ImGui::GetCursorPosX();
+        auto next_pos = ImGui::GetWindowWidth() / 2.0f - button_size.x - small_button_size.x - item_spacing;
+        if (next_pos < current_cursor)
         {
-            context.is_clicked_stop = true;
+            next_pos = current_cursor;
         }
-    }
+        ImGui::SameLine(next_pos);
 
-    void TimelineLayer::draw_mp2mm(TimelineContext &context)
-    {
-        if (ImGui::Button("mp2mm"))
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 2.0f);
+        ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 0.3f, 0.2f, 0.8f});
         {
-            context.is_clicked_mp2mm = true;
-        }
-    }
-
-    void TimelineLayer::draw_animation_option_button(glcpp::AnimationComponent *animation_component)
-    {
-        static bool edit_open = false;
-        bool *p_is_loop = animation_component->get_mutable_pointer_is_loop();
-        ImGui::Checkbox("loop", p_is_loop);
-        if (animation_component->get_animation()->get_type() == glcpp::AnimationType::Json)
-        {
+            ToggleButton(ICON_KI_REC, &context.is_recording, small_button_size);
+            ImGui::PopStyleColor();
             ImGui::SameLine();
-
-            if (ImGui::Button("edit"))
-            {
-                text_editor_->open(animation_component->get_mutable_animation()->get_path());
-                edit_open = true;
-            }
-            text_editor_->draw(&edit_open);
+            ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 1.0f, 1.0f, 1.0f});
+            ToggleButton(ICON_KI_CARET_LEFT, &context.is_backward, small_button_size, &context.is_clicked_play_back);
             ImGui::SameLine();
-
-            if (ImGui::Button("reload"))
-            {
-                animation_component->reload();
-            }
+            ToggleButton(ICON_KI_CARET_RIGHT, &context.is_forward, small_button_size, &context.is_clicked_play);
+            ImGui::SameLine();
+            ToggleButton(ICON_KI_PAUSE, &context.is_stop, small_button_size);
+            ImGui::SameLine();
         }
-    }
+        ImGui::PopStyleColor();
+        ImGui::PopStyleVar();
 
-    void TimelineLayer::draw_animation_list(TimelineContext &context, const SharedResources *shared_resources, const glcpp::Entity *entity)
-    {
-        const auto &animations = shared_resources->get_animations();
-        int current_idx = entity->get_animation_id();
-        std::string current_animation_name("None");
-        if (entity->has_animation_component())
+        current_cursor = ImGui::GetCursorPosX();
+        auto font_size = ImGui::CalcTextSize("Current Start End").x;
+        next_pos = width - font_size + (-30.0f - item_spacing) * 3;
+
+        if (next_pos < current_cursor)
         {
-            current_animation_name = std::to_string(current_idx) + ":" + entity->get_pointer_animation_component()->get_animation()->get_name();
+            next_pos = current_cursor;
         }
-
-        ImGui::PushItemWidth(100);
-        ImGui::Text("Animation:");
+        ImGui::SameLine(next_pos);
+        context.is_current_frame_changed = DragIntProperty("Current", context.current_frame, 1.0f, context.start_frame, context.end_frame);
         ImGui::SameLine();
-        if (ImGui::BeginCombo("##animations", current_animation_name.c_str()))
-        {
-            for (size_t i = 0; i < animations.size(); i++)
-            {
-                std::string name = std::to_string(i) + ":" + animations[i]->get_name();
+        DragIntProperty("Start", context.start_frame, 1.0f, 0, context.end_frame - 1);
+        ImGui::SameLine();
+        DragIntProperty("End", context.end_frame, 1.0f, context.start_frame + 1, 10000);
+        ImGui::PopItemWidth();
+    }
 
-                bool is_selected = (current_idx == i);
-                if (ImGui::Selectable(name.c_str(), is_selected) && current_idx != i)
+    void TimelineLayer::draw_sequencer(TimelineContext &context)
+    {
+        uint32_t current = static_cast<uint32_t>(animator_->get_current_time());
+        uint32_t start = static_cast<uint32_t>(animator_->get_start_time());
+        uint32_t end = static_cast<uint32_t>(animator_->get_end_time());
+        uint32_t before = current;
+        // TODO: begin neo sequencer : uint32_t to int
+        if (ImGui::BeginNeoSequencer("Sequencer", &current, &start, &end))
+        {
+            if (entity_ && entity_->get_component<AnimationComponent>())
+            {
+                auto anim_component = entity_->get_component<AnimationComponent>();
+                if (anim_component && anim_component->get_animation())
                 {
-                    context.animation_idx = i;
+                    draw_keyframes(context, anim_component->get_animation());
+                    draw_keyframe_popup(context);
                 }
             }
-            ImGui::EndCombo();
-        }
-    }
-
-    void TimelineLayer::draw_input_box(TimelineContext &context, const glcpp::AnimationComponent *animation_component)
-    {
-        context.fps = animation_component->get_fps();
-        context.tps = animation_component->get_tps();
-        ImGui::PushItemWidth(30);
-
-        ImGui::Text("Fps:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##fps", &context.fps, 1.0f, 1.0f, FLT_MAX, "%.0f");
-        ImGui::SameLine();
-        ImGui::Text("Scale:");
-        ImGui::SameLine();
-        ImGui::DragFloat("##scale", &context.tps, 1.0f, 1.0f, FLT_MAX, "%.0f");
-    }
-
-    void TimelineLayer::draw_sequencer(TimelineContext &context, glcpp::AnimationComponent *animation_component)
-    {
-        current_frame_ = animation_component->get_current_frame_num();
-        uint32_t before_frame = current_frame_;
-        uint32_t start_frame = 0;
-        uint32_t end_frame = animation_component->get_custom_duration();
-
-        if (ImGui::BeginNeoSequencer("Sequencer", &current_frame_, &start_frame, &end_frame))
-        {
-            draw_keyframes(animation_component->get_mutable_animation());
-            draw_keyframe_popup(context);
+            is_hovered_zoom_slider_ = false;
             if (ImGui::IsZoomSliderHovered())
             {
                 is_hovered_zoom_slider_ = true;
-            }
-            else
-            {
-                is_hovered_zoom_slider_ = false;
             }
             ImGui::EndNeoSequencer();
         }
 
         // update current time
-        if (before_frame != current_frame_)
+        if (before != current)
         {
-            animation_component->set_current_frame_num_to_time(current_frame_);
+            context.is_current_frame_changed = true;
+            context.current_frame = static_cast<int>(current);
         }
     }
 
-    void TimelineLayer::draw_keyframes(glcpp::Animation *animation)
+    void TimelineLayer::draw_keyframes(TimelineContext &context, const Animation *animation)
     {
         if (ImGui::BeginNeoGroup("Transform", &is_opened_transform_))
         {
-            auto &name_bone_map = animation->get_mutable_name_bone_map();
+            auto &name_bone_map = animation->get_name_bone_map();
             bool is_hovered = false;
             for (auto &bone : name_bone_map)
             {
                 float factor = bone.second->get_factor();
                 std::vector<float> &keys = bone.second->get_mutable_time_list();
+                const char *name = bone.second->get_bone_name().c_str();
 
-                if (ImGui::BeginNeoTimeline(bone.second->get_bone_name().c_str()))
+                if (ImGui::BeginNeoTimeline(name))
                 {
                     for (size_t i = 0; i < keys.size(); i++)
                     {
                         uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
-                        if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && clicked_time_ == -1.0f)
+                        if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && ImGui::IsItemClicked())
                         {
-                            if (ImGui::IsItemClicked())
-                            {
-                                clicked_frame_ = key;
-                                clicked_time_ = keys[i];
-                                clicked_bone_ = bone.second.get();
-                            }
+                            clicked_frame_ = key;
+                            clicked_time_ = keys[i];
+                            clicked_bone_ = bone.second.get();
+                            context.is_clicked_bone = true;
+                            context.clicked_bone_name = bone.second->get_bone_name();
+                            context.is_stop = true;
+                            context.current_frame = clicked_frame_;
+                            context.is_current_frame_changed = true;
+                            ImGui::ItemSelect(name);
                         }
                     }
                     ImGui::EndNeoTimeLine();
@@ -222,55 +203,47 @@ namespace ui
 
     void TimelineLayer::draw_keyframe_popup(TimelineContext &context)
     {
-        if (clicked_time_ != -1.0f && clicked_bone_)
+        if (clicked_bone_ != nullptr)
         {
-            ImVec2 vMin{0, 0};
-            ImVec2 vMax{0, 0};
-            current_frame_ = clicked_frame_;
-            context.is_clicked_stop = true;
             ImGui::OpenPopup("my_select_popup");
             ImGui::SameLine();
-            if (ImGui::BeginPopup("my_select_popup"))
+            if (ImGui::BeginPopup("my_select_popup") && !context.is_clicked_bone)
             {
-                vMin = ImGui::GetWindowContentRegionMin();
-                vMax = ImGui::GetWindowContentRegionMax();
-                vMin.x += ImGui::GetWindowPos().x - 10;
-                vMin.y += ImGui::GetWindowPos().y - 10;
-                vMax.x += ImGui::GetWindowPos().x + 10;
-                vMax.y += ImGui::GetWindowPos().y + 10;
-                ImGui::Text("%s: %u", clicked_bone_->get_bone_name().c_str(), clicked_frame_);
-                glm::vec3 *p_pos = clicked_bone_->get_mutable_pointer_positions(clicked_time_);
-                glm::quat *p_quat = clicked_bone_->get_mutable_pointer_rotations(clicked_time_);
-                glm::vec3 *p_scale = clicked_bone_->get_mutable_pointer_scales(clicked_time_);
-                if (p_pos)
-                {
-                    ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
-                }
-                if (p_quat)
-                {
-                    auto before_quat = *p_quat;
-                    ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
-                    if (before_quat != *p_quat)
-                    {
-                        *p_quat = glm::normalize(*p_quat);
-                    }
-                }
-                if (p_scale)
-                {
-                    ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
-                }
+                ImGuiWindow *window = ImGui::GetCurrentWindow();
 
-                ImGui::EndPopup();
-            }
-            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-            {
-                auto x = ImGui::GetMousePos().x;
-                auto y = ImGui::GetMousePos().y;
-                if (!(vMax.y > y && vMax.x > x && vMin.x < x && vMin.y < y))
+                draw_bone_status();
+
+                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
                 {
-                    clicked_time_ = -1.0f;
+                    clicked_bone_ = nullptr;
                 }
             }
+            ImGui::EndPopup();
         }
     }
+    void TimelineLayer::draw_bone_status()
+    {
+        ImGui::Text("%s: %u", clicked_bone_->get_bone_name().c_str(), clicked_frame_);
+        glm::vec3 *p_pos = clicked_bone_->get_mutable_pointer_positions(clicked_time_);
+        glm::quat *p_quat = clicked_bone_->get_mutable_pointer_rotations(clicked_time_);
+        glm::vec3 *p_scale = clicked_bone_->get_mutable_pointer_scales(clicked_time_);
+        if (p_pos)
+        {
+            ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
+        }
+        if (p_quat)
+        {
+            auto before_quat = *p_quat;
+            ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
+            if (before_quat != *p_quat)
+            {
+                *p_quat = glm::normalize(*p_quat);
+            }
+        }
+        if (p_scale)
+        {
+            ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
+        }
+    }
+
 }

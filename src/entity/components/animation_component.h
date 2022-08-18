@@ -7,13 +7,10 @@
 namespace anim
 {
     class Animation;
+
     class AnimationComponent : public ComponentBase<AnimationComponent>
     {
     public:
-        AnimationComponent() = default;
-        AnimationComponent(std::shared_ptr<Animation> animation);
-        ~AnimationComponent() = default;
-
         void init_animation();
         void play();
         void stop();

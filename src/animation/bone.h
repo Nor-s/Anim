@@ -55,7 +55,7 @@ namespace anim
         const std::string &get_bone_name() const;
         int get_position_index(float animation_time);
         int get_rotation_index(float animation_time);
-        int GetScaleIndex(float animation_time);
+        int get_scale_index(float animation_time);
         std::vector<float> &get_mutable_time_list();
         float get_factor();
         glm::vec3 *get_mutable_pointer_positions(float time);
@@ -70,6 +70,7 @@ namespace anim
         void push_scale(const glm::vec3 &scale, float time);
         void init_time_list();
         void get_ai_node_anim(aiNodeAnim *channel, const aiMatrix4x4 &binding_pose_transform);
+        void replace_key_frame(const glm::mat4 &transform, float time);
 
     private:
         float get_scale_factor(float last_time_stamp, float next_time_stamp, float animation_time);
@@ -95,9 +96,9 @@ namespace anim
         std::map<float, int> time_scales_map_;
         std::vector<float> time_list_;
 
-        uint32_t recently_used_position_idx_ = 0;
-        uint32_t recently_used_rotation_idx_ = 0;
-        uint32_t recently_used_scale_idx_ = 0;
+        int recently_used_position_idx_ = -1;
+        int recently_used_rotation_idx_ = -1;
+        int recently_used_scale_idx_ = -1;
     };
 }
 

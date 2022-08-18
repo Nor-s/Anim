@@ -24,31 +24,23 @@ namespace anim
             final_bone_matrices_.push_back(glm::mat4(1.0f));
     }
 
-    void Animator::update_animation(float dt, AnimationComponent *animation, Entity *root, Shader *shader)
+    void Animator::update(float dt)
     {
-        assert(animation);
-
-        bool &is_stop = animation->get_mutable_is_stop();
-        float &current_time = animation->get_mutable_current_time();
-        uint32_t duration = animation->get_custom_duration();
-        const float fps = animation->get_mutable_fps();
-        bool is_loop = animation->get_mutable_is_loop();
-
-        if (!is_stop)
+        if (!is_stop_)
         {
-            float time = current_time + fps * dt;
-            if (dt <= 0)
-            {
-                time = 0.0f;
-            }
-            current_time = fmod(time, duration);
-            if (time > duration)
-            {
-                is_stop = !is_loop;
-                current_time = 0.0f;
-            }
+            current_time_ += fps_ * dt * direction_;
+            current_time_ = fmax(start_time_, fmod(end_time_ + current_time_, end_time_));
         }
-        current_time_ = current_time;
+        else
+        {
+            current_time_ = floor(current_time_);
+        }
+    }
+
+    void Animator::update_animation(AnimationComponent *animation, Entity *root, Shader *shader)
+    {
+        assert(animation && root && shader);
+
         factor_ = animation->get_ticks_per_second_factor();
         calculate_bone_transform(root, animation->get_mutable_animation(), glm::mat4(1.0f));
         shader->use();
@@ -63,16 +55,18 @@ namespace anim
         const std::string &node_name = entity->get_name();
         auto armature = entity->get_component<ArmatureComponent>();
         glm::mat4 global_transformation = parentTransform;
+        entity->set_local(glm::mat4(1.0f));
 
         // 바인딩 포즈
-        global_transformation *= entity->get_local_transformation();
+        global_transformation *= armature->get_bind_pose();
 
         // 애니메이션
         auto bone = animation->find_bone(node_name);
         if (bone != nullptr)
         {
             // 애니메이션 포즈
-            global_transformation *= bone->get_local_transform(current_time_, factor_);
+            entity->set_local(bone->get_local_transform(current_time_, factor_));
+            global_transformation *= entity->get_local();
         }
         // FK
         int id = armature->get_id();
@@ -85,11 +79,70 @@ namespace anim
 
         auto &children = entity->get_mutable_children();
         size_t size = children.size();
-        entity->set_world_transformation(global_transformation);
-
+        armature->set_model_pose(global_transformation);
         for (size_t i = 0; i < size; i++)
         {
             calculate_bone_transform(children[i].get(), animation, global_transformation);
         }
+    }
+    const float Animator::get_current_time() const
+    {
+        return current_time_;
+    }
+    const float Animator::get_start_time() const
+    {
+        return start_time_;
+    }
+    const float Animator::get_end_time() const
+    {
+        return end_time_;
+    }
+    const float Animator::get_fps() const
+    {
+        return fps_;
+    }
+    const float Animator::get_direction() const
+    {
+        return direction_;
+    }
+    const bool Animator::get_is_recording() const
+    {
+        return is_recording_;
+    }
+    const bool Animator::get_is_stop() const
+    {
+        return is_stop_;
+    }
+    void Animator::set_current_time(float current_time)
+    {
+        current_time_ = current_time;
+    }
+    void Animator::set_start_time(float time)
+    {
+        start_time_ = time;
+    }
+    void Animator::set_end_time(float time)
+    {
+        end_time_ = time;
+    }
+    void Animator::set_fps(float fps)
+    {
+        fps_ = fps;
+    }
+    void Animator::set_direction(bool is_left)
+    {
+        direction_ = 1.0f;
+        if (is_left)
+        {
+            direction_ = -1.0f;
+        }
+    }
+    void Animator::set_is_stop(bool is_stop)
+    {
+        is_stop_ = is_stop;
+    }
+    void Animator::set_is_recording(bool is_recording)
+    {
+        is_recording_ = is_recording;
     }
 }

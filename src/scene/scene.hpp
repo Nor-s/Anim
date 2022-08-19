@@ -27,6 +27,7 @@ public:
     virtual void init_framebuffer(uint32_t width, uint32_t height) = 0;
     virtual void pre_draw() = 0;
     virtual void draw() = 0;
+    virtual void picking(int x, int y) = 0;
     virtual anim::Entity *get_mutable_selected_entity()
     {
         return selected_entity_;
@@ -63,11 +64,16 @@ public:
     {
         selected_entity_ = entity;
     }
+    void set_selected_entity(int id)
+    {
+        selected_entity_ = resources_->get_entity(id);
+    }
 
 protected:
     anim::Entity *selected_entity_{nullptr};
     std::shared_ptr<anim::SharedResources> resources_;
     std::shared_ptr<anim::Framebuffer> framebuffer_;
+    std::shared_ptr<anim::Framebuffer> offscreen_framebuffer_;
     std::shared_ptr<glcpp::Camera> camera_;
     float delta_time_ = 0.0f;
     uint32_t width_ = 800;

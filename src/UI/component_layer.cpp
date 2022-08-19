@@ -44,8 +44,8 @@ namespace ui
 
     void ComponentLayer::draw_animation(ComponentContext &context, const SharedResources *shared_resource, const Entity *entity, const AnimationComponent *animation)
     {
-        context.animation_idx = animation->get_animation()->get_id();
-        int animation_idx = context.animation_idx;
+        context.current_animation_idx = animation->get_animation()->get_id();
+        int animation_idx = context.current_animation_idx;
 
         const auto &animations = shared_resource->get_animations();
         const char *names[] = {"Animation"};

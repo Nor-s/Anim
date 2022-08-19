@@ -6,12 +6,14 @@ namespace anim
 {
     void MeshComponent::update()
     {
-        if (isActivate)
+        if (!isActivate)
         {
             return;
         }
         shader_->use();
         shader_->set_mat4("model", entity_->get_world_transformation());
+        shader_->set_vec3("selectionColor", selectionColor);
+
         // apply transformation
         for (auto &mesh : meshes_)
         {
@@ -22,7 +24,7 @@ namespace anim
     {
         meshes_ = meshes;
     }
-    void MeshComponent::set_shader(std::shared_ptr<Shader> &shader)
+    void MeshComponent::set_shader(Shader *shader)
     {
         shader_ = shader;
     }

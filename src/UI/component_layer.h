@@ -1,6 +1,8 @@
 #ifndef UI_IMGUI_COMPONENT_LAYER_H
 #define UI_IMGUI_COMPONENT_LAYER_H
 
+#include "ui_context.h"
+
 class Scene;
 namespace anim
 {
@@ -12,10 +14,6 @@ namespace anim
 
 namespace ui
 {
-    struct ComponentContext
-    {
-        int animation_idx{-1};
-    };
     class ComponentLayer
     {
     public:

@@ -25,6 +25,8 @@ namespace anim
         Entity *get_root_entity();
         Animator *get_animator();
         void add_and_replace_bone(const std::string &name, const glm::mat4 &transform);
+        Entity *find(int bone_id);
+        Entity *find(int bone_id, Entity *entity);
 
     private:
         std::unordered_map<std::string, BoneInfo> bone_info_map_{};

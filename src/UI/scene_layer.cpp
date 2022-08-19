@@ -34,7 +34,7 @@ namespace ui
           current_gizmo_operation_(ImGuizmo::OPERATION::NONE)
     {
     }
-    void SceneLayer::draw(const char *title, Scene *scene)
+    void SceneLayer::draw(const char *title, Scene *scene, UiContext &ui_context)
     {
         static ImGuiWindowFlags sceneWindowFlags = 0;
 
@@ -50,8 +50,18 @@ namespace ui
             ImVec2 viewportPanelSize = ImGui::GetContentRegionAvail();
             width_ = viewportPanelSize.x;
             height_ = viewportPanelSize.y;
+            ImVec2 mouse_pos = ImGui::GetMousePos();
+            int x = mouse_pos.x - scene_pos_.x;
+            int y = mouse_pos.y - scene_pos_.y;
+            // scene->
             ImGuiWindow *window = ImGui::GetCurrentWindow();
             is_hovered_ = !ImGuizmo::IsOver() && ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max);
+            if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
+            {
+                ui_context.scene.is_picking = true;
+                ui_context.scene.x = x;
+                ui_context.scene.y = height - y;
+            }
 
             // draw scene framebuffer
             ImGui::Image(reinterpret_cast<void *>(static_cast<intptr_t>(scene->get_mutable_framebuffer()->get_color_texture())), ImVec2{width_, height_}, ImVec2{0, 1}, ImVec2{1, 0});
@@ -59,7 +69,7 @@ namespace ui
             {
                 scene->set_size(width_, height_);
             }
-            draw_gizmo(scene);
+            draw_gizmo(scene, ui_context);
             sceneWindowFlags = ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max) ? ImGuiWindowFlags_NoMove : 0;
         }
         ImGui::End();
@@ -67,10 +77,10 @@ namespace ui
 
         draw_mode_window();
     }
-    void SceneLayer::draw_gizmo(Scene *scene)
+    void SceneLayer::draw_gizmo(Scene *scene, UiContext &ui_context)
     {
         bool useSnap = true;
-        float snap_value = 0.1f;
+        float snap_value = 1.0f;
         float snap[3] = {snap_value, snap_value, snap_value};
 
         ImGuiIO &io = ImGui::GetIO();
@@ -103,13 +113,9 @@ namespace ui
                                  useSnap ? &snap[0] : NULL);
             if (ImGuizmo::IsUsing())
             {
-                auto delta = glm::inverse(transform) * glm::make_mat4(object_mat_ptr);
-                delta = selected_entity->get_local() * delta;
-                selected_entity->set_local(delta);
-                if (auto armature = selected_entity->get_component<anim::ArmatureComponent>(); armature)
-                {
-                    armature->add_and_replace_bone();
-                }
+                ui_context.entity.new_transform = glm::inverse(transform) * glm::make_mat4(object_mat_ptr);
+                ui_context.entity.new_transform = selected_entity->get_local() * ui_context.entity.new_transform;
+                ui_context.entity.is_changed_transform = true;
             }
             if (ImGuizmo::IsOver())
             {

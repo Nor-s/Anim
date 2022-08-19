@@ -29,7 +29,7 @@ namespace ui
             ImGui::EndTooltip();
         }
     }
-    bool DragPropertyXYZ(const char *label, glm::vec3 &value, float step, float min, float max, const std::string &help_message)
+    bool DragFPropertyXYZ(const char *label, float *value, float step, float min, float max, const char *format, const std::string &help_message, int num)
     {
         bool is_value_changed = false;
         ImGui::PushID(label);
@@ -39,20 +39,22 @@ namespace ui
         ImGui::Text(label);
         ImGui::NextColumn();
 
-        ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+        ImGui::PushMultiItemsWidths(num, ImGui::CalcItemWidth());
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
 
-        const char *button_labels[] = {"X", "Y", "Z"};
-        const char *drag_labels[] = {"##x", "##y", "##z"};
+        const char *button_labels[] = {"X", "Y", "Z", "W"};
+        const char *drag_labels[] = {"##x", "##y", "##z", "##w"};
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < num; i++)
         {
             auto button_color = glm::vec4{0.0f, 0.0f, 0.0f, 0.5f};
             auto framebg_color = glm::vec4{0.4f, 0.4f, 0.4f, 0.1f};
             auto framebg_hovered_color = glm::vec4{0.4f, 0.4f, 0.4f, 0.7f};
             auto framebg_active_color = glm::vec4{0.5f, 0.5f, 0.5f, 1.0f};
 
-            button_color[i] = framebg_hovered_color[i] = framebg_active_color[i] = framebg_color[i] = 0.9f;
+            if (i <= 3)
+                button_color[i] = framebg_hovered_color[i] = framebg_active_color[i] = framebg_color[i] = 0.9f;
+
             ImGui::PushStyleColor(ImGuiCol_Button, GlmVec4ToImVec4(button_color));                  // IM_COL32(button_color.r * 255, button_color.g * 255, button_color.b * 255, button_color.a * 255));
             ImGui::PushStyleColor(ImGuiCol_ButtonHovered, GlmVec4ToImVec4(button_color));           // IM_COL32(button_color.r * 255, button_color.g * 255, button_color.b * 255, button_color.a * 255));
             ImGui::PushStyleColor(ImGuiCol_ButtonActive, GlmVec4ToImVec4(button_color));            // IM_COL32(button_color.r * 255, button_color.g * 255, button_color.b * 255, button_color.a * 255));
@@ -63,9 +65,9 @@ namespace ui
             ImGui::PopStyleColor(1);
 
             ImGui::SameLine();
-            is_value_changed |= ImGui::DragFloat(drag_labels[i], &value[i], step, min, max);
+            is_value_changed |= ImGui::DragFloat(drag_labels[i], &value[i], step, min, max, format);
             ImGui::PopItemWidth();
-            if (i != 3)
+            if (i != num)
             {
                 ImGui::SameLine();
             }
@@ -78,6 +80,11 @@ namespace ui
         ImGui::PopID();
 
         return is_value_changed;
+    }
+
+    bool DragPropertyXYZ(const char *label, glm::vec3 &value, float step, float min, float max, const std::string &help_message)
+    {
+        return DragFPropertyXYZ(label, &value[0], step, min, max, "%.3f", help_message);
     }
     inline void BeginDragProperty(const char *label, const ImVec2 &btn_size)
     {

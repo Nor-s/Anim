@@ -21,19 +21,6 @@ namespace ui
 {
     class SceneLayer;
 
-    struct MenuContext
-    {
-        bool clicked_import_model{false};
-        bool clicked_export_animation{false};
-        std::string path{""};
-    };
-
-    struct UiContext
-    {
-        MenuContext menu_context{};
-        TimelineContext timeline_context{};
-        ComponentContext component_context{};
-    };
     /**
      * @brief dock + menu bar(import, export)
      *

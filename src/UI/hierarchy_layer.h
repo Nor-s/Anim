@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <imgui/imgui.h>
+#include "ui_context.h"
 
 namespace anim
 {
@@ -17,7 +18,7 @@ namespace ui
     public:
         HierarchyLayer();
         ~HierarchyLayer();
-        void draw(Scene *scene);
+        void draw(Scene *scene, UiContext &ui_context);
 
     private:
         anim::Entity *draw_tree_node(anim::Entity *entity_node, const ImGuiTreeNodeFlags &node_flags, int depth = 0);

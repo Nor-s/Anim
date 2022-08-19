@@ -13,7 +13,7 @@ layout (std140) uniform Matrices
     mat4 view;
 };
 uniform mat4 model;
-
+out float boneId;
 
 out vec2 TexCoords;
 out vec3 Normal;
@@ -24,4 +24,5 @@ void main()
     gl_Position = projection * view * model * vec4(aPos, 1.0);
     Normal = mat3(model)* aNormal;
     FragPos = vec3(model * vec4(aPos, 1.0));
+    boneId = 0.0;
 }

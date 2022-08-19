@@ -8,6 +8,10 @@ namespace anim
     }
     void Entity::update()
     {
+        if (is_deactivate_)
+        {
+            return;
+        }
         world_ = local_; // transform_.get_mat4();
         if (parent_)
         {

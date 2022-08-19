@@ -12,7 +12,7 @@ namespace ui
 {
     HierarchyLayer::HierarchyLayer() = default;
     HierarchyLayer::~HierarchyLayer() = default;
-    void HierarchyLayer::draw(Scene *scene)
+    void HierarchyLayer::draw(Scene *scene, UiContext &ui_context)
     {
         ImGuiTreeNodeFlags node_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
         auto &entities = scene->get_mutable_ref_shared_resources()->get_mutable_entities();
@@ -29,7 +29,8 @@ namespace ui
                 auto selected_node = draw_tree_node(entities.get(), node_flags);
                 if (selected_node)
                 {
-                    scene->set_selected_entity(selected_node);
+                    ui_context.entity.is_changed_selected_entity = true;
+                    ui_context.entity.selected_id = selected_node->get_id();
                 }
             }
         }

@@ -122,12 +122,13 @@ namespace anim
     {
         auto world = pose_->get_root_entity()->get_mutable_parent()->get_world_transformation();
         shader_->use();
+        shader_->set_vec3("selectionColor", selectionColor);
         world = world * model_;
         entity_->set_world_transformation(world);
-        // world * model * bind * relative
-        //  (world*model*bind)-1
-        //   new = relative * (wordl)-1 * (new world)
-
+        if (!isActivate)
+        {
+            return;
+        }
         auto mat = armature_->get_mutable_mat_properties();
         for (int i = 0; i < rotation_.size(); i++)
         {

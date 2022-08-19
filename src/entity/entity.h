@@ -14,6 +14,7 @@ namespace anim
     class Entity
     {
     public:
+        bool is_deactivate_ = false;
         Entity() = default;
         Entity(const std::string &name, int id, Entity *parent = nullptr);
         template <class T>

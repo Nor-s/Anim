@@ -6,6 +6,7 @@
 #include <imgui/imgui_internal.h>
 #include <imgui/imgui_neo_sequencer.h>
 #include <imgui/icons/icons.h>
+#include <imgui/ImGuizmo.h>
 
 #include <entity/entity.h>
 #include <resources/shared_resources.h>
@@ -14,6 +15,7 @@
 #include <animation/bone.h>
 #include <entity/components/pose_component.h>
 #include <entity/components/animation_component.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "imgui_helper.h"
 
@@ -30,9 +32,9 @@ namespace ui
         text_editor_->init();
     }
 
-    void TimelineLayer::draw(Scene *scene, TimelineContext &context)
+    void TimelineLayer::draw(Scene *scene, UiContext &ui_context)
     {
-        init_context(context, scene);
+        init_context(ui_context, scene);
         ImGuiWindowFlags window_flags = ImGuiWindowFlags_AlwaysAutoResize;
 
         if (is_hovered_zoom_slider_)
@@ -42,22 +44,24 @@ namespace ui
 
         ImGui::Begin("Animation", 0, window_flags);
         {
-            draw_animator_status(context);
+            draw_animator_status(ui_context);
             ImGui::BeginChild("##Timeline", ImVec2(0, 0), false, window_flags);
             {
-                draw_sequencer(context);
+                draw_sequencer(ui_context);
             }
             ImGui::EndChild();
         }
         ImGui::End();
     }
-    inline void TimelineLayer::init_context(TimelineContext &context, Scene *scene)
+    inline void TimelineLayer::init_context(UiContext &ui_context, Scene *scene)
     {
+        auto &context = ui_context.timeline;
         scene_ = scene;
         entity_ = scene->get_mutable_selected_entity();
+        root_entity_ = nullptr;
         if (entity_)
         {
-            entity_ = entity_->get_mutable_root();
+            root_entity_ = entity_->get_mutable_root();
         }
         resources_ = scene->get_mutable_shared_resources().get();
         animator_ = resources_->get_mutable_animator();
@@ -74,8 +78,9 @@ namespace ui
         }
     }
 
-    void TimelineLayer::draw_animator_status(TimelineContext &context)
+    void TimelineLayer::draw_animator_status(UiContext &ui_context)
     {
+        auto &context = ui_context.timeline;
         ImGuiIO &io = ImGui::GetIO();
 
         ImVec2 button_size(40.0f, 0.0f);
@@ -130,8 +135,9 @@ namespace ui
         ImGui::PopItemWidth();
     }
 
-    void TimelineLayer::draw_sequencer(TimelineContext &context)
+    void TimelineLayer::draw_sequencer(UiContext &ui_context)
     {
+        auto &context = ui_context.timeline;
         uint32_t current = static_cast<uint32_t>(animator_->get_current_time());
         uint32_t start = static_cast<uint32_t>(animator_->get_start_time());
         uint32_t end = static_cast<uint32_t>(animator_->get_end_time());
@@ -139,13 +145,13 @@ namespace ui
         // TODO: begin neo sequencer : uint32_t to int
         if (ImGui::BeginNeoSequencer("Sequencer", &current, &start, &end))
         {
-            if (entity_ && entity_->get_component<AnimationComponent>())
+            if (root_entity_ && root_entity_->get_component<AnimationComponent>())
             {
-                auto anim_component = entity_->get_component<AnimationComponent>();
+                auto anim_component = root_entity_->get_component<AnimationComponent>();
                 if (anim_component && anim_component->get_animation())
                 {
-                    draw_keyframes(context, anim_component->get_animation());
-                    draw_keyframe_popup(context);
+                    draw_keyframes(ui_context, anim_component->get_animation());
+                    // draw_keyframe_popup(ui_context);
                 }
             }
             is_hovered_zoom_slider_ = false;
@@ -164,86 +170,104 @@ namespace ui
         }
     }
 
-    void TimelineLayer::draw_keyframes(TimelineContext &context, const Animation *animation)
+    void TimelineLayer::draw_keyframes(UiContext &ui_context, const Animation *animation)
     {
-        // if (ImGui::BeginNeoGroup("Transform", &is_opened_transform_))
-        // {
-        //     auto &name_bone_map = animation->get_name_bone_map();
-        //     bool is_hovered = false;
-        //     for (auto &bone : name_bone_map)
-        //     {
-        //         float factor = bone.second->get_factor();
-        //         std::vector<float> &keys = bone.second->get_mutable_time_list();
-        //         const char *name = bone.second->get_name().c_str();
-
-        //         if (ImGui::BeginNeoTimeline(name))
-        //         {
-        //             for (size_t i = 0; i < keys.size(); i++)
-        //             {
-        //                 uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
-        //                 if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && ImGui::IsItemClicked())
-        //                 {
-        //                     clicked_frame_ = key;
-        //                     clicked_time_ = keys[i];
-        //                     clicked_bone_ = bone.second.get();
-        //                     context.is_clicked_bone = true;
-        //                     context.clicked_bone_name = bone.second->get_name();
-        //                     context.is_stop = true;
-        //                     context.current_frame = clicked_frame_;
-        //                     context.is_current_frame_changed = true;
-        //                     ImGui::ItemSelect(name);
-        //                 }
-        //             }
-        //             ImGui::EndNeoTimeLine();
-        //         }
-        //     }
-        //     ImGui::EndNeoGroup();
-        // }
-    }
-
-    void TimelineLayer::draw_keyframe_popup(TimelineContext &context)
-    {
-        if (clicked_bone_ != nullptr)
+        auto &context = ui_context.timeline;
+        auto &entity_context = ui_context.entity;
+        if (ImGui::BeginNeoGroup("Transform", &is_opened_transform_))
         {
-            ImGui::OpenPopup("my_select_popup");
-            ImGui::SameLine();
-            if (ImGui::BeginPopup("my_select_popup") && !context.is_clicked_bone)
+            auto &name_bone_map = animation->get_name_bone_map();
+            bool is_hovered = false;
+            for (auto &bone : name_bone_map)
             {
-                ImGuiWindow *window = ImGui::GetCurrentWindow();
+                float factor = bone.second->get_factor();
+                auto &keys = bone.second->get_time_set();
+                const char *name = bone.second->get_name().c_str();
 
-                draw_bone_status();
-
-                if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
+                if (ImGui::BeginNeoTimeline(name))
                 {
-                    clicked_bone_ = nullptr;
+                    for (auto key : keys)
+                    {
+                        uint32_t ukey = static_cast<uint32_t>(floorf(key * factor));
+                        if (ImGui::Keyframe(&ukey, &is_hovered) && is_hovered && ImGui::IsItemClicked())
+                        {
+                            // clicked_frame_ = ukey;
+                            // clicked_time_ = key;
+                            // clicked_bone_ = bone.second.get();
+                            auto selected_entity = root_entity_->find(bone.second->get_name());
+                            if (selected_entity)
+                            {
+                                entity_context.is_changed_selected_entity = true;
+                                entity_context.selected_id = selected_entity->get_id();
+                            }
+                            context.is_stop = true;
+                            context.current_frame = ukey;
+                            context.is_current_frame_changed = true;
+                            // ImGui::OpenPopup("my_select_popup");
+                            ImGui::ItemSelect(name);
+                        }
+                    }
+                    ImGui::EndNeoTimeLine();
                 }
             }
-            ImGui::EndPopup();
+            ImGui::EndNeoGroup();
         }
     }
-    void TimelineLayer::draw_bone_status()
-    {
-        // ImGui::Text("%s: %u", clicked_bone_->get_name().c_str(), clicked_frame_);
-        // glm::vec3 *p_pos = clicked_bone_->get_mutable_pointer_positions(clicked_time_);
-        // glm::quat *p_quat = clicked_bone_->get_mutable_pointer_rotations(clicked_time_);
-        // glm::vec3 *p_scale = clicked_bone_->get_mutable_pointer_scales(clicked_time_);
-        // if (p_pos)
-        // {
-        //     ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
-        // }
-        // if (p_quat)
-        // {
-        //     auto before_quat = *p_quat;
-        //     ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
-        //     if (before_quat != *p_quat)
-        //     {
-        //         *p_quat = glm::normalize(*p_quat);
-        //     }
-        // }
-        // if (p_scale)
-        // {
-        //     ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
-        // }
-    }
+
+    // void TimelineLayer::draw_keyframe_popup(UiContext &ui_context)
+    // {
+    //     if (clicked_bone_ != nullptr)
+    //     {
+    //         // ImGui::ShowDemoWindow()
+    //         ImGui::SameLine();
+    //         ImGui::SetNextWindowSize({400.0, 90.0});
+    //         if (ImGui::BeginPopup("my_select_popup")) //&& !ui_context.entity.is_changed_selected_entity)
+    //         {
+    //             ImGuiWindow *window = ImGui::GetCurrentWindow();
+
+    //             draw_bone_status(ui_context);
+
+    //             // if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
+    //             // {
+    //             //     clicked_bone_ = nullptr;
+    //             // }
+    //             ImGui::EndPopup();
+    //         }
+    //     }
+    // }
+    // void TimelineLayer::draw_bone_status(UiContext &ui_context)
+    // {
+    //     ImGui::Text("%s: %u", clicked_bone_->get_name().c_str(), clicked_frame_);
+    //     auto t = clicked_bone_->get_position(clicked_frame_);
+    //     auto r = clicked_bone_->get_rotation(clicked_frame_);
+    //     auto s = clicked_bone_->get_scale(clicked_frame_);
+    //     glm::vec3 tt{}, ss{};
+    //     glm::vec4 tmp_r{};
+    //     glm::quat rr{};
+    //     bool changed = false;
+
+    //     if (t)
+    //     {
+    //         tt = *t;
+    //         changed = DragFPropertyXYZ("Tr", &tt[0], 0.1f, -1000.0f, 1000.0f, "%.3f");
+    //     }
+    //     if (r)
+    //     {
+    //         tmp_r = glm::vec4{r->x, r->y, r->z, r->w};
+    //         changed |= DragFPropertyXYZ("Rt", &tmp_r[0], 0.01f, -1.0f, 1.0f, "%.3f", "", 4);
+    //         rr = glm::quat{tmp_r.a, tmp_r.r, tmp_r.g, tmp_r.b};
+    //         rr = glm::normalize(rr);
+    //     }
+    //     if (s)
+    //     {
+    //         ss = *s;
+    //         changed |= DragFPropertyXYZ("Sc", &ss[0], 0.1f, 0.1f, 179.0f, "%.3f", "");
+    //     }
+    //     if (changed)
+    //     {
+    //         // ui_context.entity.is_changed_transform = true;
+    //         // ui_context.entity.new_transform = glm::translate(glm::mat4(1.0f), tt) * glm::mat4(rr) * glm::scale(glm::mat4(1.0f), ss);
+    //     }
+    // }
 
 }

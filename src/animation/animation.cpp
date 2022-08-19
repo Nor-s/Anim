@@ -97,10 +97,10 @@ namespace anim
         else
         {
             LOG("bone not found: " + name);
-            // name_bone_map_[name] = std::make_unique<Bone>();
-            // bone = name_bone_map_[name].get();
-            // bone->set_name(name);
-            // bone->replace_key_frame(transform, time);
+            name_bone_map_[name] = std::make_unique<Bone>();
+            bone = name_bone_map_[name].get();
+            bone->set_name(name);
+            bone->replace_key_frame(transform, time);
         }
     }
 

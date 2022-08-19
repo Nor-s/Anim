@@ -32,6 +32,7 @@ struct DirLight {
 uniform DirLight dir_lights[NR_DIR_LIGHTS];
 
 uniform Material material;
+uniform vec3 selectionColor;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 mat_diffuse)
 {

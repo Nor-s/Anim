@@ -69,6 +69,7 @@ private:
     void post_update();
     void process_menu_context();
     void process_timeline_context();
+    void process_scene_context();
 
     void import_model_or_animation(const char *const path);
     std::shared_ptr<anim::SharedResources> shared_resources_;

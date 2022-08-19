@@ -8,6 +8,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+
+#include "ui_context.h"
 namespace ui
 {
     class SceneLayer
@@ -15,14 +17,14 @@ namespace ui
     public:
         SceneLayer();
         ~SceneLayer() = default;
-        void draw(const char *title, Scene *scene);
+        void draw(const char *title, Scene *scene, UiContext &ui_context);
         float get_width();
         float get_height();
         float get_aspect();
         bool get_is_hovered();
 
     private:
-        void draw_gizmo(Scene *scene);
+        void draw_gizmo(Scene *scene, UiContext &ui_context);
         void draw_mode_window();
         float width_{800.0f};
         float height_{800.0f};

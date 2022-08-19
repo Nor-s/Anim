@@ -21,6 +21,7 @@ uniform mat4 finalBonesMatrices[MAX_BONES];
 out vec2 TexCoords;
 out vec3 Normal;
 out vec3 FragPos;
+out float boneId;
 
 void main()
 {
@@ -29,6 +30,9 @@ void main()
     vec4 totalPosition = vec4(0.0f);
     vec4 totalFragPosition = vec4(0.0f);
     vec3 totalNormal = vec3(0.0f);
+
+    float maxWeight = 0.0;
+    int maxBoneId = 0;
 
     for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
     {
@@ -45,6 +49,10 @@ void main()
         vec3 localNormal = bonemat3 * norm;
         totalNormal += localNormal * weights[i];
         totalPosition += localPosition * weights[i];
+        if(maxWeight < weights[i]) {
+            maxWeight = weights[i];
+            maxBoneId = boneIds[i];
+        }
    }
 	
     mat4 viewModel = view * model;
@@ -53,4 +61,5 @@ void main()
     TexCoords = aTexCoords;
     Normal = mat3(model)* totalNormal;
     FragPos = vec3(model * totalPosition);
+    boneId = float(maxBoneId)/255.0;
 }

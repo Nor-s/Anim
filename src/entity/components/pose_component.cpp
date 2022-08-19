@@ -2,6 +2,8 @@
 #include "../../util/log.h"
 #include "animation_component.h"
 #include "animation/animation.h"
+#include "renderable/armature_component.h"
+#include "../entity.h"
 
 namespace anim
 {
@@ -76,5 +78,30 @@ namespace anim
             animation->add_and_replace_bone(name, transform, animator_->get_current_time());
         }
     }
-
+    Entity *PoseComponent::find(int bone_id)
+    {
+        return find(bone_id, armature_root_);
+    }
+    Entity *PoseComponent::find(int bone_id, Entity *entity)
+    {
+        auto armature = entity->get_component<ArmatureComponent>();
+        if (armature)
+        {
+            int id = armature->get_id();
+            if (bone_id == id)
+            {
+                return entity;
+            }
+            auto &child = entity->get_mutable_children();
+            for (int i = 0; i < child.size(); i++)
+            {
+                auto ret = find(bone_id, child[i].get());
+                if (ret)
+                {
+                    return ret;
+                }
+            }
+        }
+        return nullptr;
+    }
 }

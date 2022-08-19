@@ -21,6 +21,9 @@ namespace anim
     class ArmatureComponent : public ComponentBase<ArmatureComponent>
     {
     public:
+        static inline bool isActivate = true;
+        glm::vec3 selectionColor{1.0f, 1.0f, 1.0f};
+
         static void setShape(std::unique_ptr<Mesh> shape);
 
         void set_pose(PoseComponent *pose);

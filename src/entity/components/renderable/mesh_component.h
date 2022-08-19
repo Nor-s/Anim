@@ -6,6 +6,7 @@
 #include <string>
 #include <memory>
 #include <vector>
+#include <glm/glm.hpp>
 
 namespace anim
 {
@@ -15,18 +16,21 @@ namespace anim
     class MeshComponent : public ComponentBase<MeshComponent>
     {
     public:
-        static inline bool isActivate = false;
+        static inline bool isActivate = true;
         static inline bool isWireframe = false;
+        bool isDynamic{false};
+        glm::vec3 selectionColor{1.0f, 1.0f, 1.0f};
+
         ~MeshComponent() = default;
         void update() override;
 
         void set_meshes(const std::vector<std::shared_ptr<Mesh>> &meshes);
-        void set_shader(std::shared_ptr<Shader> &shader);
+        void set_shader(Shader *shader);
         void set_entity(Entity *entity);
 
     private:
         std::vector<std::shared_ptr<Mesh>> meshes_;
-        std::shared_ptr<Shader> shader_;
+        Shader *shader_;
         Entity *entity_;
     };
 }

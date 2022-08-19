@@ -23,10 +23,8 @@ namespace anim
     {
         init_animator();
         init_shader();
-        root_entity_.reset(new Entity());
-        root_entity_->set_name("All");
-        // root_entity_->set_parent(root_entity_.get());
-        // root_entity_->set_root(root_entity_.get());
+        root_entity_.reset(new Entity("All", single_entity_list_.size()));
+        single_entity_list_.push_back(root_entity_);
         ArmatureComponent::setShape(gl::CreateBiPyramid());
     }
     SharedResources::~SharedResources()
@@ -80,6 +78,57 @@ namespace anim
     {
         root_entity_->update();
     }
+    void SharedResources::update_for_picking()
+    {
+        // picking r + g == entity id, b == bone id
+        auto model_shader = shaders_["model_one_color"].get();
+        auto animation_shader = shaders_["animation_one_color"].get();
+        bool before_mesh_activate = MeshComponent::isActivate;
+        MeshComponent::isActivate = true;
+        GetComponentManager<PoseComponent>().for_each(
+            [animation_shader](auto cp)
+            {
+                cp->set_shader(animation_shader);
+                if (cp->get_root_entity())
+                {
+                    cp->get_root_entity()->is_deactivate_ = true;
+                }
+            });
+        GetComponentManager<MeshComponent>().for_each(
+            [animation_shader, model_shader](auto cp)
+            {
+                cp->set_shader(model_shader);
+                if (cp->isDynamic)
+                {
+                    cp->set_shader(animation_shader);
+                }
+            });
+
+        root_entity_->update();
+
+        model_shader = shaders_["model"].get();
+        animation_shader = shaders_["animation"].get();
+
+        GetComponentManager<MeshComponent>().for_each(
+            [animation_shader, model_shader](auto cp)
+            {
+                cp->set_shader(model_shader);
+                if (cp->isDynamic)
+                {
+                    cp->set_shader(animation_shader);
+                }
+            });
+        GetComponentManager<PoseComponent>().for_each(
+            [animation_shader](auto cp)
+            {
+                cp->set_shader(animation_shader);
+                if (cp->get_root_entity())
+                {
+                    cp->get_root_entity()->is_deactivate_ = false;
+                }
+            });
+        MeshComponent::isActivate = before_mesh_activate;
+    }
 }
 
 namespace anim
@@ -90,25 +139,39 @@ namespace anim
     }
     void SharedResources::init_shader()
     {
-        add_shader("armature", "./resources/shaders/armature.vs", "./resources/shaders/1.model_loading.fs");
-        add_shader("model", "./resources/shaders/1.model_loading.vs", "./resources/shaders/1.model_loading.fs");
-        add_shader("animation", "./resources/shaders/animation_loading.vs", "./resources/shaders/1.model_loading.fs");
+        add_shader("animation_one_color", "./resources/shaders/animation_cpu.vs", "./resources/shaders/selection_color.fs");
+        add_shader("model_one_color", "./resources/shaders/simple_model.vs", "./resources/shaders/selection_color.fs");
+        add_shader("armature_one_color", "./resources/shaders/armature.vs", "./resources/shaders/selection_color.fs");
+
+        add_shader("armature", "./resources/shaders/armature.vs", "./resources/shaders/simple_light_model.fs");
+        add_shader("model", "./resources/shaders/simple_model.vs", "./resources/shaders/simple_light_model.fs");
+        add_shader("animation", "./resources/shaders/animation_cpu.vs", "./resources/shaders/simple_light_model.fs");
+
         add_shader("framebuffer", "./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
         add_shader("grid", "./resources/shaders/grid.vs", "./resources/shaders/grid.fs");
+
         auto model_id = get_mutable_shader("model")->get_id();
         auto animation_id = get_mutable_shader("animation")->get_id();
-        auto grid_id = get_mutable_shader("grid")->get_id();
         auto armature_id = get_mutable_shader("armature")->get_id();
+        auto grid_id = get_mutable_shader("grid")->get_id();
+        auto one_model_id = get_mutable_shader("model_one_color")->get_id();
+        auto one_animation_id = get_mutable_shader("animation_one_color")->get_id();
+        auto one_armature_id = get_mutable_shader("armature_one_color")->get_id();
 
         unsigned int uniform_block_id_model = glGetUniformBlockIndex(model_id, "Matrices");
         unsigned int uniform_block_id_animation = glGetUniformBlockIndex(animation_id, "Matrices");
-        unsigned int uniform_block_id_grid = glGetUniformBlockIndex(grid_id, "Matrices");
         unsigned int uniform_block_id_armature = glGetUniformBlockIndex(armature_id, "Matrices");
-
+        unsigned int uniform_block_id_grid = glGetUniformBlockIndex(grid_id, "Matrices");
+        unsigned int uniform_block_id_model_one = glGetUniformBlockIndex(one_model_id, "Matrices");
+        unsigned int uniform_block_id_animation_one = glGetUniformBlockIndex(one_animation_id, "Matrices");
+        unsigned int uniform_block_id_armature_one = glGetUniformBlockIndex(one_armature_id, "Matrices");
         glUniformBlockBinding(model_id, uniform_block_id_model, 0);
-        glUniformBlockBinding(grid_id, uniform_block_id_grid, 0);
         glUniformBlockBinding(animation_id, uniform_block_id_animation, 0);
         glUniformBlockBinding(armature_id, uniform_block_id_armature, 0);
+        glUniformBlockBinding(grid_id, uniform_block_id_grid, 0);
+        glUniformBlockBinding(one_model_id, uniform_block_id_model_one, 0);
+        glUniformBlockBinding(one_animation_id, uniform_block_id_animation_one, 0);
+        glUniformBlockBinding(one_armature_id, uniform_block_id_armature_one, 0);
 
         glGenBuffers(1, &matrices_UBO_);
         glBindBuffer(GL_UNIFORM_BUFFER, matrices_UBO_);
@@ -153,8 +216,8 @@ namespace anim
     {
         const std::string &name = model_node->name;
         LOG("- - TO ENTITY: " + name);
-
-        entity.reset(new Entity(name, single_entity_list_.size(), parent_entity));
+        uint32_t entity_id = single_entity_list_.size();
+        entity.reset(new Entity(name, entity_id, parent_entity));
         if (!root_entity)
         {
             root_entity = entity.get();
@@ -167,13 +230,18 @@ namespace anim
         {
             auto mesh = entity->add_component<MeshComponent>();
             mesh->set_meshes(model_node->meshes);
-            mesh->set_shader(shaders_["model"]);
+            mesh->set_shader(shaders_["model"].get());
             mesh->set_entity(entity.get());
+            mesh->isDynamic = false;
             LOG("===================== MESH: " + name);
             if (model_node->has_bone)
             {
-                mesh->set_shader(shaders_["animation"]);
+                mesh->set_shader(shaders_["animation"].get());
+                mesh->isDynamic = true;
             }
+            mesh->selectionColor = {(entity_id & 0x000000FF) >> 0, (entity_id & 0x0000FF00) >> 8, (entity_id & 0x00FF0000) >> 16};
+            mesh->selectionColor /= 255.0f;
+            GetComponentManager<MeshComponent>().components.push_back(mesh);
         }
         // find mising bone
         ArmatureComponent *parent_armature = (parent_entity) ? parent_entity->get_component<ArmatureComponent>() : nullptr;
@@ -221,6 +289,7 @@ namespace anim
                 pose->set_animation_component(animation);
                 pose->set_armature_root(entity.get());
                 armature->set_local_scale(0, 100.0f);
+                GetComponentManager<PoseComponent>().components.push_back(pose);
             }
             armature->set_pose(pose);
             armature->set_entity(entity.get());
@@ -229,6 +298,9 @@ namespace anim
             armature->set_bone_offset(bone_info->offset);
             armature->set_bind_pose(bind_pose_transformation);
             armature->set_shader(shaders_["armature"].get());
+            armature->selectionColor = {(entity_id & 0x000000FF) >> 0, (entity_id & 0x0000FF00) >> 8, (entity_id & 0x00FF0000) >> 16};
+            armature->selectionColor /= 255.0f;
+            GetComponentManager<ArmatureComponent>().components.push_back(armature);
         }
         int child_size = model_node->childrens.size();
         auto &children = entity->get_mutable_children();
@@ -239,5 +311,13 @@ namespace anim
             LOG("---------------------------------------------------------- Children: " + model_node->childrens[i]->name);
             convert_to_entity(children[i], model, model_node->childrens[i], entity.get(), i, root_entity);
         }
+    }
+    Entity *SharedResources::get_entity(int id)
+    {
+        if (id >= 0 && id < single_entity_list_.size())
+        {
+            return single_entity_list_[id].get();
+        }
+        return nullptr;
     }
 }

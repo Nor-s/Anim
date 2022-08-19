@@ -26,6 +26,21 @@ namespace anim
         void bind_with_depth_and_stencil(const glm::vec4 &color = glm::vec4(0.2f, 0.2f, 0.2f, 1.0f));
         void unbind();
         bool error();
+        const glm::vec3 read_pixel(unsigned int x, unsigned int y)
+        {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_);
+
+            glReadBuffer(GL_COLOR_ATTACHMENT0);
+
+            unsigned char data[4];
+            glReadPixels(x, y, 1, 1, format_, GL_UNSIGNED_BYTE, data);
+
+            glReadBuffer(GL_NONE);
+
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+
+            return {data[0], data[1], data[2]};
+        }
 
     private:
         void init_framebuffer();

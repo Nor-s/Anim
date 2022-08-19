@@ -14,10 +14,11 @@ class MainScene : public Scene
 public:
     MainScene() = delete;
     MainScene(uint32_t width, uint32_t height, std::shared_ptr<anim::SharedResources> resources = nullptr);
-    virtual ~MainScene() = default;
-    virtual void init_framebuffer(uint32_t width, uint32_t height) override;
-    virtual void pre_draw() override;
-    virtual void draw() override;
+    ~MainScene() = default;
+    void init_framebuffer(uint32_t width, uint32_t height) override;
+    void pre_draw() override;
+    void draw() override;
+    void picking(int x, int y) override;
 
 private:
     void init_camera();

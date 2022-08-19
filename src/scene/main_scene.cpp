@@ -10,6 +10,9 @@
 #include <graphics/opengl/image.h>
 #include <graphics/opengl/framebuffer.h>
 
+#include "../components/component.h"
+#include "../components/pose_component.h"
+
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -41,6 +44,7 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
         anim::LOG("framebuffer error");
         framebuffer_.reset(new anim::Framebuffer{width, height, GL_RGB, false});
     }
+    offscreen_framebuffer_.reset(new anim::Framebuffer{width, height, GL_RGB, false});
 }
 
 void MainScene::init_camera()
@@ -91,4 +95,38 @@ void MainScene::draw()
     auto framebuffer_shader = resources_->get_mutable_shader("framebuffer");
 
     framebuffer_->draw(*framebuffer_shader);
+}
+
+void MainScene::picking(int x, int y)
+{
+    glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    offscreen_framebuffer_->bind_with_depth({1.0f, 1.0f, 1.0f, 1.0f});
+    {
+        resources_->update_for_picking();
+    }
+    offscreen_framebuffer_->unbind();
+    auto pixel = offscreen_framebuffer_->read_pixel(x, y);
+    std::cout << pixel.x << " " << pixel.y << " " << pixel.z << "\n";
+    int pick_id = pixel.x + pixel.y * 256;
+    if (pick_id == 0x0000ffff)
+    {
+        anim::LOG("- - pick: background");
+        selected_entity_ = nullptr;
+    }
+    else
+    {
+        auto entity = resources_->get_entity(pick_id);
+        if (entity)
+        {
+            selected_entity_ = entity->get_mutable_root();
+            static bool isBoneMode = true;
+            if (isBoneMode && selected_entity_ && selected_entity_->get_component<anim::PoseComponent>())
+            {
+                auto pose = selected_entity_->get_component<anim::PoseComponent>();
+
+                selected_entity_ = pose->find(pixel.z);
+            }
+        }
+    }
 }

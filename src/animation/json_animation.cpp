@@ -75,10 +75,6 @@ namespace anim
                     process_bones(bones, time);
                 }
             }
-            for (auto &name_bone : name_bone_map_)
-            {
-                name_bone.second->init_time_list();
-            }
         }
         catch (std::exception &e)
         {

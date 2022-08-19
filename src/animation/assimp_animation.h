@@ -26,9 +26,6 @@ namespace anim
     private:
         void init_animation(const aiAnimation *animation, const aiScene *scene, const char *path);
         void process_bones(const aiAnimation *animation, const aiNode *root_node);
-
-    private:
-        std::map<std::string, glm::mat4> bone_inverse_transform_map_;
     };
 
 }

@@ -9,73 +9,66 @@ namespace anim
         : name_(name),
           local_transform_(1.0f)
     {
-        std::set<float> time_set;
-        num_positions_ = channel->mNumPositionKeys;
+        int num_positions = channel->mNumPositionKeys;
+        int num_rotations = channel->mNumRotationKeys;
+        int num_scales = channel->mNumScalingKeys;
+        std::set<float> times;
 
-        for (int pos_idx = 0; pos_idx < num_positions_; ++pos_idx)
+        // push position
+        for (int pos_idx = 0; pos_idx < num_positions; ++pos_idx)
         {
             aiVector3D aiPosition = channel->mPositionKeys[pos_idx].mValue;
             float time = channel->mPositionKeys[pos_idx].mTime;
-            KeyPosition data;
-            data.position = AiVecToGlmVec(aiPosition);
-            data.time = time;
-            positions_.push_back(data);
-            time_positions_map_[time] = pos_idx;
-            time_set.insert(time);
+            times.insert(time);
+            push_position(AiVecToGlmVec(aiPosition), time);
         }
 
-        num_rotations_ = channel->mNumRotationKeys;
-        for (int rot_idx = 0; rot_idx < num_rotations_; ++rot_idx)
+        // push rotation
+        for (int rot_idx = 0; rot_idx < num_rotations; ++rot_idx)
         {
             aiQuaternion aiOrientation = channel->mRotationKeys[rot_idx].mValue;
             float time = channel->mRotationKeys[rot_idx].mTime;
-            KeyRotation data;
-            data.orientation = AiQuatToGlmQuat(aiOrientation);
-            data.time = time;
-            rotations_.push_back(data);
-            time_rotations_map_[time] = rot_idx;
-            time_set.insert(time);
+            times.insert(time);
+            push_rotation(AiQuatToGlmQuat(aiOrientation), time);
         }
 
-        num_scales_ = channel->mNumScalingKeys;
-        for (int scale_idx = 0; scale_idx < num_scales_; ++scale_idx)
+        // push scaling
+        for (int scale_idx = 0; scale_idx < num_scales; ++scale_idx)
         {
             aiVector3D scale = channel->mScalingKeys[scale_idx].mValue;
             float time = channel->mScalingKeys[scale_idx].mTime;
-            KeyScale data;
-            data.scale = AiVecToGlmVec(scale);
-            data.time = time;
-            scales_.push_back(data);
-            time_scales_map_[time] = scale_idx;
-            time_set.insert(time);
+            times.insert(time);
+            push_scale(AiVecToGlmVec(scale), time);
         }
-        time_list_.reserve(time_set.size());
 
-        for (auto time : time_set)
+        // unbind bind pose
+        for (auto time : times)
         {
-            auto it_pose = time_positions_map_.find(time);
-            auto it_scale = time_scales_map_.find(time);
-            auto it_rotate = time_rotations_map_.find(time);
-            glm::vec3 v_scale = (it_scale != time_scales_map_.end()) ? scales_[it_scale->second].scale : glm::vec3(1.0f, 1.0f, 1.0f);
-            glm::vec3 v_pose = (it_pose != time_positions_map_.end()) ? positions_[it_pose->second].position : glm::vec3(0.0f, 0.0f, 0.0f);
-            glm::quat v_rotate = (it_rotate != time_rotations_map_.end()) ? rotations_[it_rotate->second].orientation : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-            glm::mat4 transformation = glm::translate(glm::mat4(1.0f), v_pose) * glm::toMat4(glm::normalize(v_rotate)) * glm::scale(glm::mat4(1.0f), v_scale);
+            auto t = positions_.find(time);
+            auto r = rotations_.find(time);
+            auto s = scales_.find(time);
+            glm::vec3 tt = (t != positions_.end()) ? t->second.position : glm::vec3(0.0f, 0.0f, 0.0f);
+            glm::quat rr = (r != rotations_.end()) ? r->second.orientation : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+            glm::vec3 ss = (s != scales_.end()) ? s->second.scale : glm::vec3(1.0f, 1.0f, 1.0f);
+            glm::mat4 transformation = glm::translate(glm::mat4(1.0f), tt) * glm::toMat4(glm::normalize(rr)) * glm::scale(glm::mat4(1.0f), ss);
             transformation = inverse_binding_pose * transformation;
 
             auto [translation, rotation, scale] = DecomposeTransform(transformation);
-            if (it_pose != time_positions_map_.end())
+            if (t != positions_.end())
             {
-                positions_[it_pose->second].position = translation;
+                t->second.position = translation;
+                pos_.push_back(t->second);
             }
-            if (it_rotate != time_rotations_map_.end())
+            if (r != rotations_.end())
             {
-                rotations_[it_rotate->second].orientation = rotation;
+                r->second.orientation = rotation;
+                rot_.push_back(r->second);
             }
-            if (it_scale != time_scales_map_.end())
+            if (s != scales_.end())
             {
-                scales_[it_scale->second].scale = scale;
+                s->second.scale = scale;
+                scale_.push_back(s->second);
             }
-            time_list_.push_back(time);
         }
     }
 
@@ -88,114 +81,17 @@ namespace anim
         local_transform_ = translation * rotation * scale;
     }
 
-    glm::mat4 &Bone::get_local_transform() { return local_transform_; }
-
     glm::mat4 &Bone::get_local_transform(float animation_time, float factor)
     {
         update(animation_time, factor);
         return local_transform_;
     }
 
-    const std::string &Bone::get_bone_name() const { return name_; }
-
-    int Bone::get_position_index(float animation_time)
-    {
-        int size = num_positions_ - 1;
-        for (int index = 0; index < size; ++index)
-        {
-            if (animation_time < positions_[index + 1].get_time(factor_))
-            {
-                return index;
-            }
-        }
-        return size;
-    }
-
-    int Bone::get_rotation_index(float animation_time)
-    {
-        int size = num_rotations_ - 1;
-        for (int index = 0; index < size; ++index)
-        {
-            if (animation_time < rotations_[index + 1].get_time(factor_))
-            {
-                return index;
-            }
-        }
-        return size;
-    }
-
-    int Bone::get_scale_index(float animation_time)
-    {
-        int size = num_scales_ - 1;
-        for (int index = 0; index < size; ++index)
-        {
-            if (animation_time < scales_[index + 1].get_time(factor_))
-            {
-                return index;
-            }
-        }
-        return size;
-    }
-
-    std::vector<float> &Bone::get_mutable_time_list()
-    {
-        return time_list_;
-    }
+    const std::string &Bone::get_name() const { return name_; }
 
     float Bone::get_factor()
     {
         return factor_;
-    }
-    glm::vec3 *Bone::get_mutable_pointer_positions(float time)
-    {
-        auto it = time_positions_map_.find(time);
-        if (it == time_positions_map_.end())
-        {
-            return nullptr;
-        }
-        return &(positions_[it->second].position);
-    }
-    glm::quat *Bone::get_mutable_pointer_rotations(float time)
-    {
-        auto it = time_rotations_map_.find(time);
-        if (it == time_rotations_map_.end())
-        {
-            return nullptr;
-        }
-        return &(rotations_[it->second].orientation);
-    }
-    glm::vec3 *Bone::get_mutable_pointer_scales(float time)
-    {
-        auto it = time_scales_map_.find(time);
-        if (it == time_scales_map_.end())
-        {
-            return nullptr;
-        }
-        return &(scales_[it->second].scale);
-    }
-    glm::vec3 *Bone::get_mutable_pointer_recently_used_position()
-    {
-        if (positions_.size() == 0)
-        {
-            return nullptr;
-        }
-        return &(positions_[recently_used_position_idx_].position);
-    }
-    glm::quat *Bone::get_mutable_pointer_recently_used_rotation()
-    {
-        if (rotations_.size() == 0)
-        {
-            return nullptr;
-        }
-        return &(rotations_[recently_used_rotation_idx_].orientation);
-    }
-    glm::vec3 *Bone::get_mutable_pointer_recently_used_scale()
-    {
-        if (scales_.size() == 0)
-        {
-            return nullptr;
-        }
-        return &(scales_[recently_used_scale_idx_].scale);
     }
     void Bone::set_name(const std::string &name)
     {
@@ -203,99 +99,15 @@ namespace anim
     }
     void Bone::push_position(const glm::vec3 &pos, float time)
     {
-        if (positions_.empty() || positions_.back().time <= time)
-        {
-            positions_.push_back({pos, time});
-            time_positions_map_[time] = positions_.size() - 1;
-            num_positions_++;
-        }
+        positions_[time] = {pos, time};
     }
     void Bone::push_rotation(const glm::quat &quat, float time)
     {
-        if (rotations_.empty() || rotations_.back().time <= time)
-        {
-            // quat = glm::normalize(quat);
-            rotations_.push_back({quat, time});
-            time_rotations_map_[time] = rotations_.size() - 1;
-            num_rotations_++;
-        }
+        rotations_[time] = {quat, time};
     }
     void Bone::push_scale(const glm::vec3 &scale, float time)
     {
-        if (scales_.empty() || scales_.back().time <= time)
-        {
-            scales_.push_back({scale, time});
-            time_scales_map_[time] = scales_.size() - 1;
-            num_scales_++;
-        }
-    }
-    void Bone::init_time_list()
-    {
-        std::set<float> time_set;
-        std::transform(time_scales_map_.begin(), time_scales_map_.end(),
-                       std::inserter(time_set, time_set.begin()),
-                       [](const std::pair<float, int> &key_value)
-                       { return key_value.first; });
-        std::transform(time_rotations_map_.begin(), time_rotations_map_.end(),
-                       std::inserter(time_set, time_set.begin()),
-                       [](const std::pair<float, int> &key_value)
-                       { return key_value.first; });
-        std::transform(time_scales_map_.begin(), time_scales_map_.end(),
-                       std::inserter(time_set, time_set.begin()),
-                       [](const std::pair<float, int> &key_value)
-                       { return key_value.first; });
-        time_list_.clear();
-        time_list_.reserve(time_set.size());
-        for (auto &time : time_set)
-        {
-            time_list_.push_back(time);
-        }
-    }
-    void Bone::get_ai_node_anim(aiNodeAnim *channel, const aiMatrix4x4 &binding_pose_transform)
-    {
-        channel->mNodeName = aiString(name_);
-        channel->mNumPositionKeys = positions_.size();
-        channel->mNumRotationKeys = rotations_.size();
-        channel->mNumScalingKeys = scales_.size();
-
-        channel->mPositionKeys = new aiVectorKey[channel->mNumPositionKeys];
-        channel->mRotationKeys = new aiQuatKey[channel->mNumRotationKeys];
-        channel->mScalingKeys = new aiVectorKey[channel->mNumScalingKeys];
-
-        unsigned int pos_idx = 0, rot_idx = 0, scale_idx = 0;
-
-        for (auto time : time_list_)
-        {
-            auto it_pose = time_positions_map_.find(time);
-            auto it_scale = time_scales_map_.find(time);
-            auto it_rotate = time_rotations_map_.find(time);
-            glm::vec3 v_scale = (it_scale != time_scales_map_.end()) ? scales_[it_scale->second].scale : glm::vec3(1.0f, 1.0f, 1.0f);
-            glm::vec3 v_pose = (it_pose != time_positions_map_.end()) ? positions_[it_pose->second].position : glm::vec3(0.0f, 0.0f, 0.0f);
-            glm::quat v_rotate = (it_rotate != time_rotations_map_.end()) ? rotations_[it_rotate->second].orientation : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
-            glm::mat4 transformation = glm::translate(glm::mat4(1.0f), v_pose) * glm::toMat4(glm::normalize(v_rotate)) * glm::scale(glm::mat4(1.0f), v_scale);
-            transformation = AiMatToGlmMat(binding_pose_transform) * transformation;
-
-            auto [t, r, s] = DecomposeTransform(transformation);
-
-            if (it_pose != time_positions_map_.end())
-            {
-                channel->mPositionKeys[pos_idx].mValue = GlmVecToAiVec(t);
-                channel->mPositionKeys[pos_idx].mTime = time;
-                pos_idx++;
-            }
-            if (it_rotate != time_rotations_map_.end())
-            {
-                channel->mRotationKeys[rot_idx].mValue = GlmQuatToAiQuat(r);
-                channel->mRotationKeys[rot_idx].mTime = time;
-                rot_idx++;
-            }
-            if (it_scale != time_scales_map_.end())
-            {
-                channel->mScalingKeys[scale_idx].mValue = GlmVecToAiVec(s);
-                channel->mScalingKeys[scale_idx].mTime = time;
-                scale_idx++;
-            }
-        }
+        scales_[time] = {scale, time};
     }
 
     float Bone::get_scale_factor(float last_time_stamp, float next_time_stamp, float animation_time)
@@ -313,69 +125,55 @@ namespace anim
 
     glm::mat4 Bone::interpolate_position(float animation_time)
     {
-        int p0Index = get_position_index(animation_time);
-        recently_used_position_idx_ = p0Index;
-        int p1Index = num_positions_ - 1;
-        // for nested frame
-        auto it = time_positions_map_.find(positions_[p0Index].time);
-        it++;
-        if (it != time_positions_map_.end())
-            p1Index = it->second;
-        float scaleFactor = get_scale_factor(positions_[p0Index].get_time(factor_),
-                                             positions_[p1Index].get_time(factor_), animation_time);
-        glm::vec3 finalPosition = glm::mix(positions_[p0Index].position, positions_[p1Index].position, scaleFactor);
-
-        return glm::translate(glm::mat4(1.0f), finalPosition);
+        //     const KeyPosition &p0Index = get_start<KeyPosition>(positions_, animation_time, {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f});
+        //   const KeyPosition &p1Index = get_end<KeyPosition>(positions_, animation_time, {glm::vec3(0.0f, 0.0f, 0.0f), animation_time});
+        int idx = get_start_vec<KeyPosition>(pos_, animation_time);
+        const KeyPosition &p0Index = pos_[idx];
+        const KeyPosition &p1Index = pos_[(idx == pos_.size() - 1) ? idx : idx + 1];
+        float scaleFactor = get_scale_factor(p0Index.get_time(factor_),
+                                             p1Index.get_time(factor_), animation_time);
+        return glm::translate(glm::mat4(1.0f), glm::mix(p0Index.position, p1Index.position, scaleFactor));
     }
 
     glm::mat4 Bone::interpolate_rotation(float animation_time)
     {
-        int p0Index = get_rotation_index(animation_time);
-        recently_used_rotation_idx_ = p0Index;
-        int p1Index = num_rotations_ - 1;
-        // for nested frame
-        auto it = time_rotations_map_.find(rotations_[p0Index].time);
-        it++;
-        if (it != time_rotations_map_.end())
-            p1Index = it->second;
-        float scaleFactor = get_scale_factor(rotations_[p0Index].get_time(factor_),
-                                             rotations_[p1Index].get_time(factor_), animation_time);
-        glm::quat finalRotation = glm::slerp(rotations_[p0Index].orientation, rotations_[p1Index].orientation, scaleFactor);
-        finalRotation = glm::normalize(finalRotation);
-        return glm::toMat4(finalRotation);
+        // const KeyRotation &p0Index = get_start<KeyRotation>(rotations_, animation_time, {glm::quat(1.0f, 0.0f, 0.0f, 0.0f), 0.0f});
+        // const KeyRotation &p1Index = get_end<KeyRotation>(rotations_, animation_time, {glm::quat(1.0f, 0.0f, 0.0f, 0.0f), animation_time});
+        int idx = get_start_vec<KeyRotation>(rot_, animation_time);
+        const KeyRotation &p0Index = rot_[idx];
+        const KeyRotation &p1Index = rot_[(idx == rot_.size() - 1) ? idx : idx + 1];
+        float scaleFactor = get_scale_factor(p0Index.get_time(factor_),
+                                             p1Index.get_time(factor_), animation_time);
+        glm::quat finalRotation = glm::slerp(p0Index.orientation, p1Index.orientation, scaleFactor);
+        return glm::toMat4(glm::normalize(finalRotation));
     }
 
     glm::mat4 Bone::interpolate_scaling(float animation_time)
     {
-        int p0Index = get_scale_index(animation_time);
-        recently_used_scale_idx_ = p0Index;
-        int p1Index = num_scales_ - 1;
-        // for nested frame
-        auto it = time_scales_map_.find(scales_[p0Index].time);
-        it++;
-        if (it != time_scales_map_.end())
-            p1Index = it->second;
-        float scaleFactor = get_scale_factor(scales_[p0Index].get_time(factor_),
-                                             scales_[p1Index].get_time(factor_), animation_time);
-        glm::vec3 finalScale = glm::mix(scales_[p0Index].scale, scales_[p1Index].scale, scaleFactor);
-        return glm::scale(glm::mat4(1.0f), finalScale);
+        // const KeyScale &p0Index = get_start<KeyScale>(scales_, animation_time, {glm::vec3(1.0f, 1.0f, 1.0f), 0.0f});
+        // const KeyScale &p1Index = get_end<KeyScale>(scales_, animation_time, {glm::vec3(1.0f, 1.0f, 1.0f), animation_time});
+        int idx = get_start_vec<KeyScale>(scale_, animation_time);
+        const KeyScale &p0Index = scale_[idx];
+        const KeyScale &p1Index = scale_[(idx == scale_.size() - 1) ? idx : idx + 1];
+        float scaleFactor = get_scale_factor(p0Index.get_time(factor_),
+                                             p1Index.get_time(factor_), animation_time);
+        return glm::scale(glm::mat4(1.0f), glm::mix(p0Index.scale, p1Index.scale, scaleFactor));
     }
     void Bone::replace_key_frame(const glm::mat4 &transform, float time)
     {
         auto [t, r, s] = DecomposeTransform(transform);
         float time_stamp = time * factor_;
-        if (recently_used_position_idx_ > -1 && positions_[recently_used_position_idx_].get_time() == time_stamp)
-        {
-            positions_[recently_used_position_idx_].position = t;
-        }
-        if (recently_used_rotation_idx_ > -1 && rotations_[recently_used_rotation_idx_].get_time() == time_stamp)
-        {
-            rotations_[recently_used_rotation_idx_].orientation = r;
-        }
-        if (recently_used_scale_idx_ > -1 && scales_[recently_used_scale_idx_].get_time() == time_stamp)
-        {
-            scales_[recently_used_scale_idx_].scale = s;
-        }
+        // if (recently_used_position_idx_ > -1 && positions_[recently_used_position_idx_].get_time() == time_stamp)
+        // {
+        //     positions_[recently_used_position_idx_].position = t;
+        // }
+        // if (recently_used_rotation_idx_ > -1 && rotations_[recently_used_rotation_idx_].get_time() == time_stamp)
+        // {
+        //     rotations_[recently_used_rotation_idx_].orientation = r;
+        // }
+        // if (recently_used_scale_idx_ > -1 && scales_[recently_used_scale_idx_].get_time() == time_stamp)
+        // {
+        //     scales_[recently_used_scale_idx_].scale = s;
+        // }
     }
-
 }

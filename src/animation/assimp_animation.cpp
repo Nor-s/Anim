@@ -43,8 +43,7 @@ namespace anim
             const aiNode *node = root_node->FindNode(channel->mNodeName);
             if (node)
             {
-                bone_inverse_transform_map_[bone_name] = glm::inverse(AiMatToGlmMat(node->mTransformation));
-                name_bone_map_[bone_name] = std::make_unique<Bone>(bone_name, channel, bone_inverse_transform_map_[bone_name]);
+                name_bone_map_[bone_name] = std::make_unique<Bone>(bone_name, channel, glm::inverse(AiMatToGlmMat(node->mTransformation)));
             }
         }
     }

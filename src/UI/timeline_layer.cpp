@@ -166,39 +166,39 @@ namespace ui
 
     void TimelineLayer::draw_keyframes(TimelineContext &context, const Animation *animation)
     {
-        if (ImGui::BeginNeoGroup("Transform", &is_opened_transform_))
-        {
-            auto &name_bone_map = animation->get_name_bone_map();
-            bool is_hovered = false;
-            for (auto &bone : name_bone_map)
-            {
-                float factor = bone.second->get_factor();
-                std::vector<float> &keys = bone.second->get_mutable_time_list();
-                const char *name = bone.second->get_bone_name().c_str();
+        // if (ImGui::BeginNeoGroup("Transform", &is_opened_transform_))
+        // {
+        //     auto &name_bone_map = animation->get_name_bone_map();
+        //     bool is_hovered = false;
+        //     for (auto &bone : name_bone_map)
+        //     {
+        //         float factor = bone.second->get_factor();
+        //         std::vector<float> &keys = bone.second->get_mutable_time_list();
+        //         const char *name = bone.second->get_name().c_str();
 
-                if (ImGui::BeginNeoTimeline(name))
-                {
-                    for (size_t i = 0; i < keys.size(); i++)
-                    {
-                        uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
-                        if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && ImGui::IsItemClicked())
-                        {
-                            clicked_frame_ = key;
-                            clicked_time_ = keys[i];
-                            clicked_bone_ = bone.second.get();
-                            context.is_clicked_bone = true;
-                            context.clicked_bone_name = bone.second->get_bone_name();
-                            context.is_stop = true;
-                            context.current_frame = clicked_frame_;
-                            context.is_current_frame_changed = true;
-                            ImGui::ItemSelect(name);
-                        }
-                    }
-                    ImGui::EndNeoTimeLine();
-                }
-            }
-            ImGui::EndNeoGroup();
-        }
+        //         if (ImGui::BeginNeoTimeline(name))
+        //         {
+        //             for (size_t i = 0; i < keys.size(); i++)
+        //             {
+        //                 uint32_t key = static_cast<uint32_t>(roundf(keys[i] * factor));
+        //                 if (ImGui::Keyframe(&key, &is_hovered) && is_hovered && ImGui::IsItemClicked())
+        //                 {
+        //                     clicked_frame_ = key;
+        //                     clicked_time_ = keys[i];
+        //                     clicked_bone_ = bone.second.get();
+        //                     context.is_clicked_bone = true;
+        //                     context.clicked_bone_name = bone.second->get_name();
+        //                     context.is_stop = true;
+        //                     context.current_frame = clicked_frame_;
+        //                     context.is_current_frame_changed = true;
+        //                     ImGui::ItemSelect(name);
+        //                 }
+        //             }
+        //             ImGui::EndNeoTimeLine();
+        //         }
+        //     }
+        //     ImGui::EndNeoGroup();
+        // }
     }
 
     void TimelineLayer::draw_keyframe_popup(TimelineContext &context)
@@ -223,27 +223,27 @@ namespace ui
     }
     void TimelineLayer::draw_bone_status()
     {
-        ImGui::Text("%s: %u", clicked_bone_->get_bone_name().c_str(), clicked_frame_);
-        glm::vec3 *p_pos = clicked_bone_->get_mutable_pointer_positions(clicked_time_);
-        glm::quat *p_quat = clicked_bone_->get_mutable_pointer_rotations(clicked_time_);
-        glm::vec3 *p_scale = clicked_bone_->get_mutable_pointer_scales(clicked_time_);
-        if (p_pos)
-        {
-            ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
-        }
-        if (p_quat)
-        {
-            auto before_quat = *p_quat;
-            ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
-            if (before_quat != *p_quat)
-            {
-                *p_quat = glm::normalize(*p_quat);
-            }
-        }
-        if (p_scale)
-        {
-            ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
-        }
+        // ImGui::Text("%s: %u", clicked_bone_->get_name().c_str(), clicked_frame_);
+        // glm::vec3 *p_pos = clicked_bone_->get_mutable_pointer_positions(clicked_time_);
+        // glm::quat *p_quat = clicked_bone_->get_mutable_pointer_rotations(clicked_time_);
+        // glm::vec3 *p_scale = clicked_bone_->get_mutable_pointer_scales(clicked_time_);
+        // if (p_pos)
+        // {
+        //     ImGui::SliderFloat3("position", &((*p_pos)[0]), 0.0f, 50.0f);
+        // }
+        // if (p_quat)
+        // {
+        //     auto before_quat = *p_quat;
+        //     ImGui::SliderFloat4("quaternion", &(*p_quat)[0], -1.0f, 1.0f);
+        //     if (before_quat != *p_quat)
+        //     {
+        //         *p_quat = glm::normalize(*p_quat);
+        //     }
+        // }
+        // if (p_scale)
+        // {
+        //     ImGui::SliderFloat3("scale", &((*p_scale)[0]), 0.1f, 50.0f);
+        // }
     }
 
 }

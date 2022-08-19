@@ -18,9 +18,9 @@ namespace anim
     {
         glm::vec3 position;
         float time;
-        float get_time(float factor = 1.0f)
+        const float get_time(float factor = 1.0f) const
         {
-            return time * factor; // (float)static_cast<uint32_t>(roundf(time * factor));
+            return time * factor;
         }
     };
 
@@ -28,9 +28,9 @@ namespace anim
     {
         glm::quat orientation;
         float time;
-        float get_time(float factor = 1.0f)
+        const float get_time(float factor = 1.0f) const
         {
-            return time * factor; //(float)static_cast<uint32_t>(roundf(time * factor));
+            return time * factor;
         }
     };
 
@@ -38,9 +38,9 @@ namespace anim
     {
         glm::vec3 scale;
         float time;
-        float get_time(float factor = 1.0f)
+        const float get_time(float factor = 1.0f) const
         {
-            return time * factor; //(float)static_cast<uint32_t>(roundf(time * factor));
+            return time * factor;
         }
     };
 
@@ -50,56 +50,85 @@ namespace anim
         Bone();
         Bone(const std::string &name, const aiNodeAnim *channel, const glm::mat4 &inverse_binding_pose);
         void update(float animation_time, float factor);
-        glm::mat4 &get_local_transform();
         glm::mat4 &get_local_transform(float animation_time, float factor);
-        const std::string &get_bone_name() const;
-        int get_position_index(float animation_time);
-        int get_rotation_index(float animation_time);
-        int get_scale_index(float animation_time);
-        std::vector<float> &get_mutable_time_list();
+        const std::string &get_name() const;
         float get_factor();
-        glm::vec3 *get_mutable_pointer_positions(float time);
-        glm::quat *get_mutable_pointer_rotations(float time);
-        glm::vec3 *get_mutable_pointer_scales(float time);
-        glm::vec3 *get_mutable_pointer_recently_used_position();
-        glm::quat *get_mutable_pointer_recently_used_rotation();
-        glm::vec3 *get_mutable_pointer_recently_used_scale();
         void set_name(const std::string &name);
         void push_position(const glm::vec3 &pos, float time);
         void push_rotation(const glm::quat &quat, float time);
         void push_scale(const glm::vec3 &scale, float time);
-        void init_time_list();
-        void get_ai_node_anim(aiNodeAnim *channel, const aiMatrix4x4 &binding_pose_transform);
         void replace_key_frame(const glm::mat4 &transform, float time);
 
     private:
+        template <class T>
+        const T &get_start(typename std::map<float, T> &mp, float animation_time, const T &default_value);
+        template <class T>
+        const T &get_end(typename std::map<float, T> &mp, float animation_time, const T &default_value);
+        template <class T>
+        int get_start_vec(typename std::vector<T> &vec, float animation_time);
         float get_scale_factor(float last_time_stamp, float next_time_stamp, float animation_time);
         glm::mat4 interpolate_position(float animation_time);
         glm::mat4 interpolate_rotation(float animation_time);
         glm::mat4 interpolate_scaling(float animation_time);
 
-        std::vector<KeyPosition> positions_;
-        std::vector<KeyRotation> rotations_;
-        std::vector<KeyScale> scales_;
-
-        int num_positions_ = 0;
-        int num_rotations_ = 0;
-        int num_scales_ = 0;
+        std::map<float, KeyPosition> positions_;
+        std::map<float, KeyRotation> rotations_;
+        std::map<float, KeyScale> scales_;
+        std::vector<KeyPosition> pos_;
+        std::vector<KeyRotation> rot_;
+        std::vector<KeyScale> scale_;
 
         std::string name_ = "";
         glm::mat4 local_transform_{1.0f};
         float factor_ = 1.0f;
-
-        // keyframe, position, rotation, scale
-        std::map<float, int> time_positions_map_;
-        std::map<float, int> time_rotations_map_;
-        std::map<float, int> time_scales_map_;
-        std::vector<float> time_list_;
-
-        int recently_used_position_idx_ = -1;
-        int recently_used_rotation_idx_ = -1;
-        int recently_used_scale_idx_ = -1;
     };
+
+    template <class T>
+    const T &Bone::get_start(typename std::map<float, T> &mp, float animation_time, const T &default_value)
+    {
+        typename std::map<float, T>::iterator lower = mp.lower_bound(animation_time);
+
+        if (mp.size() != 0 && lower != mp.end() && animation_time == lower->first)
+        {
+            return lower->second;
+        }
+        if (lower == mp.begin() || mp.size() == 0)
+        {
+            return default_value;
+        }
+        return std::next(lower, -1)->second;
+    }
+    template <class T>
+    const T &Bone::get_end(typename std::map<float, T> &mp, float animation_time, const T &default_value)
+    {
+        if (mp.size() == 0)
+        {
+            return default_value;
+        }
+        typename std::map<float, T>::iterator upper = mp.upper_bound(animation_time);
+        if (upper == mp.begin())
+        {
+            return upper->second;
+        }
+        if (std::next(upper, -1)->first == animation_time || upper == mp.end())
+        {
+            return std::next(upper, -1)->second;
+        }
+        return upper->second;
+    }
+    template <class T>
+    int Bone::get_start_vec(typename std::vector<T> &vec, float animation_time)
+    {
+        int size = vec.size() - 1;
+        for (int index = 0; index < size; ++index)
+        {
+            if (animation_time < vec[index + 1].get_time(factor_))
+            {
+                return index;
+            }
+        }
+        return size;
+    }
 }
 
 #endif

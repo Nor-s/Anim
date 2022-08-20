@@ -1316,11 +1316,7 @@ namespace IMGUIZMO_NAMESPACE
          }
          if (!gContext.mbUsing || usingAxis)
          {
-            colors[3 - axis] <<= 8;
-            colors[3 - axis] >>= 8;
-            colors[3 - axis] |= 0x80 << IM_COL32_A_SHIFT;
-
-            drawList->AddPolyline(circlePos, 0.8f * (circleMul * halfCircleSegmentCount + 1), colors[3 - axis], false, 4);
+            drawList->AddPolyline(circlePos, (circleMul * halfCircleSegmentCount + 1), colors[3 - axis], false, 4);
          }
 
          float radiusAxis = sqrtf((ImLengthSqr(worldToPos(gContext.mModel.v.position, gContext.mViewProjection) - circlePos[0])));
@@ -1332,10 +1328,6 @@ namespace IMGUIZMO_NAMESPACE
 
       if (hasRSC && (!gContext.mbUsing || type == MT_ROTATE_SCREEN))
       {
-         colors[0] <<= 8;
-         colors[0] >>= 8;
-         colors[0] |= 0x80 << IM_COL32_A_SHIFT;
-
          drawList->AddCircle(worldToPos(gContext.mModel.v.position, gContext.mViewProjection), gContext.mRadiusSquareCenter, colors[0], 64, 4.f);
       }
 

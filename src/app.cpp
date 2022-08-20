@@ -14,6 +14,7 @@
 #include "entity/components/renderable/armature_component.h"
 #include "animation/animator.h"
 #include "util/log.h"
+#include "UI/ui_context.h"
 
 namespace fs = std::filesystem;
 
@@ -202,7 +203,7 @@ void App::process_scene_context()
     auto &scene_context = ui_context.scene;
     if (scene_context.is_picking)
     {
-        scenes_[current_scene_idx_]->picking(scene_context.x, scene_context.y);
+        scenes_[current_scene_idx_]->picking(scene_context.x, scene_context.y, scene_context.is_bone_picking_mode);
     }
 }
 void App::import_model_or_animation(const char *const path)

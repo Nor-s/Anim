@@ -2,41 +2,29 @@
 
 Animating tool
 
--   video -> glft2
+![](</screenshot/2022-08-21(1).gif>)
 
-## **devlog**
+## **Feature**
 
-### **08/05**
-
--   simple lighting, add imguizmo
-
-![](/screenshot/2022-0805.gif)
-
-### **08/10**
-
--   skeleton visualization, imguizmo bar, change grid
-
-![](/screenshot/2022-08-10.gif)
+-   Eidit: FK animation
+-   Object selction
+-   Embeded python (only windows)
+-   Export glft2
 
 ## **TODO**
 
 -   python script
--   model picking, bone picking
--   export glft2
--   IK edit mode
 -   compute shader for animation
--   retargeting
--   import multi model
--   Z ordering
--   undo, redo
 -   Fix camera movement
--   edit keyframe
+-   Ctrl + z, Ctrl + c, Ctrl + v
+-   IK edit mode
+-   retargeting
 
-## **build**
+## **Build**
 
 -   windows: MSVC 19.33.31517.0
--   ubunt(wsl2): gcc 9.4.0 x86_64-linux-gnu
--   mac os: Clang 13.0.0 arm64-apple-darwin21.2.0
+-   ~~ubunt(wsl2): gcc 9.4.0 x86_64-linux-gnu~~
+-   ~~mac os: Clang 13.0.0 arm64-apple-darwin21.2.0~~
 
 ```
  mkdir build
@@ -97,11 +85,13 @@ Animating tool
 
 ### **Resources**
 
--   model: https://www.mixamo.com/#/?page=1&type=Character
+-   model
+    -   https://www.mixamo.com/#/?page=1&type=Character
     -   https://github.com/JoeyDeVries/LearnOpenGL/tree/master/resources/objects
 -   font
     -   https://github.com/naver/d2codingfont/wiki/Open-Font-License
     -   https://github.com/juliettef/IconFontCppHeaders
--   skybox: https://www.cleanpng.com/free/skybox.html
+-   skybox
+    -   https://www.cleanpng.com/free/skybox.html
     -   https://opengameart.org/content/forest-skyboxes
     -   https://www.humus.name/index.php?page=Textures

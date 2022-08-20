@@ -8,6 +8,9 @@
 #include <memory>
 #include <entity/components/component.h>
 #include <../resources/shared_resources.h>
+#include <../entity/entity.h>
+#include <../entity/components/pose_component.h>
+#include <../entity/components/renderable/armature_component.h>
 
 namespace glcpp
 {
@@ -15,7 +18,6 @@ namespace glcpp
 }
 namespace anim
 {
-    class Entity;
     class Framebuffer;
 }
 
@@ -27,7 +29,7 @@ public:
     virtual void init_framebuffer(uint32_t width, uint32_t height) = 0;
     virtual void pre_draw() = 0;
     virtual void draw() = 0;
-    virtual void picking(int x, int y) = 0;
+    virtual void picking(int x, int y, bool is_only_bone) = 0;
     virtual anim::Entity *get_mutable_selected_entity()
     {
         return selected_entity_;
@@ -62,11 +64,50 @@ public:
     }
     void set_selected_entity(anim::Entity *entity)
     {
+        if (selected_entity_)
+        {
+            selected_entity_->set_is_selected(false);
+        }
+        if (entity)
+        {
+            entity->set_is_selected(true);
+            auto parent = entity->get_mutable_parent();
+            if (parent)
+            {
+                auto &child = parent->get_mutable_children();
+                int idx = 0;
+                for (int i = 0; i < child.size(); i++)
+                {
+                    if (child[i]->get_id() == entity->get_id())
+                    {
+                        idx = i;
+                        break;
+                    }
+                }
+                std::swap(child[idx], child.back());
+            }
+            auto root = entity->get_mutable_root();
+            if (root && entity->get_component<anim::ArmatureComponent>())
+            {
+                int idx = 0;
+                auto &child = root->get_mutable_children();
+                for (int i = 0; i < child.size(); i++)
+                {
+                    if (child[i]->get_component<anim::ArmatureComponent>())
+                    {
+                        idx = i;
+                        break;
+                    }
+                }
+                std::swap(child[idx], child.back());
+            }
+        }
+
         selected_entity_ = entity;
     }
     void set_selected_entity(int id)
     {
-        selected_entity_ = resources_->get_entity(id);
+        set_selected_entity(resources_->get_entity(id));
     }
 
 protected:

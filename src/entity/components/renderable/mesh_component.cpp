@@ -14,10 +14,15 @@ namespace anim
         shader_->set_mat4("model", entity_->get_world_transformation());
         shader_->set_vec3("selectionColor", selectionColor);
 
-        // apply transformation
         for (auto &mesh : meshes_)
         {
-            mesh->draw(*shader_);
+            if (entity_->is_selected_ || entity_->get_mutable_root()->is_selected_)
+                mesh->draw_outline(*shader_);
+            else
+            {
+
+                mesh->draw(*shader_);
+            }
         }
     }
     void MeshComponent::set_meshes(const std::vector<std::shared_ptr<Mesh>> &meshes)

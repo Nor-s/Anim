@@ -12,39 +12,39 @@ namespace anim::gl
         const float position[24 * 3] = {
             // positions
             // front bottom
-            -0.12f, 0.2f, 0.12f,
+            -0.10f, 0.10f, 0.10f,
             0.0f, 0.0f, 0.0f,
-            0.12f, 0.2f, 0.12f,
+            0.10f, 0.10f, 0.10f,
             // right
-            0.12f, 0.2f, 0.12f,
+            0.10f, 0.10f, 0.10f,
             0.0f, 0.0f, 0.0f,
-            0.12f, 0.2f, -0.12f,
+            0.10f, 0.10f, -0.10f,
             // left
-            -0.12f, 0.2f, -0.12f,
+            -0.10f, 0.10f, -0.10f,
             0.0f, 0.0f, 0.0f,
-            -0.12f, 0.2f, 0.12f,
+            -0.10f, 0.10f, 0.10f,
             // back
-            0.12f, 0.2f, -0.12f,
+            0.10f, 0.10f, -0.10f,
             0.0f, 0.0f, 0.0f,
-            -0.12f, 0.2f, -0.12f,
+            -0.10f, 0.10f, -0.10f,
 
             // front top
 
-            0.12f, 0.2f, 0.12f,
+            0.10f, 0.10f, 0.10f,
             0.0f, 1.0f, 0.0f,
-            -0.12f, 0.2f, 0.12f,
+            -0.10f, 0.10f, 0.10f,
             // right
-            0.12f, 0.2f, -0.12f,
+            0.10f, 0.10f, -0.10f,
             0.0f, 1.0f, 0.0f,
-            0.12f, 0.2f, 0.12f,
+            0.10f, 0.10f, 0.10f,
             // left
-            -0.12f, 0.2f, 0.12f,
+            -0.10f, 0.10f, 0.10f,
             0.0f, 1.0f, 0.0f,
-            -0.12f, 0.2f, -0.12f,
+            -0.10f, 0.10f, -0.10f,
             // back
-            -0.12f, 0.2f, -0.12f,
+            -0.10f, 0.10f, -0.10f,
             0.0f, 1.0f, 0.0f,
-            0.12f, 0.2f, -0.12f};
+            0.10f, 0.10f, -0.10f};
         float normal[72]{0.0f};
         for (int i = 0; i < 72; i += 9)
         {
@@ -78,9 +78,8 @@ namespace anim::gl
         : Mesh(vertices, indices, textures, mat_properties)
     {
         init_buffer();
-
     }
-    GLMesh::GLMesh(const std::vector<Vertex>& vertices) 
+    GLMesh::GLMesh(const std::vector<Vertex> &vertices)
         : Mesh(vertices)
     {
         init_buffer();
@@ -128,6 +127,40 @@ namespace anim::gl
             glBindTexture(GL_TEXTURE_2D, textures_[i].id);
         }
         // draw mesh
+        draw();
+
+        // always good practice to set everything back to defaults once configured.
+        glActiveTexture(GL_TEXTURE0);
+    }
+    void GLMesh::draw_outline(anim::Shader &shader)
+    {
+        glEnable(GL_STENCIL_TEST);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0xFF);
+
+        draw(shader);
+
+        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        glStencilMask(0x00);
+        glDisable(GL_DEPTH_TEST);
+
+        shader.set_float("outlineWidth", 0.4f);
+        shader.set_bool("isOutline", true);
+        shader.set_vec4("outlineColor", {1.0f, 0.5f, 0.06f, 1.0f});
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        draw(shader);
+        shader.set_bool("isOutline", false);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        glStencilMask(0xFF);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
+        glEnable(GL_DEPTH_TEST);
+    }
+    void GLMesh::draw()
+    {
+        // draw mesh
         glBindVertexArray(VAO_);
         if (indices_.size() > 0)
         {
@@ -138,9 +171,6 @@ namespace anim::gl
             glDrawArrays(GL_TRIANGLES, 0, vertices_.size());
         }
         glBindVertexArray(0);
-
-        // always good practice to set everything back to defaults once configured.
-        glActiveTexture(GL_TEXTURE0);
     }
 
     void GLMesh::init_buffer()

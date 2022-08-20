@@ -73,11 +73,11 @@ void MainScene::update_framebuffer()
 void MainScene::draw_to_framebuffer()
 {
     auto grid_shader = resources_->get_mutable_shader("grid");
-    glEnable(GL_LINE_SMOOTH);
+    // glEnable(GL_LINE_SMOOTH);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    framebuffer_->bind_with_depth(background_color_);
+    framebuffer_->bind_with_depth_and_stencil(background_color_);
     {
         resources_->update();
 
@@ -97,7 +97,7 @@ void MainScene::draw()
     framebuffer_->draw(*framebuffer_shader);
 }
 
-void MainScene::picking(int x, int y)
+void MainScene::picking(int x, int y, bool is_only_bone)
 {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
@@ -107,25 +107,32 @@ void MainScene::picking(int x, int y)
     }
     offscreen_framebuffer_->unbind();
     auto pixel = offscreen_framebuffer_->read_pixel(x, y);
-    std::cout << pixel.x << " " << pixel.y << " " << pixel.z << "\n";
+    anim::LOG(std::to_string(pixel.x) + " " + std::to_string(pixel.y) + " " + std::to_string(pixel.z));
     int pick_id = pixel.x + pixel.y * 256;
     if (pick_id == 0x0000ffff)
     {
         anim::LOG("- - pick: background");
-        selected_entity_ = nullptr;
+        set_selected_entity(nullptr);
     }
     else
     {
         auto entity = resources_->get_entity(pick_id);
         if (entity)
         {
-            selected_entity_ = entity->get_mutable_root();
-            static bool isBoneMode = true;
-            if (isBoneMode && selected_entity_ && selected_entity_->get_component<anim::PoseComponent>())
+            set_selected_entity(entity->get_mutable_root());
+            if (is_only_bone)
             {
-                auto pose = selected_entity_->get_component<anim::PoseComponent>();
+                if (pixel.z == 255)
+                {
+                    set_selected_entity(entity);
+                }
+                else if (selected_entity_ && selected_entity_->get_component<anim::PoseComponent>())
+                {
+                    // mesh to armature
+                    auto pose = selected_entity_->get_component<anim::PoseComponent>();
 
-                selected_entity_ = pose->find(pixel.z);
+                    set_selected_entity(pose->find(pixel.z));
+                }
             }
         }
     }

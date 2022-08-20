@@ -72,6 +72,11 @@ namespace anim
         {
             return id_;
         }
+        void set_is_selected(bool is_selected)
+        {
+            is_selected_ = is_selected;
+        }
+        bool is_selected_{false};
 
     private:
         std::string name_{};

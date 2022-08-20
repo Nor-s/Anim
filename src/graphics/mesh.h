@@ -95,6 +95,7 @@ namespace anim
         // virtual ~Mesh();
         virtual ~Mesh() = default;
         virtual void draw(Shader &shader) = 0;
+        virtual void draw_outline(anim::Shader &shader) = 0;
         MaterialProperties &get_mutable_mat_properties()
         {
             return mat_properties_;

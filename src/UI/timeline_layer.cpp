@@ -42,7 +42,7 @@ namespace ui
             window_flags |= ImGuiWindowFlags_NoScrollWithMouse;
         }
 
-        ImGui::Begin("Animation", 0, window_flags);
+        ImGui::Begin(ICON_MD_SCHEDULE " Animation", 0, window_flags);
         {
             draw_animator_status(ui_context);
             ImGui::BeginChild("##Timeline", ImVec2(0, 0), false, window_flags);
@@ -70,7 +70,10 @@ namespace ui
         context.end_frame = static_cast<int>(animator_->get_end_time());
         context.current_frame = static_cast<int>(animator_->get_current_time());
         context.is_recording = animator_->get_is_recording();
-        context.is_stop = animator_->get_is_stop();
+        if (!context.is_stop)
+        {
+            context.is_stop = animator_->get_is_stop();
+        }
         if (!context.is_stop)
         {
             context.is_forward = (animator_->get_direction() > 0.0f) ? true : false;
@@ -137,6 +140,7 @@ namespace ui
 
     void TimelineLayer::draw_sequencer(UiContext &ui_context)
     {
+        ImGuiIO &io = ImGui::GetIO();
         auto &context = ui_context.timeline;
         uint32_t current = static_cast<uint32_t>(animator_->get_current_time());
         uint32_t start = static_cast<uint32_t>(animator_->get_start_time());
@@ -145,6 +149,12 @@ namespace ui
         // TODO: begin neo sequencer : uint32_t to int
         if (ImGui::BeginNeoSequencer("Sequencer", &current, &start, &end))
         {
+            // if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            // {
+            //     ImGui::GetForegroundDrawList()->AddRectFilled(io.MouseClickedPos[0],
+            //                                                   io.MousePos,
+            //                                                   ImGui::GetColorU32(ImGuiCol_Button)); // Draw a line between the button and the mouse cursor
+            // }
             if (root_entity_ && root_entity_->get_component<AnimationComponent>())
             {
                 auto anim_component = root_entity_->get_component<AnimationComponent>();

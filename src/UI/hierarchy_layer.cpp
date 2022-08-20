@@ -27,8 +27,9 @@ namespace ui
             if (entities)
             {
                 auto selected_node = draw_tree_node(entities.get(), node_flags);
-                if (selected_node)
+                if (selected_node && !(selected_entity && selected_entity->get_id() == selected_node->get_id()))
                 {
+
                     ui_context.entity.is_changed_selected_entity = true;
                     ui_context.entity.selected_id = selected_node->get_id();
                 }
@@ -57,15 +58,17 @@ namespace ui
         std::string label = "";
 
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0, 0));
+
         if (entity_node->get_component<anim::PoseComponent>())
         {
-            ImGui::PushStyleColor(ImGuiCol_Text, {0.2f, 0.4f, 0.8f, 1.0f});
+            ImGui::PushStyleColor(ImGuiCol_Text, {0.8f, 0.2f, 0.8f, 1.0f});
+
             ImGui::Text(ICON_MD_SETTINGS_ACCESSIBILITY);
         }
         else if (entity_node->get_component<anim::ArmatureComponent>())
         {
             ImGui::PushStyleColor(ImGuiCol_Text, {0.2f, 0.8f, 0.8f, 1.0f});
-            ImGui::Text(ICON_MD_LINK);
+            ImGui::Text(ICON_MD_SHARE);
         }
         else if (entity_node->get_component<anim::MeshComponent>())
         {
@@ -77,11 +80,11 @@ namespace ui
             ImGui::PushStyleColor(ImGuiCol_Text, {0.1f, 0.1f, 0.1f, 1.0f});
             ImGui::Text(ICON_MD_LIST);
         }
-        ImGui::PopStyleColor();
         ImGui::SameLine();
-        ImGui::PopStyleVar();
-        label = entity_node->get_name() + "##" + std::to_string(entity_node->get_id());
+        ImGui::PopStyleColor();
+        label += " " + entity_node->get_name() + "##" + std::to_string(entity_node->get_id());
         bool node_open = ImGui::TreeNodeEx(label.c_str(), selected_flags);
+        ImGui::PopStyleVar();
 
         if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
         {

@@ -114,6 +114,7 @@ namespace anim
     {
         shader_ = shader;
     }
+
     void ArmatureComponent::set_entity(Entity *entity)
     {
         entity_ = entity;
@@ -129,14 +130,26 @@ namespace anim
         {
             return;
         }
-        auto mat = armature_->get_mutable_mat_properties();
+        auto &mat = armature_->get_mutable_mat_properties();
+
         for (int i = 0; i < rotation_.size(); i++)
         {
-            mat.diffuse = glm::vec3{0.4f, 0.5f, 0.6f};
+            mat.diffuse = glm::mix(glm::vec3{0.8f, 0.8f, 0.9f}, glm::vec3{0.0f, 0.0f, 0.0f}, (float)id_ / 128.0f);
+            mat.shininess = 1.0f;
+
             glm::mat4 r = glm::mat4(rotation_[i]);
             glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(scale_[i]));
             shader_->set_mat4("model", world * r * s);
-            armature_->draw(*shader_);
+            if (entity_->is_selected_ || entity_->get_mutable_root()->is_selected_)
+            {
+                mat.shininess = 100.0f;
+                mat.diffuse = glm::vec4{1.0f, 0.5f, 0.06f, 1.0f};
+                armature_->draw_outline(*shader_);
+            }
+            else
+            {
+                armature_->draw(*shader_);
+            }
         }
     }
     void ArmatureComponent::add_and_replace_bone()

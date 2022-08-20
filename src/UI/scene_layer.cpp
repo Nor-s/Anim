@@ -22,7 +22,7 @@ namespace ui
         : width_(800.0f),
           height_(800.0f),
           is_hovered_(false),
-          is_select_mode_(true),
+          is_bone_picking_mode_(true),
           is_univ_mode_(false),
           is_rotate_mode_(false),
           is_scale_mode_(false),
@@ -37,7 +37,7 @@ namespace ui
     void SceneLayer::draw(const char *title, Scene *scene, UiContext &ui_context)
     {
         static ImGuiWindowFlags sceneWindowFlags = 0;
-
+        is_hovered_ = false;
         // add rendered texture to ImGUI scene window
         float width = (float)scene->get_mutable_framebuffer()->get_width();
         float height = (float)scene->get_mutable_framebuffer()->get_height();
@@ -55,7 +55,7 @@ namespace ui
             int y = mouse_pos.y - scene_pos_.y;
             // scene->
             ImGuiWindow *window = ImGui::GetCurrentWindow();
-            is_hovered_ = !ImGuizmo::IsOver() && ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max);
+            is_hovered_ = !ImGuizmo::IsUsing() && ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
             {
                 ui_context.scene.is_picking = true;
@@ -75,7 +75,7 @@ namespace ui
         ImGui::End();
         ImGui::PopStyleVar();
 
-        draw_mode_window();
+        draw_mode_window(ui_context);
     }
     void SceneLayer::draw_gizmo(Scene *scene, UiContext &ui_context)
     {
@@ -98,7 +98,7 @@ namespace ui
         float *cameraProjection = const_cast<float *>(glm::value_ptr(camera->get_projection()));
         auto selected_entity = scene->get_mutable_selected_entity();
 
-        if (!is_select_mode_ && selected_entity)
+        if (selected_entity && current_gizmo_mode_ != ImGuizmo::OPERATION::NONE)
         {
             auto &transform = selected_entity->get_world_transformation();
             glm::mat4 object_matrix = transform;
@@ -116,19 +116,20 @@ namespace ui
                 ui_context.entity.new_transform = glm::inverse(transform) * glm::make_mat4(object_mat_ptr);
                 ui_context.entity.new_transform = selected_entity->get_local() * ui_context.entity.new_transform;
                 ui_context.entity.is_changed_transform = true;
-            }
-            if (ImGuizmo::IsOver())
-            {
-                is_hovered_ = false;
+                if (selected_entity->get_component<anim::ArmatureComponent>())
+                {
+                    ui_context.timeline.is_stop = true;
+                }
             }
         }
+        is_hovered_ = is_hovered_ && (!ImGuizmo::IsUsing() && !ImGuizmo::IsOver() && !ui_context.entity.is_changed_transform);
         ImGuizmo::ViewManipulate(cameraView, 8.0f, ImVec2{scene_window_right_ - 128.0f, scene_window_top_ + 16.0f}, ImVec2{128, 128}, ImU32{0x00000000});
     }
-    void SceneLayer::draw_mode_window()
+    void SceneLayer::draw_mode_window(UiContext &ui_context)
     {
         ImGuiIO &io = ImGui::GetIO();
-        ImVec2 mode_window_size = {512.0f, 50.0f};
-        ImVec2 mode_window_pos = {scene_window_right_ - width_ * 0.5f - mode_window_size.x * 0.5f, scene_cursor_y_ + height_ - 40.0f};
+        ImVec2 mode_window_size = {672.0f, 45.0f};
+        ImVec2 mode_window_pos = {scene_window_right_ - width_ * 0.5f - mode_window_size.x * 0.5f, scene_cursor_y_ + height_ + 16.0f - mode_window_size.y};
 
         if (height_ - mode_window_size.y < 5.0f || width_ - mode_window_size.x < 5.0f)
         {
@@ -137,12 +138,11 @@ namespace ui
 
         ImGui::SetNextWindowSize(mode_window_size);
         ImGui::SetNextWindowPos(mode_window_pos);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, {55.0f, 65.0f});
+        ImGui::PushStyleVar(ImGuiStyleVar_WindowMinSize, mode_window_size);
         ImGui::PushStyleColor(ImGuiCol_Button, {0.3f, 0.3f, 0.3f, 0.8f});
         ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 1.0f, 1.0f, 1.0f});
         if (ImGui::Begin("Child", 0, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoScrollWithMouse | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoBackground))
         {
-
             ImVec2 btn_size{80.0f, 45.0f};
 
             if (ImGui::BeginTable("split", 1, ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_BordersOuterV | ImGuiTableFlags_NoPadInnerX | ImGuiTableFlags_SizingFixedSame))
@@ -150,15 +150,9 @@ namespace ui
                 current_gizmo_operation_ = ImGuizmo::OPERATION::NONE;
                 ImGui::TableNextColumn();
                 // select
-                bool before_select_mode = is_select_mode_;
-                ToggleButton(ICON_MD_NEAR_ME, &is_select_mode_, btn_size);
-                if (!before_select_mode && is_select_mode_)
-                {
-                    is_univ_mode_ = false;
-                    is_rotate_mode_ = false;
-                    is_scale_mode_ = false;
-                    is_translate_mode_ = false;
-                }
+                ToggleButton(ICON_MD_NEAR_ME, &is_bone_picking_mode_, {btn_size.x * 2, btn_size.y});
+                ui_context.scene.is_bone_picking_mode = is_bone_picking_mode_;
+                // ImGui::PopStyleVar();
                 ImGui::SameLine();
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
                 // all
@@ -199,17 +193,16 @@ namespace ui
 
                 ImGui::PopStyleVar();
                 ImGui::SameLine();
-                // skeleton
-                bool &is_selected = anim::MeshComponent::isActivate;
+                // view mode
+                bool &is_activate_mesh = anim::MeshComponent::isActivate;
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
-                ToggleButton(ICON_MD_PERSON_OFF, &is_selected, btn_size);
+                ToggleButton(ICON_MD_PERSON_OFF, &is_activate_mesh, btn_size);
+                ImGui::SameLine();
+                ImGui::PushFont(io.Fonts->Fonts[ICON_FA]);
+                ToggleButton(ICON_FA_BONE, &anim::ArmatureComponent::isActivate, btn_size);
+                ImGui::PopFont();
+                ImGui::PopStyleVar();
 
-                is_select_mode_ = is_select_mode_ && !(is_univ_mode_ || is_rotate_mode_ || is_scale_mode_ || is_translate_mode_);
-
-                if (is_select_mode_)
-                {
-                    current_gizmo_operation_ = ImGuizmo::OPERATION::NONE;
-                }
                 if (is_univ_mode_ && !(is_rotate_mode_ && is_scale_mode_ && is_translate_mode_))
                 {
                     is_univ_mode_ = false;
@@ -219,12 +212,10 @@ namespace ui
                 }
 
                 ImGui::EndTable();
-                ImGui::PopStyleVar();
             }
         }
         ImGui::End();
-        ImGui::PopStyleColor();
-        ImGui::PopStyleColor();
+        ImGui::PopStyleColor(2);
         ImGui::PopStyleVar();
     }
 

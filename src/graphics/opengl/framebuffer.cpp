@@ -193,8 +193,14 @@ namespace anim
     {
         bind_without_clear();
         glClearColor(color.x, color.y, color.z, color.a);
-
+        glEnable(GL_DEPTH_TEST);
+        glStencilMask(~0); // https://community.khronos.org/t/how-to-clear-stencil-buffer-after-stencil-test/15882/4
+        glDisable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glEnable(GL_STENCIL_TEST);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+        glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilMask(0x00);
     }
     void Framebuffer::unbind()
     {

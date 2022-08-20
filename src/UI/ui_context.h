@@ -50,6 +50,7 @@ namespace ui
     struct SceneContext
     {
         bool is_picking{false};
+        bool is_bone_picking_mode{false};
         int x{0};
         int y{0};
     };

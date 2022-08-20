@@ -25,11 +25,11 @@ namespace ui
 
     private:
         void draw_gizmo(Scene *scene, UiContext &ui_context);
-        void draw_mode_window();
+        void draw_mode_window(UiContext &ui_context);
         float width_{800.0f};
         float height_{800.0f};
         bool is_hovered_{false};
-        bool is_select_mode_{true};
+        bool is_bone_picking_mode_{true};
         bool is_univ_mode_{false};
         bool is_rotate_mode_{false};
         bool is_scale_mode_{false};

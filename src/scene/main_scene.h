@@ -18,7 +18,7 @@ public:
     void init_framebuffer(uint32_t width, uint32_t height) override;
     void pre_draw() override;
     void draw() override;
-    void picking(int x, int y) override;
+    void picking(int x, int y, bool is_only_bone) override;
 
 private:
     void init_camera();

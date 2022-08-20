@@ -24,6 +24,7 @@ namespace anim
         init_animator();
         init_shader();
         root_entity_.reset(new Entity("All", single_entity_list_.size()));
+        root_entity_->set_root(root_entity_.get());
         single_entity_list_.push_back(root_entity_);
         ArmatureComponent::setShape(gl::CreateBiPyramid());
     }
@@ -83,16 +84,17 @@ namespace anim
         // picking r + g == entity id, b == bone id
         auto model_shader = shaders_["model_one_color"].get();
         auto animation_shader = shaders_["animation_one_color"].get();
-        bool before_mesh_activate = MeshComponent::isActivate;
-        MeshComponent::isActivate = true;
+        auto armature_shader = shaders_["armature_one_color"].get();
+
+        GetComponentManager<ArmatureComponent>().for_each(
+            [armature_shader](auto cp)
+            {
+                cp->set_shader(armature_shader);
+            });
         GetComponentManager<PoseComponent>().for_each(
             [animation_shader](auto cp)
             {
                 cp->set_shader(animation_shader);
-                if (cp->get_root_entity())
-                {
-                    cp->get_root_entity()->is_deactivate_ = true;
-                }
             });
         GetComponentManager<MeshComponent>().for_each(
             [animation_shader, model_shader](auto cp)
@@ -108,6 +110,7 @@ namespace anim
 
         model_shader = shaders_["model"].get();
         animation_shader = shaders_["animation"].get();
+        armature_shader = shaders_["armature"].get();
 
         GetComponentManager<MeshComponent>().for_each(
             [animation_shader, model_shader](auto cp)
@@ -122,12 +125,12 @@ namespace anim
             [animation_shader](auto cp)
             {
                 cp->set_shader(animation_shader);
-                if (cp->get_root_entity())
-                {
-                    cp->get_root_entity()->is_deactivate_ = false;
-                }
             });
-        MeshComponent::isActivate = before_mesh_activate;
+        GetComponentManager<ArmatureComponent>().for_each(
+            [armature_shader](auto cp)
+            {
+                cp->set_shader(armature_shader);
+            });
     }
 }
 

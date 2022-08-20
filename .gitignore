@@ -12,4 +12,14 @@ dist/
 
 resources/models/
 
+__pycache__
+
 *.fbx
+
+mp2mm/
+
+out/
+
+python/
+
+note/

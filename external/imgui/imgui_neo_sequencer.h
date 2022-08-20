@@ -97,6 +97,7 @@ namespace ImGui
     IMGUI_API bool BeginCreateKeyframe();
     IMGUI_API bool Keyframe(uint32_t *frame, bool *is_hovered = nullptr);
     IMGUI_API void EndCreateKeyframe();
+    IMGUI_API void ItemSelect(const char *label);
 
     IMGUI_API bool IsZoomSliderHovered();
 }

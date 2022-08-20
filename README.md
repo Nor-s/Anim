@@ -2,36 +2,29 @@
 
 Animating tool
 
--   video -> glft2
+![](</screenshot/2022-08-21(1).gif>)
 
-## **devlog**
+## **Feature**
 
-### **08/05**
-
--   simple lighting, add imguizmo
-
-![](/screenshot/2022-0805.gif)
-
-### **08/10**
-
--   skeleton visualization, imguizmo bar, change grid
-
-![](/screenshot/2022-08-10.gif)
+-   Eidit: FK animation
+-   Object selction
+-   Embeded python (only windows)
+-   Export glft2
 
 ## **TODO**
 
--   ~~Fix [#6](https://github.com/Nor-s/Pixel3D/issues/6)~~
-    -   Change: NFD to IFD
--   model picking, bone picking
--   ~~visualize skeleton~~
--   mp2mm: increased accuracy
--   refactor export
+-   python script
+-   compute shader for animation
+-   Fix camera movement
+-   Ctrl + z, Ctrl + c, Ctrl + v
+-   IK edit mode
+-   retargeting
 
-## **build**
+## **Build**
 
 -   windows: MSVC 19.33.31517.0
--   ubunt(wsl2): gcc 9.4.0 x86_64-linux-gnu
--   mac os: Clang 13.0.0 arm64-apple-darwin21.2.0
+-   ~~ubunt(wsl2): gcc 9.4.0 x86_64-linux-gnu~~
+-   ~~mac os: Clang 13.0.0 arm64-apple-darwin21.2.0~~
 
 ```
  mkdir build
@@ -39,19 +32,6 @@ Animating tool
  cmake .. -G Ninja
  Ninja
 ```
-
-### mp2mm python module (mp_gui_build.yaml)
-
-```
-conda env create -f mp_gui_build.yaml
-```
-
--   pyqt5
--   mediapipe
--   pafy
--   pyglm
--   youtube-dl==2020.12.2
--   pyinstaller
 
 ## **External**
 
@@ -72,13 +52,16 @@ conda env create -f mp_gui_build.yaml
 
 -   stb: https://github.com/nothings/stb
 
--   nfd(extended): https://github.com/btzy/nativefiledialog-extended
-
 -   jsoncpp: https://github.com/open-source-parsers/jsoncpp
 
 -   font(icon)
+
     -   https://github.com/juliettef/IconFontCppHeaders
     -   https://github.com/tanluteam/imgui
+
+-   cpython
+
+-   pybind11
 
 ## **Reference**
 
@@ -102,11 +85,13 @@ conda env create -f mp_gui_build.yaml
 
 ### **Resources**
 
--   model: https://www.mixamo.com/#/?page=1&type=Character
+-   model
+    -   https://www.mixamo.com/#/?page=1&type=Character
     -   https://github.com/JoeyDeVries/LearnOpenGL/tree/master/resources/objects
 -   font
     -   https://github.com/naver/d2codingfont/wiki/Open-Font-License
     -   https://github.com/juliettef/IconFontCppHeaders
--   skybox: https://www.cleanpng.com/free/skybox.html
+-   skybox
+    -   https://www.cleanpng.com/free/skybox.html
     -   https://opengameart.org/content/forest-skyboxes
     -   https://www.humus.name/index.php?page=Textures

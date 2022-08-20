@@ -3,14 +3,13 @@
 
 #include <memory>
 #include <imgui/imgui.h>
+#include "ui_context.h"
 
-namespace glcpp
+namespace anim
 {
-    class Model;
-    class Animation;
-    struct ModelNode;
     class Entity;
 }
+class Scene;
 
 namespace ui
 {
@@ -19,11 +18,11 @@ namespace ui
     public:
         HierarchyLayer();
         ~HierarchyLayer();
-        void draw(glcpp::Entity *model);
+        void draw(Scene *scene, UiContext &ui_context);
 
     private:
-        void draw_selected_node(const char *node_name, glcpp::Animation *animation);
-        const char *dfs(const glcpp::ModelNode *anim_node, const ImGuiTreeNodeFlags &node_flags, int &count);
+        anim::Entity *draw_tree_node(anim::Entity *entity_node, const ImGuiTreeNodeFlags &node_flags, int depth = 0);
+        int selected_id_{-2};
     };
 
 }

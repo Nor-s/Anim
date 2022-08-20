@@ -694,6 +694,15 @@ namespace ImGui
 
 		return addGroupRes;
 	}
+
+	void ItemSelect(const char *label)
+	{
+		ImGuiWindow *window = GetCurrentWindow();
+		const ImGuiID id = window->GetID(label);
+
+		auto &context = sequencerData[currentSequencer];
+		context.SelectedTimeline = context.SelectedTimeline == id ? 0 : id;
+	}
 	static std::vector<bool> is_group;
 
 	bool BeginNeoTimeline(const char *label, bool *open,

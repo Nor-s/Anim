@@ -9,16 +9,14 @@
 #include <vector>
 #include <filesystem>
 #include "glcpp/application.hpp"
-#include "mp2mm.h"
 
 struct GLFWwindow;
 class Scene;
-class SharedResources;
-
-namespace glcpp
+namespace anim
 {
-    class Model;
+    class SharedResources;
 }
+
 namespace ui
 {
     class MainLayer;
@@ -37,8 +35,6 @@ public:
     void update();
     void update_window();
     void update_time();
-    void update_resources();
-    void process_buttons();
 
     void pre_draw();
     void draw_scene();
@@ -70,12 +66,13 @@ private:
     void init_ui();
     void init_shared_resources();
     void init_scene(uint32_t width, uint32_t height);
+    void post_update();
+    void process_menu_context();
+    void process_timeline_context();
+    void process_scene_context();
 
     void import_model_or_animation(const char *const path);
-    void export_model_to_json(glcpp::Model *model);
-    std::shared_ptr<SharedResources> shared_resources_;
-
-    Mp2mm mp2mm_;
+    std::shared_ptr<anim::SharedResources> shared_resources_;
 };
 
 #endif

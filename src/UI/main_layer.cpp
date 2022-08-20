@@ -98,14 +98,6 @@ namespace ui
             ImGui::RenderPlatformWindowsDefault();
             glfwMakeContextCurrent(backup_current_context);
         }
-#ifndef NDEBUG
-
-        auto error = glGetError();
-        if (error != GL_NO_ERROR)
-        {
-            std::cout << "ImGui Render: " << error << std::endl;
-        }
-#endif
     }
 
     void MainLayer::draw_dock(float fps)
@@ -141,8 +133,8 @@ namespace ui
         {
             if (ifd::FileDialog::Instance().HasResult())
             {
-                context_.menu_context.path = ifd::FileDialog::Instance().GetResult().u8string();
-                context_.menu_context.clicked_import_model = true;
+                context_.menu.path = ifd::FileDialog::Instance().GetResult().u8string();
+                context_.menu.clicked_import_model = true;
             }
             ifd::FileDialog::Instance().Close();
         }
@@ -162,7 +154,7 @@ namespace ui
                 ImGui::Separator();
                 if (ImGui::MenuItem("Export: animation", NULL, nullptr))
                 {
-                    context_.menu_context.clicked_export_animation = true;
+                    context_.menu.clicked_export_animation = true;
                 }
 
                 ImGui::EndMenu();
@@ -184,21 +176,21 @@ namespace ui
         {
             scene_layer_map_[title] = std::make_unique<SceneLayer>();
         }
-        scene_layer_map_[title]->draw(title.c_str(), scene);
+        scene_layer_map_[title]->draw(title.c_str(), scene, context_);
     }
 
-    void MainLayer::draw_model_properties(Scene *scene)
+    void MainLayer::draw_component_layer(Scene *scene)
     {
-        property_layer_.draw(context_.properties_context, scene);
+        component_layer_.draw(context_.component, scene);
     }
 
-    void MainLayer::draw_hierarchy_layer(glcpp::Entity *entity)
+    void MainLayer::draw_hierarchy_layer(Scene *scene)
     {
-        hierarchy_layer_.draw(entity);
+        hierarchy_layer_.draw(scene, context_);
     }
     void MainLayer::draw_timeline(Scene *scene)
     {
-        timeline_layer_.draw(scene, context_.timeline_context);
+        timeline_layer_.draw(scene, context_);
     }
 
     bool MainLayer::is_scene_layer_hovered(const std::string &title)

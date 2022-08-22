@@ -38,7 +38,7 @@ namespace ui
             glGenerateMipmap(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, 0);
 
-            return (void *)tex;
+            return (void *)((uintptr_t)tex);
         };
         ifd::FileDialog::Instance().DeleteTexture = [](void *tex)
         {
@@ -89,6 +89,8 @@ namespace ui
 
     void MainLayer::end()
     {
+        ImGui::ShowDemoWindow();
+
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

@@ -74,6 +74,7 @@ void App::init_shared_resources()
 void App::init_scene(uint32_t width, uint32_t height)
 {
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
+
     // import_model_or_animation("C:\\Users\\No\\Downloads\\Sitting Laughing (3).fbx");
     // import_model_or_animation("./test.fbx");
     // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
@@ -174,12 +175,11 @@ void App::process_timeline_context()
         animator->set_is_stop(false);
         animator->set_direction(true);
     }
-    animator->set_is_recording(time_context.is_recording);
     if (entity_context.is_changed_selected_entity)
     {
         scenes_[current_scene_idx_]->set_selected_entity(entity_context.selected_id);
     }
-    if (entity_context.is_changed_transform)
+    if (entity_context.is_changed_transform && time_context.is_recording)
     {
         auto selected_entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
         selected_entity->set_local(entity_context.new_transform);

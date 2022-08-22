@@ -52,7 +52,7 @@ namespace ui
             height_ = viewportPanelSize.y;
             ImVec2 mouse_pos = ImGui::GetMousePos();
             int x = mouse_pos.x - scene_pos_.x;
-            int y = mouse_pos.y - scene_pos_.y;
+            int y = (scene_cursor_y_ + height_ + 16.0f) - mouse_pos.y;
             // scene->
             ImGuiWindow *window = ImGui::GetCurrentWindow();
             is_hovered_ = !ImGuizmo::IsUsing() && ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max);
@@ -60,7 +60,7 @@ namespace ui
             {
                 ui_context.scene.is_picking = true;
                 ui_context.scene.x = x;
-                ui_context.scene.y = height - y;
+                ui_context.scene.y = y;
             }
 
             // draw scene framebuffer

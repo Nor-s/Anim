@@ -105,10 +105,6 @@ namespace anim
     {
         return direction_;
     }
-    const bool Animator::get_is_recording() const
-    {
-        return is_recording_;
-    }
     const bool Animator::get_is_stop() const
     {
         return is_stop_;
@@ -140,9 +136,5 @@ namespace anim
     void Animator::set_is_stop(bool is_stop)
     {
         is_stop_ = is_stop;
-    }
-    void Animator::set_is_recording(bool is_recording)
-    {
-        is_recording_ = is_recording;
     }
 }

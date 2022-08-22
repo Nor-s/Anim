@@ -114,11 +114,15 @@ namespace ui
             if (ImGuizmo::IsUsing())
             {
                 ui_context.entity.new_transform = glm::inverse(transform) * glm::make_mat4(object_mat_ptr);
+                auto [t, r, s] = anim::DecomposeTransform(ui_context.entity.new_transform);
                 ui_context.entity.new_transform = selected_entity->get_local() * ui_context.entity.new_transform;
-                ui_context.entity.is_changed_transform = true;
-                if (selected_entity->get_component<anim::ArmatureComponent>())
+                if (glm::length2(t) < 100000.0f)
                 {
-                    ui_context.timeline.is_stop = true;
+                    ui_context.entity.is_changed_transform = true;
+                    if (selected_entity->get_component<anim::ArmatureComponent>())
+                    {
+                        ui_context.timeline.is_stop = true;
+                    }
                 }
             }
         }

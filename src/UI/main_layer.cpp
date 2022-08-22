@@ -23,6 +23,7 @@ namespace ui
 
     void MainLayer::init(GLFWwindow *window)
     {
+        // setup file dialog
         ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
         {
             GLuint tex;
@@ -37,14 +38,14 @@ namespace ui
             glGenerateMipmap(GL_TEXTURE_2D);
             glBindTexture(GL_TEXTURE_2D, 0);
 
-            return reinterpret_cast<void *>(static_cast<uintptr_t>(tex));
+            return (void *)tex;
         };
-
         ifd::FileDialog::Instance().DeleteTexture = [](void *tex)
         {
-            GLuint texID = static_cast<GLuint>(reinterpret_cast<uintptr_t>(tex));
+            GLuint texID = (GLuint)((uintptr_t)tex);
             glDeleteTextures(1, &texID);
         };
+
         const char *glsl_version = "#version 330";
 
         IMGUI_CHECKVERSION();
@@ -83,6 +84,7 @@ namespace ui
         ImGuizmo::BeginFrame();
 
         context_ = UiContext{};
+        context_.menu.is_dialog_open = is_dialog_open_;
     }
 
     void MainLayer::end()
@@ -135,6 +137,17 @@ namespace ui
             {
                 context_.menu.path = ifd::FileDialog::Instance().GetResult().u8string();
                 context_.menu.clicked_import_model = true;
+                is_dialog_open_ = false;
+            }
+            ifd::FileDialog::Instance().Close();
+        }
+        if (ifd::FileDialog::Instance().IsDone("Export"))
+        {
+            if (ifd::FileDialog::Instance().HasResult() && !context_.menu.clicked_import_model)
+            {
+                context_.menu.path = ifd::FileDialog::Instance().GetResult().u8string();
+                context_.menu.clicked_export_animation = true;
+                is_dialog_open_ = false;
             }
             ifd::FileDialog::Instance().Close();
         }
@@ -148,13 +161,14 @@ namespace ui
             {
                 if (ImGui::MenuItem("Import: model, animation", NULL, nullptr))
                 {
-
+                    is_dialog_open_ = true;
                     ifd::FileDialog::Instance().Open("Import", "import", "model {.obj,.dae,.pmx,.fbx,.md5mesh,.gltf,.json},.*");
                 }
                 ImGui::Separator();
-                if (ImGui::MenuItem("Export: animation", NULL, nullptr))
+                if (ImGui::MenuItem("Export: animation(selected model)", NULL, nullptr))
                 {
-                    context_.menu.clicked_export_animation = true;
+                    is_dialog_open_ = true;
+                    ifd::FileDialog::Instance().Save("Export", "export", "fbx_gltf {.fbx,.gltf}");
                 }
 
                 ImGui::EndMenu();

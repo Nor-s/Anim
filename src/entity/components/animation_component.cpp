@@ -7,9 +7,9 @@ namespace anim
 
     void AnimationComponent::init_animation()
     {
-        if (animation_->get_fps() >= 120)
+        if (animation_->get_fps() >= 24)
         {
-            custom_ticks_per_second_ = 30.0f;
+            custom_ticks_per_second_ = 24.0f;
         }
         else
         {
@@ -36,10 +36,13 @@ namespace anim
         }
     }
 
-    void AnimationComponent::set_animation(std::shared_ptr<Animation> animation)
+    void AnimationComponent::set_animation(Animation *animation)
     {
-        animation_.reset();
-        animation_ = std::move(animation);
+        if (!animation)
+        {
+            return;
+        }
+        animation_ = animation;
         init_animation();
     }
 
@@ -66,12 +69,12 @@ namespace anim
 
     const Animation *AnimationComponent::get_animation() const
     {
-        return animation_.get();
+        return animation_;
     }
 
     Animation *AnimationComponent::get_mutable_animation()
     {
-        return animation_.get();
+        return animation_;
     }
 
     float AnimationComponent::get_origin_current_time(float time)

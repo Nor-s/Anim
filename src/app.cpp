@@ -7,7 +7,7 @@
 #include "scene/scene.hpp"
 #include "scene/main_scene.h"
 #include "resources/shared_resources.h"
-#include "glcpp/exporter.h"
+#include "resources/exporter.h"
 #include "entity/entity.h"
 #include "entity/components/component.h"
 #include "entity/components/animation_component.h"
@@ -74,7 +74,8 @@ void App::init_shared_resources()
 void App::init_scene(uint32_t width, uint32_t height)
 {
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Zombie Stand Up.fbx");
+    // import_model_or_animation("C:\\Users\\No\\Downloads\\Sitting Laughing (3).fbx");
+    // import_model_or_animation("./test.fbx");
     // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
     // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
     // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
@@ -146,6 +147,7 @@ void App::post_update()
     process_timeline_context();
     process_menu_context();
     process_scene_context();
+    process_component_context();
 }
 void App::process_timeline_context()
 {
@@ -196,16 +198,31 @@ void App::process_menu_context()
     {
         shared_resources_->import(menu_context.path.c_str());
     }
+    if (menu_context.clicked_export_animation)
+    {
+        shared_resources_->export_animation(scenes_[current_scene_idx_]->get_mutable_selected_entity(), menu_context.path.c_str());
+    }
 }
 void App::process_scene_context()
 {
     auto &ui_context = ui_->get_context();
     auto &scene_context = ui_context.scene;
-    if (scene_context.is_picking)
+    if (scene_context.is_picking && !ui_context.menu.is_dialog_open)
     {
         scenes_[current_scene_idx_]->picking(scene_context.x, scene_context.y, scene_context.is_bone_picking_mode);
     }
 }
+void App::process_component_context()
+{
+    auto &ui_context = ui_->get_context();
+    auto &comp_context = ui_context.component;
+    if (comp_context.is_changed_animation)
+    {
+        auto animation_comp = scenes_[current_scene_idx_]->get_mutable_selected_entity()->get_mutable_root()->get_component<anim::AnimationComponent>();
+        animation_comp->set_animation(shared_resources_->get_mutable_animation(comp_context.new_animation_idx));
+    }
+}
+
 void App::import_model_or_animation(const char *const path)
 {
     shared_resources_->import(path);

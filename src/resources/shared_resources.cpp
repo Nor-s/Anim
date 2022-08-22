@@ -7,6 +7,7 @@
 #include "../entity/entity.h"
 #include "model.h"
 #include "importer.h"
+#include "exporter.h"
 #include "../entity/components/component.h"
 #include "../entity/components/pose_component.h"
 #include "../entity/components/renderable/mesh_component.h"
@@ -47,9 +48,18 @@ namespace anim
         auto [model, animations] = import.read_file(path);
 
         add_animations(animations);
-        add_entity(model);
+        add_entity(model, path);
     }
-    void SharedResources::add_entity(std::shared_ptr<Model> &model)
+    void SharedResources::export_animation(Entity *entity, const char *save_path)
+    {
+        if (entity && entity->get_mutable_root())
+        {
+            Exporter exporter;
+            exporter.to_glft2(entity->get_mutable_root(), save_path, model_path_[entity->get_mutable_root()->get_id()].c_str());
+        }
+    }
+
+    void SharedResources::add_entity(std::shared_ptr<Model> &model, const char *path)
     {
         if (!model)
         {
@@ -59,6 +69,7 @@ namespace anim
         convert_to_entity(entity, model, model->get_root_node(), nullptr, 0, nullptr);
         if (entity)
         {
+            model_path_[entity->get_id()] = std::string(path);
             root_entity_->add_children(std::move(entity));
         }
     }
@@ -224,6 +235,7 @@ namespace anim
         if (!root_entity)
         {
             root_entity = entity.get();
+            entity->set_parent(entity.get());
         }
         entity->set_root(root_entity);
         single_entity_list_.push_back(entity);
@@ -282,7 +294,7 @@ namespace anim
                 auto animation = root_entity->add_component<AnimationComponent>();
                 if (animations_.size() > 0)
                 {
-                    animation->set_animation(animations_.back());
+                    animation->set_animation(animations_.back().get());
                 }
                 pose = root_entity->add_component<PoseComponent>();
                 LOG("=============== POSE: " + parent_entity->get_name());
@@ -322,5 +334,13 @@ namespace anim
             return single_entity_list_[id].get();
         }
         return nullptr;
+    }
+    Animation *SharedResources::get_mutable_animation(int id)
+    {
+        if (id >= animations_.size() || id < 0)
+        {
+            return nullptr;
+        }
+        return animations_[id].get();
     }
 }

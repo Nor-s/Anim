@@ -82,6 +82,17 @@ namespace ui
 
             ImGui::EndChild();
         }
+        auto animc = const_cast<AnimationComponent *>(animation);
+        auto anim = animc->get_mutable_animation();
+        ImGui::Text(("duration: " + std::to_string(anim->get_duration())).c_str());
+        ImGui::Text(("fps: " + std::to_string(anim->get_fps())).c_str());
+        float &fps = animc->get_mutable_custom_tick_per_second();
+        if (animation_idx != context.current_animation_idx)
+        {
+            context.new_animation_idx = animation_idx;
+            context.is_changed_animation = true;
+        }
+        ImGui::DragFloat("custom fps", &fps, 1.0f, 1.0f, 144.0f);
         ImGui::PopID();
     }
 

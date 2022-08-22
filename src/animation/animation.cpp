@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <iostream>
 #include <util/log.h>
+#include <algorithm>
 
 namespace anim
 {
@@ -48,36 +49,37 @@ namespace anim
         std::cout << "reload:anim" << std::endl;
 #endif
     }
+
     void Animation::get_ai_animation(aiAnimation *ai_anim, const aiNode *ai_root_node)
     {
-        // std::filesystem::path p = std::filesystem::u8path(path_.c_str());
-        // std::string anim_name = p.filename().string();
-        // ai_anim->mName = aiString(anim_name);
-        // ai_anim->mDuration = static_cast<double>(duration_);
-        // ai_anim->mTicksPerSecond = static_cast<double>(fps_);
-        // unsigned int size = name_bone_map_.size();
-        // aiNodeAnim **tmp_anim = new aiNodeAnim *[size];
+        std::filesystem::path p = std::filesystem::u8path(path_.c_str());
+        std::string anim_name = p.filename().string();
+        unsigned int size = name_bone_map_.size();
+        std::vector<aiNodeAnim *> channels;
 
-        // int idx = 0;
-        // for (auto &name_bone : name_bone_map_)
-        // {
-        //     const aiNode *node = ai_root_node->FindNode(name_bone.first.c_str());
-        //     if (node)
-        //     {
-        //         tmp_anim[idx] = new aiNodeAnim();
-        //         auto channel = tmp_anim[idx++];
-        //         name_bone.second->get_ai_node_anim(channel, node->mTransformation);
-        //     }
-        // }
+        float duration = 0.0f;
+        for (auto &name_bone : name_bone_map_)
+        {
+            const aiNode *node = ai_root_node->FindNode(name_bone.first.c_str());
+            if (node)
+            {
+                channels.emplace_back(new aiNodeAnim());
+                name_bone.second->get_ai_node(channels.back(), node->mTransformation);
+                auto time_end = *std::next(name_bone.second->get_time_set().end(), -1);
+                duration = std::max(duration, time_end);
+            }
+        }
 
-        // ai_anim->mNumChannels = idx;
-        // ai_anim->mChannels = new aiNodeAnim *[idx];
-        // for (int i = 0; i < idx; i++)
-        // {
-        //     ai_anim->mChannels[i] = new aiNodeAnim();
-        //     ai_anim->mChannels[i] = tmp_anim[i];
-        // }
-        // delete[] tmp_anim;
+        ai_anim->mTicksPerSecond = static_cast<double>(fps_);
+        ai_anim->mName = aiString(anim_name);
+        ai_anim->mDuration = static_cast<double>(duration);
+
+        ai_anim->mNumChannels = channels.size();
+        ai_anim->mChannels = new aiNodeAnim *[channels.size()];
+        for (int i = 0; i < ai_anim->mNumChannels; i++)
+        {
+            ai_anim->mChannels[i] = channels[i];
+        }
     }
     void Animation::set_id(int id)
     {

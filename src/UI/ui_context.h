@@ -11,6 +11,7 @@ namespace ui
     {
         int current_animation_idx{-1};
         int new_animation_idx{-1};
+        bool is_changed_animation{false};
     };
 
     // Change animator status (play/pause, fps, current time, start time, end time)
@@ -35,6 +36,7 @@ namespace ui
         bool clicked_import_model{false};
         bool clicked_export_animation{false};
         std::string path{""};
+        bool is_dialog_open{false};
     };
 
     // node change (bone, entity)

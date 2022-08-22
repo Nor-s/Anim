@@ -4,7 +4,6 @@ set(GLCPP_SRC
     glcpp/camera.cpp
     glcpp/application.hpp
     # glcpp/cubemap.cpp
-    # glcpp/exporter.cpp
 )
 
 add_library(glcpp STATIC ${GLCPP_SRC})
@@ -71,6 +70,8 @@ set(test_src
     entity/components/renderable/mesh_component.h
     entity/components/renderable/armature_component.h
 
+    resources/exporter.cpp
+    resources/exporter.h
     resources/importer.cpp
     resources/importer.h
     resources/model.cpp

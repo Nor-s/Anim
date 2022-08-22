@@ -10,6 +10,7 @@ namespace anim
         : name_(name),
           local_transform_(1.0f)
     {
+        bindpose_ = glm::inverse(inverse_binding_pose);
         int num_positions = channel->mNumPositionKeys;
         int num_rotations = channel->mNumRotationKeys;
         int num_scales = channel->mNumScalingKeys;
@@ -91,22 +92,90 @@ namespace anim
     {
         return factor_;
     }
+    void Bone::get_ai_node(aiNodeAnim *channel, const aiMatrix4x4 &binding_pose_transform)
+    {
+        channel->mNodeName = aiString(name_);
+        channel->mNumPositionKeys = time_set_.size(); // positions_.size();
+        channel->mNumRotationKeys = time_set_.size(); // rotations_.size();
+        channel->mNumScalingKeys = time_set_.size();  // scales_.size();
+
+        channel->mPositionKeys = new aiVectorKey[channel->mNumPositionKeys];
+        channel->mRotationKeys = new aiQuatKey[channel->mNumRotationKeys];
+        channel->mScalingKeys = new aiVectorKey[channel->mNumScalingKeys];
+
+        unsigned int pos_idx = 0, rot_idx = 0, scale_idx = 0;
+
+        if (AiMatToGlmMat(binding_pose_transform) == bindpose_)
+        {
+            std::cout << "SAME\n";
+        }
+        else
+        {
+            std::cout << "NOT SAME\n";
+        }
+
+        for (auto time : time_set_)
+        {
+            auto it_pos = positions_.find(time);
+            auto it_scale = scales_.find(time);
+            auto it_rotation = rotations_.find(time);
+            glm::vec3 v_scale = (it_scale != scales_.end()) ? it_scale->second.scale : glm::vec3(1.0f, 1.0f, 1.0f);
+            glm::vec3 v_pose = (it_pos != positions_.end()) ? it_pos->second.position : glm::vec3(0.0f, 0.0f, 0.0f);
+            glm::quat v_rotate = (it_rotation != rotations_.end()) ? it_rotation->second.orientation : glm::quat(1.0f, 0.0f, 0.0f, 0.0f);
+            glm::mat4 transformation = glm::translate(glm::mat4(1.0f), v_pose) * glm::toMat4(glm::normalize(v_rotate)) * glm::scale(glm::mat4(1.0f), v_scale);
+            transformation = AiMatToGlmMat(binding_pose_transform) * transformation;
+
+            auto [t, r, s] = DecomposeTransform(transformation);
+
+            // if (it_pos != positions_.end())
+            {
+                channel->mPositionKeys[pos_idx].mValue = GlmVecToAiVec(t);
+                channel->mPositionKeys[pos_idx].mTime = time;
+                pos_idx++;
+            }
+            // if (it_rotation != rotations_.end())
+            {
+                channel->mRotationKeys[rot_idx].mValue = GlmQuatToAiQuat(r);
+                channel->mRotationKeys[rot_idx].mTime = time;
+                rot_idx++;
+            }
+            // if (it_scale != scales_.end())
+            {
+                channel->mScalingKeys[scale_idx].mValue = GlmVecToAiVec(s);
+                channel->mScalingKeys[scale_idx].mTime = time;
+                scale_idx++;
+            }
+        }
+    }
+
     void Bone::set_name(const std::string &name)
     {
         name_ = name;
     }
     void Bone::push_position(const glm::vec3 &pos, float time)
     {
+        if (floor(time) != time)
+        {
+            return;
+        }
         positions_[time] = {pos, time};
         time_set_.insert(time);
     }
     void Bone::push_rotation(const glm::quat &quat, float time)
     {
+        if (floor(time) != time)
+        {
+            return;
+        }
         rotations_[time] = {quat, time};
         time_set_.insert(time);
     }
     void Bone::push_scale(const glm::vec3 &scale, float time)
     {
+        if (floor(time) != time)
+        {
+            return;
+        }
         scales_[time] = {scale, time};
         time_set_.insert(time);
     }
@@ -131,26 +200,26 @@ namespace anim
         // int idx = get_start_vec<KeyPosition>(pos_, animation_time);
         // const KeyPosition &p0Index = pos_[idx];
         // const KeyPosition &p1Index = pos_[(idx == pos_.size() - 1) ? idx : idx + 1];
-        const auto &[p0Index, p1Index] = get_start_end<KeyPosition>(positions_, animation_time, {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f});
-        float scaleFactor = get_scale_factor(p0Index.get_time(factor_),
-                                             p1Index.get_time(factor_), animation_time);
+        const auto &[p0Index, p1Index] = get_start_end<KeyPosition>(positions_, animation_time / factor_, {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f});
+        float scaleFactor = get_scale_factor(p0Index.get_time(),
+                                             p1Index.get_time(), animation_time / factor_);
         return glm::translate(glm::mat4(1.0f), glm::mix(p0Index.position, p1Index.position, scaleFactor));
     }
 
     glm::mat4 Bone::interpolate_rotation(float animation_time)
     {
-        const auto &[p0Index, p1Index] = get_start_end<KeyRotation>(rotations_, animation_time, {glm::quat(1.0f, 0.0f, 0.0f, 0.0f), 0.0f});
-        float scaleFactor = get_scale_factor(p0Index.get_time(factor_),
-                                             p1Index.get_time(factor_), animation_time);
-        glm::quat finalRotation = glm::slerp(p0Index.orientation, p1Index.orientation, scaleFactor);
+        const auto &[p0Index, p1Index] = get_start_end<KeyRotation>(rotations_, animation_time / factor_, {glm::quat(1.0f, 0.0f, 0.0f, 0.0f), 0.0f});
+        float scaleFactor = get_scale_factor(p0Index.get_time(),
+                                             p1Index.get_time(), animation_time / factor_);
+        glm::quat finalRotation = glm::slerp(p0Index.orientation, p1Index.orientation, (float)scaleFactor);
         return glm::toMat4(glm::normalize(finalRotation));
     }
 
     glm::mat4 Bone::interpolate_scaling(float animation_time)
     {
-        const auto &[p0Index, p1Index] = get_start_end<KeyScale>(scales_, animation_time, {glm::vec3(1.0f, 1.0f, 1.0f), 0.0f});
-        float scaleFactor = get_scale_factor(p0Index.get_time(factor_),
-                                             p1Index.get_time(factor_), animation_time);
+        const auto &[p0Index, p1Index] = get_start_end<KeyScale>(scales_, animation_time / factor_, {glm::vec3(1.0f, 1.0f, 1.0f), 0.0f});
+        float scaleFactor = get_scale_factor(p0Index.get_time(),
+                                             p1Index.get_time(), animation_time / factor_);
         return glm::scale(glm::mat4(1.0f), glm::mix(p0Index.scale, p1Index.scale, scaleFactor));
     }
     void Bone::replace_key_frame(const glm::mat4 &transform, float time)

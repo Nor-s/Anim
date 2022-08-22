@@ -42,7 +42,7 @@ namespace anim
         float start_time_{0.0f};
         float end_time_{128.0f};
         float factor_{1.0f};
-        float fps_{30.0f};
+        float fps_{24.0f};
         bool is_stop_{false};
         float direction_{1.0f};
         bool is_recording_{true};

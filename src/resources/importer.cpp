@@ -14,16 +14,38 @@ namespace fs = std::filesystem;
 namespace anim
 {
     Importer::Importer()
-        : assimp_flag_(aiProcess_Triangulate |
-                       aiProcess_GenUVCoords |
-                       //    aiProcess_OptimizeGraph |
-                       aiProcess_OptimizeMeshes |
-                       aiProcess_SortByPType |
-                       aiProcess_EmbedTextures |
-                       aiProcess_ValidateDataStructure |
-                       aiProcess_GenNormals |
-                       aiProcess_CalcTangentSpace |
-                       aiProcess_LimitBoneWeights)
+        : assimp_flag_(
+              aiProcess_CalcTangentSpace |
+              aiProcess_GenSmoothNormals |
+              aiProcess_ImproveCacheLocality |
+              aiProcess_LimitBoneWeights |
+              aiProcess_RemoveRedundantMaterials |
+              aiProcess_SplitLargeMeshes |
+              aiProcess_Triangulate |
+              aiProcess_GenUVCoords |
+              aiProcess_SortByPType |
+              aiProcess_FindDegenerates |
+              aiProcess_FindInvalidData |
+              aiProcess_FindInstances |
+              aiProcess_ValidateDataStructure |
+              aiProcess_OptimizeMeshes)
+
+    // aiProcess_CalcTangentSpace |
+    //            aiProcess_GenNormals |
+    //            aiProcess_ImproveCacheLocality |
+    //            aiProcess_LimitBoneWeights |
+    //            //    aiProcess_RemoveRedundantMaterials |
+    //            aiProcess_SplitLargeMeshes |
+    //            aiProcess_Triangulate |
+    //            aiProcess_GenUVCoords |
+    //            aiProcess_SortByPType |
+    //            //    aiProcess_FindDegenerates |
+    //            //    aiProcess_FindInvalidData |
+    //            //    aiProcess_FindInstances |
+    //            aiProcess_ValidateDataStructure |
+    //            aiProcess_OptimizeMeshes |
+    //            //    aiProcess_FixInfacingNormals |
+    //            aiProcess_OptimizeGraph)
     {
     }
 

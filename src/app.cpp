@@ -75,14 +75,7 @@ void App::init_scene(uint32_t width, uint32_t height)
 {
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
 
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Sitting Laughing (3).fbx");
-    // import_model_or_animation("./test.fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
     import_model_or_animation("./resources/models/ybot.fbx");
-    // import_model_or_animation("./anim.json");
 }
 void App::loop()
 {
@@ -201,6 +194,18 @@ void App::process_menu_context()
     if (menu_context.clicked_export_animation)
     {
         shared_resources_->export_animation(scenes_[current_scene_idx_]->get_mutable_selected_entity(), menu_context.path.c_str());
+    }
+    if (menu_context.clicked_import_dir)
+    {
+        for (const auto &file : std::filesystem::directory_iterator(menu_context.path))
+        {
+            anim::LOG(file.path().string());
+            if (file.path().extension().compare(".fbx") == 0 || file.path().extension().compare(".gltf") == 0)
+            {
+                anim::LOG("IMPORT");
+                shared_resources_->import(file.path().string().c_str());
+            }
+        }
     }
 }
 void App::process_scene_context()

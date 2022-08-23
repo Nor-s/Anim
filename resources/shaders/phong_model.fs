@@ -33,6 +33,8 @@ uniform DirLight dir_lights[NR_DIR_LIGHTS];
 
 uniform Material material;
 uniform vec3 selectionColor;
+uniform vec4 outlineColor;
+uniform bool isOutline;
 
 vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir, vec3 mat_diffuse)
 {
@@ -73,6 +75,9 @@ void main()
 
     result += CalcDirLight(dir_lights[0], norm, viewDir, mat_diffuse);
     FragColor = vec4(result, 1.0);
+    if(isOutline) {
+        FragColor = outlineColor;
+    }
 
     // for  debug
     // FragColor = vec4(tmp/52.0, 0.0, 0.0, 1.0);

@@ -97,7 +97,7 @@ namespace ui
         ImGui::SameLine();
 
         auto current_cursor = ImGui::GetCursorPosX();
-        auto next_pos = ImGui::GetWindowWidth() / 2.0f - button_size.x - small_button_size.x - item_spacing;
+        auto next_pos = ImGui::GetWindowWidth() / 2.0f - button_size.x - small_button_size.x - item_spacing / 2.0;
         if (next_pos < current_cursor)
         {
             next_pos = current_cursor;

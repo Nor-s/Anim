@@ -26,7 +26,7 @@ namespace ui
             {
                 if (ImGui::CollapsingHeader("Transform"))
                 {
-                    // draw_transform_slider();
+                    draw_transform(entity);
                     ImGui::Separator();
                 }
                 if (auto root = entity->get_mutable_root(); root)
@@ -96,27 +96,24 @@ namespace ui
         ImGui::PopID();
     }
 
-    void ComponentLayer::draw_transform_slider(anim::TransformComponent &transform)
+    void ComponentLayer::draw_transform(anim::Entity *entity)
     {
-        auto vec = transform.get_rotation();
-        bool result = DragPropertyXYZ("Rotation", vec);
-        if (result)
-        {
-            transform.set_rotation(vec);
-        }
-        vec = transform.get_scale();
-        result = DragPropertyXYZ("Scale", vec);
-        if (result)
-        {
-            transform.set_scale(vec);
-        }
+        auto &world = entity->get_world_transformation();
+        auto &local = entity->get_local();
+        TransformComponent transform;
+        transform.set_transform(world);
+        ImGui::Text("World");
+        DragPropertyXYZ("Translation", transform.translation_);
+        DragPropertyXYZ("Rotation", transform.rotation_);
+        DragPropertyXYZ("Scale", transform.scale_);
 
-        vec = transform.get_translation();
-        result = DragPropertyXYZ("Translation", vec);
-        if (result)
-        {
-            transform.set_translation(vec);
-        }
+        ImGui::Separator();
+
+        transform.set_transform(local);
+        ImGui::Text("Local");
+        DragPropertyXYZ("Translation", transform.translation_);
+        DragPropertyXYZ("Rotation", transform.rotation_);
+        DragPropertyXYZ("Scale", transform.scale_);
     }
     void ComponentLayer::draw_transform_reset_button(anim::TransformComponent &transform)
     {

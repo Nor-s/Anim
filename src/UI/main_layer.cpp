@@ -4,16 +4,30 @@
 
 #include "text_edit_layer.h"
 
+#include <array>
 #include <glcpp/window.h>
 
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_opengl3.h>
 #include <imgui/imgui_impl_glfw.h>
-#include "ImFileDialog.h"
 #include <imgui/ImGuizmo.h>
 #include <imgui/icons/icons.h>
 #include <fstream>
+
+#include <ImGuiFileDialog/ImGuiFileDialog.h>
+#ifdef _WIN32
+#pragma warning(disable : 4005)
+#include <Windows.h>
+// #include <shellapi.h>
+#include <lmcons.h>
+// #pragma comment(lib, "Shell32.lib")
+#else
+// #include <unistd.h>
+// #include <pwd.h>
+#endif
+
+#define FILTER_MODEL "Model files (*.fbx *.gltf){.fbx,.gltf,.glb}"
 
 namespace ui
 {
@@ -23,29 +37,6 @@ namespace ui
 
     void MainLayer::init(GLFWwindow *window)
     {
-        // setup file dialog
-        ifd::FileDialog::Instance().CreateTexture = [](uint8_t *data, int w, int h, char fmt) -> void *
-        {
-            GLuint tex;
-
-            glGenTextures(1, &tex);
-            glBindTexture(GL_TEXTURE_2D, tex);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w, h, 0, (fmt == 0) ? GL_BGRA : GL_RGBA, GL_UNSIGNED_BYTE, data);
-            glGenerateMipmap(GL_TEXTURE_2D);
-            glBindTexture(GL_TEXTURE_2D, 0);
-
-            return (void *)((uintptr_t)tex);
-        };
-        ifd::FileDialog::Instance().DeleteTexture = [](void *tex)
-        {
-            GLuint texID = (GLuint)((uintptr_t)tex);
-            glDeleteTextures(1, &texID);
-        };
-
         const char *glsl_version = "#version 330";
 
         IMGUI_CHECKVERSION();
@@ -66,6 +57,43 @@ namespace ui
         ImGui::LoadInternalIcons(io.Fonts);
         ImGui_ImplGlfw_InitForOpenGL(window, true);
         ImGui_ImplOpenGL3_Init(glsl_version);
+        init_bookmark();
+    }
+    void MainLayer::init_bookmark()
+    {
+        // define style for all directories
+        ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, "", ImVec4(0.02f, 0.02f, 0.02f, 1.0f), ICON_MD_FOLDER);
+        // define style for all files
+        ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeFile, "", ImVec4(0.02f, .02f, 0.02f, 1.0f), ICON_IGFD_FILE);
+
+#ifdef _WIN32
+        wchar_t username[UNLEN + 1] = {0};
+        DWORD username_len = UNLEN + 1;
+        GetUserNameW(username, &username_len);
+        std::wstring userPath = L"C:\\Users\\" + std::wstring(username) + L"\\";
+        // Quick Access / Bookmarks
+        ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_MONITOR " Desktop", std::filesystem::path(userPath).append("Desktop").string());
+        ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_DESCRIPTION " Documents", std::filesystem::path(userPath).append("Documents").string());
+        ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_DOWNLOAD " Downloads", std::filesystem::path(userPath).append("Downloads").string());
+        ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_FAVORITE " Anim", std::filesystem::path("./").string());
+#else
+        // std::error_code ec;
+
+        // // Quick Access
+        // struct passwd *pw;
+        // uid_t uid;
+        // uid = geteuid();
+        // pw = getpwuid(uid);
+        // if (pw)
+        // {
+        //     std::string homePath = "/home/" + std::string(pw->pw_name);
+        //     if (std::filesystem::exists(homePath, ec))
+        //     if (std::filesystem::exists(homePath + "/Desktop", ec))
+        //     if (std::filesystem::exists(homePath + "/Documents", ec))
+        //     if (std::filesystem::exists(homePath + "/Downloads", ec))
+        //     if (std::filesystem::exists(homePath + "/Pictures", ec))
+        // }
+#endif
     }
 
     void MainLayer::shutdown()
@@ -89,7 +117,6 @@ namespace ui
 
     void MainLayer::end()
     {
-        ImGui::ShowDemoWindow();
 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -132,31 +159,21 @@ namespace ui
         }
         draw_menu_bar(fps);
         ImGui::End();
-
-        if (ifd::FileDialog::Instance().IsDone("Import"))
-        {
-            if (ifd::FileDialog::Instance().HasResult())
-            {
-                context_.menu.path = ifd::FileDialog::Instance().GetResult().u8string();
-                context_.menu.clicked_import_model = true;
-                is_dialog_open_ = false;
-            }
-            ifd::FileDialog::Instance().Close();
-        }
-        if (ifd::FileDialog::Instance().IsDone("Export"))
-        {
-            if (ifd::FileDialog::Instance().HasResult() && !context_.menu.clicked_import_model)
-            {
-                context_.menu.path = ifd::FileDialog::Instance().GetResult().u8string();
-                context_.menu.clicked_export_animation = true;
-                is_dialog_open_ = false;
-            }
-            ifd::FileDialog::Instance().Close();
-        }
     }
 
     void MainLayer::draw_menu_bar(float fps)
     {
+        const char *menu_dialog_name[3] = {
+            "Import",
+            "ImportDir",
+            "Export"};
+        std::array<bool *, 3> is_clicked_dir = {
+            &context_.menu.clicked_import_model,
+            &context_.menu.clicked_import_dir,
+            &context_.menu.clicked_export_animation};
+        ImVec2 minSize = {650.0f, 400.0f}; // Half the display area
+        const char *filters = FILTER_MODEL ",Json Animation (*.json){.json},.*";
+
         if (ImGui::BeginMenuBar())
         {
             if (ImGui::BeginMenu("File"))
@@ -164,13 +181,24 @@ namespace ui
                 if (ImGui::MenuItem("Import: model, animation", NULL, nullptr))
                 {
                     is_dialog_open_ = true;
-                    ifd::FileDialog::Instance().Open("Import", "import", "model {.obj,.dae,.pmx,.fbx,.md5mesh,.gltf,.json},.*");
+                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[0],
+                                                            ICON_MD_FILE_OPEN " Open fbx, gltf ...",
+                                                            filters,
+                                                            ".",
+                                                            1,
+                                                            nullptr,
+                                                            ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
+                }
+                if (ImGui::MenuItem("Import: Folder", NULL, nullptr))
+                {
+                    is_dialog_open_ = true;
+                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[1], "Choose a Directory", nullptr, ".", 1, nullptr, ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
                 }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Export: animation(selected model)", NULL, nullptr))
                 {
                     is_dialog_open_ = true;
-                    ifd::FileDialog::Instance().Save("Export", "export", "fbx_gltf {.fbx,.gltf}");
+                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[2], "Save", FILTER_MODEL, ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
                 }
 
                 ImGui::EndMenu();
@@ -183,6 +211,19 @@ namespace ui
             ImGui::Text("fps: %.2f", fps);
 
             ImGui::EndMenuBar();
+        }
+        for (int i = 0; i < 3; i++)
+        {
+            if (ImGuiFileDialog::Instance()->Display(menu_dialog_name[i], ImGuiWindowFlags_NoCollapse, minSize))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    context_.menu.path = ImGuiFileDialog::Instance()->GetFilePathName();
+                    *is_clicked_dir[i] = true;
+                    is_dialog_open_ = false;
+                }
+                ImGuiFileDialog::Instance()->Close();
+            }
         }
     }
 

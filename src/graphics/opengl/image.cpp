@@ -21,7 +21,6 @@ namespace anim
     {
         shader.use();
         glUniform1i(glGetUniformLocation(shader.get_id(), "texture_diffuse1"), 0);
-        shader.set_vec2("iResolution", glm::vec2(width_, height_));
         glBindVertexArray(quad_VAO_);
         glBindTexture(GL_TEXTURE_2D, texture_);
         glDrawArrays(GL_TRIANGLES, 0, 6);

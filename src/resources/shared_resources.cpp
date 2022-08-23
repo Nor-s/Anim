@@ -153,13 +153,13 @@ namespace anim
     }
     void SharedResources::init_shader()
     {
-        add_shader("animation_one_color", "./resources/shaders/animation_cpu.vs", "./resources/shaders/selection_color.fs");
+        add_shader("animation_one_color", "./resources/shaders/animation_skinning.vs", "./resources/shaders/selection_color.fs");
         add_shader("model_one_color", "./resources/shaders/simple_model.vs", "./resources/shaders/selection_color.fs");
         add_shader("armature_one_color", "./resources/shaders/armature.vs", "./resources/shaders/selection_color.fs");
 
-        add_shader("armature", "./resources/shaders/armature.vs", "./resources/shaders/simple_light_model.fs");
-        add_shader("model", "./resources/shaders/simple_model.vs", "./resources/shaders/simple_light_model.fs");
-        add_shader("animation", "./resources/shaders/animation_cpu.vs", "./resources/shaders/simple_light_model.fs");
+        add_shader("armature", "./resources/shaders/armature.vs", "./resources/shaders/phong_model.fs");
+        add_shader("model", "./resources/shaders/simple_model.vs", "./resources/shaders/phong_model.fs");
+        add_shader("animation", "./resources/shaders/animation_skinning.vs", "./resources/shaders/phong_model.fs");
 
         add_shader("framebuffer", "./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
         add_shader("grid", "./resources/shaders/grid.vs", "./resources/shaders/grid.fs");

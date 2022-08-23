@@ -22,8 +22,9 @@ set(IMGUI_ICONS
     )
 set(IMGUI_INC_DIRS
     ${IMGUI_PATH}
+    ${IMGUI_PATH}/ImGuiFileDialog
     ${IMGUI_PATH}/icons
 )
-add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUI_ICONS})
+add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUI_ICONS} ImGuiFileDialog/ImGuiFileDialog.cpp)
 target_include_directories(imgui PUBLIC ${IMGUI_INC_DIRS})
 target_link_libraries(imgui PUBLIC glfw)

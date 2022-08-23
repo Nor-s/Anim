@@ -122,7 +122,6 @@ add_executable(Anim
 ./UI/main_layer.cpp
 ./UI/main_layer.h
 ./UI/imgui_helper.cpp
-./UI/ImFileDialog.cpp
 
 ./app.cpp
 ./scene/scene.hpp

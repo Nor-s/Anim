@@ -34,6 +34,7 @@ namespace ui
     struct MenuContext
     {
         bool clicked_import_model{false};
+        bool clicked_import_dir{false};
         bool clicked_export_animation{false};
         std::string path{""};
         bool is_dialog_open{false};

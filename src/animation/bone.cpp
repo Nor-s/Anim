@@ -105,15 +105,6 @@ namespace anim
 
         unsigned int pos_idx = 0, rot_idx = 0, scale_idx = 0;
 
-        if (AiMatToGlmMat(binding_pose_transform) == bindpose_)
-        {
-            std::cout << "SAME\n";
-        }
-        else
-        {
-            std::cout << "NOT SAME\n";
-        }
-
         for (auto time : time_set_)
         {
             auto it_pos = positions_.find(time);

@@ -29,7 +29,7 @@ MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<anim::Shar
         resources_ = std::move(resources);
     }
     init_framebuffer(width, height);
-    grid_framebuffer_.reset(new anim::Image{100, 100, GL_RGBA});
+    grid_framebuffer_.reset(new anim::Image{1, 1, GL_RGBA});
 
     init_camera();
 }
@@ -73,7 +73,6 @@ void MainScene::update_framebuffer()
 void MainScene::draw_to_framebuffer()
 {
     auto grid_shader = resources_->get_mutable_shader("grid");
-    // glEnable(GL_LINE_SMOOTH);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

@@ -8,6 +8,7 @@
 #include <string>
 #include <memory>
 #include <map>
+
 struct GLFWwindow;
 
 class Scene;
@@ -46,6 +47,7 @@ namespace ui
         const UiContext &get_context() const;
 
     private:
+        void init_bookmark();
         void shutdown();
         void draw_menu_bar(float fps);
         // https://www.fluentcpp.com/2017/09/22/make-pimpl-using-unique_ptr/

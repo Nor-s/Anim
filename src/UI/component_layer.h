@@ -23,7 +23,7 @@ namespace ui
 
     private:
         void draw_animation(ComponentContext &context, const anim::SharedResources *shared_resource, const anim::Entity *entity, const anim::AnimationComponent *animation);
-        void draw_transform_slider(anim::TransformComponent &transform);
+        void draw_transform(anim::Entity *entity);
         void draw_transform_reset_button(anim::TransformComponent &transform);
     };
 }

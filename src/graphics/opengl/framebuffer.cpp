@@ -132,7 +132,9 @@ namespace anim
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
+#ifndef NDEBUG
             std::cout << "ERROR::FRAMEBUFFER::MSAA Framebuffer is not complete!" << std::endl;
+#endif
             is_error_ = true;
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -150,7 +152,10 @@ namespace anim
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
+#ifndef NDEBUG
+
             std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
+#endif
             is_error_ = true;
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);

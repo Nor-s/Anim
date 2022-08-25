@@ -44,6 +44,7 @@ set(test_src
     graphics/opengl/gl_mesh.cpp
     graphics/opengl/framebuffer.cpp
     graphics/opengl/image.cpp
+    graphics/post_processing.cpp
 
     graphics/shader.h
     graphics/mesh.h
@@ -51,6 +52,7 @@ set(test_src
     graphics/opengl/gl_mesh.h
     graphics/opengl/framebuffer.h
     graphics/opengl/image.h
+    graphics/post_processing.h
 
     util/log.h
     util/utility.h
@@ -122,6 +124,9 @@ add_executable(Anim
 ./UI/main_layer.cpp
 ./UI/main_layer.h
 ./UI/imgui_helper.cpp
+
+event/event_history.h
+event/event_history.cpp
 
 ./app.cpp
 ./scene/scene.hpp

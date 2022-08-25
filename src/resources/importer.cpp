@@ -28,7 +28,8 @@ namespace anim
               aiProcess_FindInvalidData |
               aiProcess_FindInstances |
               aiProcess_ValidateDataStructure |
-              aiProcess_OptimizeMeshes)
+              aiProcess_OptimizeMeshes |
+              aiProcess_OptimizeGraph)
 
     // aiProcess_CalcTangentSpace |
     //            aiProcess_GenNormals |

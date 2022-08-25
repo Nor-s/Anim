@@ -31,6 +31,8 @@
 
 namespace ui
 {
+    static bool isLinear{true};
+
     MainLayer::MainLayer() = default;
 
     MainLayer::~MainLayer() = default;
@@ -117,7 +119,6 @@ namespace ui
 
     void MainLayer::end()
     {
-
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
@@ -161,16 +162,26 @@ namespace ui
         ImGui::End();
     }
 
+    inline void InfosPane(const char *vFilter, IGFDUserDatas vUserDatas, bool *vCantContinue) // if vCantContinue is false, the user cant validate the dialog
+    {
+        ImGui::TextColored(ImVec4(0, 1, 1, 1), "Infos Pane");
+        ImGui::Text("Linear: ");
+        ImGui::SameLine();
+        ImGui::Checkbox("##check", reinterpret_cast<bool *>(vUserDatas));
+    }
+
     void MainLayer::draw_menu_bar(float fps)
     {
-        const char *menu_dialog_name[3] = {
+        const char *menu_dialog_name[4] = {
             "Import",
             "ImportDir",
-            "Export"};
-        std::array<bool *, 3> is_clicked_dir = {
+            "Export",
+            "ExportData"};
+        std::array<bool *, 4> is_clicked_dir = {
             &context_.menu.clicked_import_model,
             &context_.menu.clicked_import_dir,
-            &context_.menu.clicked_export_animation};
+            &context_.menu.clicked_export_animation,
+            &context_.menu.clicked_export_all_data};
         ImVec2 minSize = {650.0f, 400.0f}; // Half the display area
         const char *filters = FILTER_MODEL ",Json Animation (*.json){.json},.*";
 
@@ -198,9 +209,21 @@ namespace ui
                 if (ImGui::MenuItem("Export: animation(selected model)", NULL, nullptr))
                 {
                     is_dialog_open_ = true;
-                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[2], "Save", FILTER_MODEL, ".", 1, nullptr, ImGuiFileDialogFlags_Modal);
+                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[2], "Save",
+                                                            FILTER_MODEL,
+                                                            ".", "",
+                                                            std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
+                                                            IGFD::UserDatas(&isLinear),
+                                                            ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
                 }
-
+                if (ImGui::MenuItem("Export: rotation, world pos(json)", NULL, nullptr))
+                {
+                    is_dialog_open_ = true;
+                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[3], "Save",
+                                                            "Json (*.json){.json}",
+                                                            ".", 1, nullptr,
+                                                            ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
+                }
                 ImGui::EndMenu();
             }
             HelpMarker(
@@ -212,7 +235,8 @@ namespace ui
 
             ImGui::EndMenuBar();
         }
-        for (int i = 0; i < 3; i++)
+        int dialog_count = 0;
+        for (int i = 0; i < 4; i++)
         {
             if (ImGuiFileDialog::Instance()->Display(menu_dialog_name[i], ImGuiWindowFlags_NoCollapse, minSize))
             {
@@ -220,11 +244,19 @@ namespace ui
                 {
                     context_.menu.path = ImGuiFileDialog::Instance()->GetFilePathName();
                     *is_clicked_dir[i] = true;
-                    is_dialog_open_ = false;
                 }
                 ImGuiFileDialog::Instance()->Close();
             }
+            else
+            {
+                dialog_count++;
+            }
         }
+        if (dialog_count == 4)
+        {
+            is_dialog_open_ = false;
+        }
+        context_.menu.is_export_linear_interpolation = isLinear;
     }
 
     void MainLayer::draw_scene(const std::string &title, Scene *scene)

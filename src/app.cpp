@@ -15,6 +15,8 @@
 #include "animation/animator.h"
 #include "util/log.h"
 #include "UI/ui_context.h"
+#include "event/event_history.h"
+#include "resources/exporter.h"
 
 namespace fs = std::filesystem;
 
@@ -43,6 +45,7 @@ void App::init(uint32_t width, uint32_t height, const std::string &title)
     init_ui();
     init_shared_resources();
     init_scene(width, height);
+    history_.reset(new anim::EventHistoryQueue());
 }
 void App::init_window(uint32_t width, uint32_t height, const std::string &title)
 {
@@ -58,7 +61,6 @@ void App::init_callback()
     window_->set_cursor_pos_callback(mouse_callback);
 
 #ifndef NDEBUG
-
     glfwSetErrorCallback(error_callback);
 #endif
 }
@@ -172,14 +174,32 @@ void App::process_timeline_context()
     {
         scenes_[current_scene_idx_]->set_selected_entity(entity_context.selected_id);
     }
+    static uint32_t count = 0u;
+    is_manipulated_ = entity_context.is_manipulated;
     if (entity_context.is_changed_transform && time_context.is_recording)
     {
         auto selected_entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+        auto &before_transform = selected_entity->get_local();
         selected_entity->set_local(entity_context.new_transform);
         if (auto armature = selected_entity->get_component<anim::ArmatureComponent>(); armature)
         {
             armature->add_and_replace_bone();
+            if (count == 0u)
+            {
+                history_->push(std::make_unique<anim::BoneChangeEvent>(
+                    scenes_[current_scene_idx_].get(),
+                    scenes_[current_scene_idx_]->get_mutable_ref_shared_resources().get(),
+                    selected_entity->get_id(),
+                    selected_entity->get_mutable_root()->get_component<anim::AnimationComponent>()->get_animation()->get_id(),
+                    before_transform,
+                    armature->get_pose()->get_animator()->get_current_time()));
+            }
+            count++;
         }
+    }
+    else
+    {
+        count = 0u;
     }
 }
 
@@ -193,7 +213,7 @@ void App::process_menu_context()
     }
     if (menu_context.clicked_export_animation)
     {
-        shared_resources_->export_animation(scenes_[current_scene_idx_]->get_mutable_selected_entity(), menu_context.path.c_str());
+        shared_resources_->export_animation(scenes_[current_scene_idx_]->get_mutable_selected_entity(), menu_context.path.c_str(), menu_context.is_export_linear_interpolation);
     }
     if (menu_context.clicked_import_dir)
     {
@@ -206,6 +226,11 @@ void App::process_menu_context()
                 shared_resources_->import(file.path().string().c_str());
             }
         }
+    }
+    if (menu_context.clicked_export_all_data)
+    {
+        auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+        anim::to_json_all_animation_data(menu_context.path.c_str(), entity, shared_resources_.get());
     }
 }
 void App::process_scene_context()
@@ -275,6 +300,25 @@ void App::process_input(GLFWwindow *window)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::LEFT, delta_frame_);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
+
+    static bool is_pressed_z = false;
+    bool is_released_z = false;
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+    {
+        is_pressed_z = true;
+    }
+    else if (is_pressed_z && glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE)
+    {
+        is_pressed_z = false;
+        is_released_z = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && is_released_z && !is_manipulated_)
+    {
+        anim::LOG("POP::HISTORY");
+        history_->pop();
+        is_released_z = false;
+        shared_resources_->get_mutable_animator()->set_is_stop(true);
+    }
 }
 
 void App::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)

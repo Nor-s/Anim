@@ -30,7 +30,7 @@ namespace ui
           scene_window_right_(0.0f),
           scene_window_top_(0.0f),
           scene_pos_(0.0f, 0.0f),
-          current_gizmo_mode_(ImGuizmo::WORLD),
+          current_gizmo_mode_(ImGuizmo::LOCAL),
           current_gizmo_operation_(ImGuizmo::OPERATION::NONE)
     {
     }
@@ -58,6 +58,7 @@ namespace ui
             is_hovered_ = !ImGuizmo::IsUsing() && ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
             {
+                anim::LOG("double click" + std::to_string(x) + " " + std::to_string(y));
                 ui_context.scene.is_picking = true;
                 ui_context.scene.x = x;
                 ui_context.scene.y = y;
@@ -119,6 +120,7 @@ namespace ui
                 if (glm::length2(t) < 100000.0f)
                 {
                     ui_context.entity.is_changed_transform = true;
+                    ui_context.entity.is_manipulated = true;
                     if (selected_entity->get_component<anim::ArmatureComponent>())
                     {
                         ui_context.timeline.is_stop = true;
@@ -154,7 +156,12 @@ namespace ui
                 current_gizmo_operation_ = ImGuizmo::OPERATION::NONE;
                 ImGui::TableNextColumn();
                 // select
-                ToggleButton(ICON_MD_NEAR_ME, &is_bone_picking_mode_, {btn_size.x * 2, btn_size.y});
+                ToggleButton(ICON_MD_NEAR_ME, &is_bone_picking_mode_, {btn_size.x * 2, btn_size.y}, &ui_context.scene.is_clicked_picking_mode);
+                if (ui_context.scene.is_clicked_picking_mode && !is_bone_picking_mode_)
+                {
+                    ui_context.entity.is_changed_selected_entity = true;
+                    ui_context.entity.selected_id = -1;
+                }
                 ui_context.scene.is_bone_picking_mode = is_bone_picking_mode_;
                 // ImGui::PopStyleVar();
                 ImGui::SameLine();

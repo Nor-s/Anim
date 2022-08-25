@@ -5,6 +5,7 @@
 #include "../entity/entity.h"
 #include "../entity/components/renderable/armature_component.h"
 #include "../entity/components/pose_component.h"
+#include "../entity/components/transform_component.h"
 #include "../entity/components/animation_component.h"
 #include "../animation/animation.h"
 
@@ -22,6 +23,24 @@
 
 namespace anim
 {
+
+    Json::Value get_quat_json(const glm::quat &r)
+    {
+        Json::Value ret_json;
+        ret_json["w"] = r.w;
+        ret_json["x"] = r.x;
+        ret_json["y"] = r.y;
+        ret_json["z"] = r.z;
+        return ret_json;
+    }
+    Json::Value get_vec_json(const glm::vec3 &p)
+    {
+        Json::Value ret_json;
+        ret_json["x"] = p.x;
+        ret_json["y"] = p.y;
+        ret_json["z"] = p.z;
+        return ret_json;
+    }
     void Exporter::to_png(Framebuffer *framebuffer, const char *save_path)
     {
         auto format = framebuffer->get_format();
@@ -72,23 +91,6 @@ namespace anim
         }
         return node_json;
     }
-    Json::Value Exporter::get_quat_json(const glm::quat &r)
-    {
-        Json::Value ret_json;
-        ret_json["w"] = r.w;
-        ret_json["x"] = r.x;
-        ret_json["y"] = r.y;
-        ret_json["z"] = r.z;
-        return ret_json;
-    }
-    Json::Value Exporter::get_vec_json(const glm::vec3 &p)
-    {
-        Json::Value ret_json;
-        ret_json["x"] = p.x;
-        ret_json["y"] = p.y;
-        ret_json["z"] = p.z;
-        return ret_json;
-    }
 
     // assimp export not stable
     // "mixamorig:LeftForeArm"
@@ -123,13 +125,14 @@ namespace anim
         // //     // scene->mRootNode = new aiNode();
         // //   // to_ai_node(scene->mRootNode, root_entity);
 
-        auto animation = entity->get_component<AnimationComponent>()->get_mutable_animation();
+        auto animation_comp = entity->get_component<AnimationComponent>();
+        auto animation = animation_comp->get_mutable_animation();
         // delete scene->mAnimations[0];
         scene->mAnimations = new aiAnimation *[1];
         scene->mAnimations[0] = new aiAnimation();
         scene->mNumAnimations = 1;
 
-        animation->get_ai_animation(scene->mAnimations[0], scene->mRootNode);
+        animation->get_ai_animation(scene->mAnimations[0], scene->mRootNode, animation_comp->get_ticks_per_second_factor(), is_linear_);
 
         Assimp::Exporter exporter;
         auto save = std::filesystem::u8path(save_path);
@@ -173,4 +176,85 @@ namespace anim
             to_ai_node(ai_node->mChildren[i], childrens[i].get(), ai_node);
         }
     }
+    void init_name(Entity *entity, Json::Value &name_list)
+    {
+        name_list.append(entity->get_name());
+        for (auto &child : entity->get_mutable_children())
+        {
+            init_name(child.get(), name_list);
+        }
+    }
+    void init_json_pose(Json::Value &world_value, Json::Value &local_value, Entity *entity, const glm::vec3 &root_pos)
+    {
+        auto transformation = entity->get_world_transformation();
+        TransformComponent transform{};
+        transform.set_transform(transformation);
+        glm::vec3 pos = transform.get_translation() - root_pos;
+        world_value[entity->get_name()] = get_vec_json(pos);
+
+        auto [t, r, s] = DecomposeTransform(entity->get_local());
+        local_value[entity->get_name()] = get_quat_json(r);
+
+        for (auto &child : entity->get_mutable_children())
+        {
+            init_json_pose(world_value, local_value, child.get(), root_pos);
+        }
+    }
+    void to_json_all_animation_data(const char *save_path, Entity *entity, SharedResources *resources)
+    {
+        if (!(entity && entity->get_mutable_root() && entity->get_mutable_root()->get_component<AnimationComponent>()))
+        {
+            return;
+        }
+        auto root = entity->get_mutable_root();
+        auto animation_comp = root->get_component<AnimationComponent>();
+        auto pose_comp = root->get_component<PoseComponent>();
+        auto pose_root_entity = pose_comp->get_root_entity();
+        auto size = resources->get_animations().size();
+        auto animator = resources->get_mutable_animator();
+        float before_time = animator->get_current_time();
+        bool before_rootmotion = animator->mIsRootMotion;
+        animator->mIsRootMotion = true;
+        Json::Value ret;
+        ret["pose"] = Json::arrayValue;
+        ret["name_list"] = Json::arrayValue;
+        init_name(pose_root_entity, ret["name_list"]);
+        int pose_size = 0;
+        for (int i = 0; i < size; i++)
+        {
+            auto animation = resources->get_mutable_animation(i);
+            animation_comp->set_animation(animation);
+            float duration = static_cast<float>(animation_comp->get_custom_duration());
+            for (float time = 0.0f; time <= duration; time += 1.0f)
+            {
+                Json::Value pose;
+                animator->set_current_time(time);
+                pose_comp->update();
+                TransformComponent hips{};
+                hips.set_transform(pose_root_entity->get_world_transformation());
+                init_json_pose(pose["world"], pose["rotation"], pose_root_entity, hips.mTranslation);
+                ret["pose"].append(pose);
+                pose_size++;
+            }
+        }
+        animator->set_current_time(before_time);
+        animator->mIsRootMotion = before_rootmotion;
+
+        ret["pose_size"] = pose_size;
+
+        try
+        {
+            std::ofstream json_stream(save_path, std::ofstream::binary);
+            json_stream << ret.toStyledString();
+            if (json_stream.is_open())
+            {
+                json_stream.close();
+            }
+        }
+        catch (std::exception &e)
+        {
+            LOG(e.what());
+        }
+    }
+
 }

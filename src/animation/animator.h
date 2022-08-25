@@ -34,6 +34,8 @@ namespace anim
         void set_direction(bool is_left);
         void set_is_stop(bool is_stop);
 
+        bool mIsRootMotion{false};
+
     private:
         std::vector<glm::mat4> final_bone_matrices_;
         float current_time_{0.0f};

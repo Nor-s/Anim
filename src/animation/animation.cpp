@@ -50,7 +50,7 @@ namespace anim
 #endif
     }
 
-    void Animation::get_ai_animation(aiAnimation *ai_anim, const aiNode *ai_root_node)
+    void Animation::get_ai_animation(aiAnimation *ai_anim, const aiNode *ai_root_node, float factor, bool is_linear)
     {
         std::filesystem::path p = std::filesystem::u8path(path_.c_str());
         std::string anim_name = p.filename().string();
@@ -61,16 +61,16 @@ namespace anim
         for (auto &name_bone : name_bone_map_)
         {
             const aiNode *node = ai_root_node->FindNode(name_bone.first.c_str());
-            if (node)
+            if (node && name_bone.second->get_time_set().size() != 0)
             {
                 channels.emplace_back(new aiNodeAnim());
-                name_bone.second->get_ai_node(channels.back(), node->mTransformation);
+                name_bone.second->get_ai_node(channels.back(), node->mTransformation, factor, is_linear);
                 auto time_end = *std::next(name_bone.second->get_time_set().end(), -1);
                 duration = std::max(duration, time_end);
             }
         }
 
-        ai_anim->mTicksPerSecond = static_cast<double>(fps_);
+        ai_anim->mTicksPerSecond = static_cast<double>(floorf(fps_ * factor));
         ai_anim->mName = aiString(anim_name);
         ai_anim->mDuration = static_cast<double>(duration);
 
@@ -94,7 +94,8 @@ namespace anim
         auto bone = find_bone(name);
         if (bone)
         {
-            bone->replace_key_frame(transform, time);
+            LOG("bone: " + name);
+            bone->replace_or_add_keyframe(transform, time);
         }
         else
         {
@@ -102,7 +103,15 @@ namespace anim
             name_bone_map_[name] = std::make_unique<Bone>();
             bone = name_bone_map_[name].get();
             bone->set_name(name);
-            bone->replace_key_frame(transform, time);
+        }
+    }
+    void Animation::replace_bone(const std::string &name, const glm::mat4 &transform, float time)
+    {
+        auto bone = find_bone(name);
+        if (bone)
+        {
+            LOG("bone: " + name);
+            bone->replace_or_sub_keyframe(transform, time);
         }
     }
 

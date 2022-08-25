@@ -18,10 +18,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../graphics/opengl/gl_mesh.h"
+#include "../graphics/post_processing.h"
 namespace anim
 {
     SharedResources::SharedResources()
     {
+        mPostProcessing.reset(new PostProcessing());
+
         init_animator();
         init_shader();
         root_entity_.reset(new Entity("All", single_entity_list_.size()));
@@ -50,11 +53,12 @@ namespace anim
         add_animations(animations);
         add_entity(model, path);
     }
-    void SharedResources::export_animation(Entity *entity, const char *save_path)
+    void SharedResources::export_animation(Entity *entity, const char *save_path, bool is_linear)
     {
         if (entity && entity->get_mutable_root())
         {
             Exporter exporter;
+            exporter.is_linear_ = is_linear;
             exporter.to_glft2(entity->get_mutable_root(), save_path, model_path_[entity->get_mutable_root()->get_id()].c_str());
         }
     }
@@ -163,6 +167,9 @@ namespace anim
 
         add_shader("framebuffer", "./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
         add_shader("grid", "./resources/shaders/grid.vs", "./resources/shaders/grid.fs");
+        add_shader("outline", "./resources/shaders/simple_framebuffer.vs", "./resources/shaders/outline.fs");
+
+        mPostProcessing->set_shaders(shaders_["framebuffer"].get(), shaders_["outline"].get());
 
         auto model_id = get_mutable_shader("model")->get_id();
         auto animation_id = get_mutable_shader("animation")->get_id();

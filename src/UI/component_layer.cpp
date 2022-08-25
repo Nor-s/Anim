@@ -103,17 +103,17 @@ namespace ui
         TransformComponent transform;
         transform.set_transform(world);
         ImGui::Text("World");
-        DragPropertyXYZ("Translation", transform.translation_);
-        DragPropertyXYZ("Rotation", transform.rotation_);
-        DragPropertyXYZ("Scale", transform.scale_);
+        DragPropertyXYZ("Translation", transform.mTranslation);
+        DragPropertyXYZ("Rotation", transform.mRotation);
+        DragPropertyXYZ("Scale", transform.mScale);
 
         ImGui::Separator();
 
         transform.set_transform(local);
         ImGui::Text("Local");
-        DragPropertyXYZ("Translation", transform.translation_);
-        DragPropertyXYZ("Rotation", transform.rotation_);
-        DragPropertyXYZ("Scale", transform.scale_);
+        DragPropertyXYZ("Translation", transform.mTranslation);
+        DragPropertyXYZ("Rotation", transform.mRotation);
+        DragPropertyXYZ("Scale", transform.mScale);
     }
     void ComponentLayer::draw_transform_reset_button(anim::TransformComponent &transform)
     {

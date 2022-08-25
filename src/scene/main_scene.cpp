@@ -14,6 +14,7 @@
 #include "../components/pose_component.h"
 
 #include <filesystem>
+#include <graphics/post_processing.h>
 
 namespace fs = std::filesystem;
 
@@ -79,10 +80,14 @@ void MainScene::draw_to_framebuffer()
     framebuffer_->bind_with_depth_and_stencil(background_color_);
     {
         resources_->update();
-
         grid_framebuffer_->draw(*grid_shader);
     }
     framebuffer_->unbind();
+    if (selected_entity_)
+    {
+        resources_->mPostProcessing->execuate_outline_with_depth(framebuffer_.get());
+    }
+
 #ifndef NDEBUG
     auto error = glGetError();
     anim::LOG("main scene: " + std::to_string((int)error), error == GL_NO_ERROR);

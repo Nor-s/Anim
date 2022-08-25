@@ -46,7 +46,7 @@ namespace anim
                 anim_stream.close();
             }
             duration_ = root.get("duration", "0").asFloat();
-            fps_ = root.get("ticksPerSecond", "1").asFloat();
+            fps_ = root.get("ticksPerSecond", "24").asFloat();
             const Json::Value frames = root["frames"];
             if (frames != "null")
             {

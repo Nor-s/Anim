@@ -64,8 +64,13 @@ namespace anim
         auto bone = animation->find_bone(node_name);
         if (bone != nullptr)
         {
+            auto local = bone->get_local_transform(current_time_, factor_);
+            if (entity->get_mutable_parent()->get_component<ArmatureComponent>() == nullptr && mIsRootMotion)
+            {
+                local = glm::mat4(glm::mat3(local));
+            }
             // 애니메이션 포즈
-            entity->set_local(bone->get_local_transform(current_time_, factor_));
+            entity->set_local(local);
             global_transformation *= entity->get_local();
         }
         // FK
@@ -137,4 +142,5 @@ namespace anim
     {
         is_stop_ = is_stop;
     }
+
 }

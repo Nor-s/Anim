@@ -15,6 +15,7 @@ class Scene;
 namespace anim
 {
     class SharedResources;
+    class EventHistoryQueue;
 }
 
 namespace ui
@@ -57,6 +58,7 @@ public:
     float last_frame_ = 0.0f;
     float fps_ = 0.0f;
     int frames_ = 0;
+    bool is_manipulated_ = false;
     std::vector<std::shared_ptr<Scene>> scenes_;
 
 private:
@@ -74,6 +76,7 @@ private:
 
     void import_model_or_animation(const char *const path);
     std::shared_ptr<anim::SharedResources> shared_resources_;
+    std::unique_ptr<anim::EventHistoryQueue> history_;
 };
 
 #endif

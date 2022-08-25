@@ -15,6 +15,7 @@ namespace anim
     class Entity;
     class Model;
     struct ModelNode;
+    class PostProcessing;
     class SharedResources
     {
     public:
@@ -23,7 +24,7 @@ namespace anim
         Animator *get_mutable_animator();
         std::shared_ptr<Shader> get_mutable_shader(const std::string &name);
         void import(const char *path);
-        void export_animation(Entity *entity, const char *path);
+        void export_animation(Entity *entity, const char *path, bool is_linear);
         void add_entity(std::shared_ptr<Model> &model, const char *path);
         void add_animations(const std::vector<std::shared_ptr<Animation>> &animations);
         void add_shader(const std::string &name, const char *vs_path, const char *fs_path);
@@ -41,6 +42,8 @@ namespace anim
         Animation *get_mutable_animation(int id);
 
         Entity *get_entity(int id);
+
+        std::unique_ptr<PostProcessing> mPostProcessing;
 
     private:
         void init_animator();

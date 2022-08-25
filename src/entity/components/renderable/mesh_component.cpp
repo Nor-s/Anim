@@ -20,7 +20,6 @@ namespace anim
                 mesh->draw_outline(*shader_);
             else
             {
-
                 mesh->draw(*shader_);
             }
         }

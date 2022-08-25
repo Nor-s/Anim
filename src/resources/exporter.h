@@ -20,6 +20,7 @@ namespace anim
     class Animation;
     class Framebuffer;
     class Entity;
+    class SharedResources;
     class Exporter
     {
     public:
@@ -29,13 +30,16 @@ namespace anim
         void to_json(Entity *entity, const char *save_path);
         void to_glft2(Entity *entity, const char *save_path, const char *model_path);
 
+        bool is_linear_{true};
+
     private:
         Json::Value dfs(Entity *node, const std::string &parent_name);
-        Json::Value get_quat_json(const glm::quat &r);
-        Json::Value get_vec_json(const glm::vec3 &p);
 
         void to_ai_node(aiNode *ai_node, Entity *entity, aiNode *parent_ai_node = nullptr);
     };
+    Json::Value get_quat_json(const glm::quat &r);
+    Json::Value get_vec_json(const glm::vec3 &p);
+    void to_json_all_animation_data(const char *save_path, Entity *entity, SharedResources *resources);
 }
 
 #endif

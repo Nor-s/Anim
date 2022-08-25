@@ -13,8 +13,8 @@ layout (std140) uniform Matrices
     mat4 view;
 };
 uniform mat4 model;
-uniform bool isOutline;
-uniform float outlineWidth=1.0;
+// uniform bool isOutline;
+// uniform float outlineWidth=1.0;
 
 
 const int MAX_BONES = 128;
@@ -63,7 +63,7 @@ void main()
     FragPos = vec3(model * totalPosition);
     boneId = float(maxBoneId)/255.0;
 
-    if(isOutline)
-        gl_Position =  projection * view * model *vec4(outlineWidth*Normal +vec3(totalPosition), 1.0);
+    // if(isOutline)
+    //     gl_Position =  projection * view * model *vec4(outlineWidth*Normal +vec3(totalPosition), 1.0);
 
 }

@@ -36,8 +36,10 @@ namespace ui
         bool clicked_import_model{false};
         bool clicked_import_dir{false};
         bool clicked_export_animation{false};
+        bool clicked_export_all_data{false};
         std::string path{""};
         bool is_dialog_open{false};
+        bool is_export_linear_interpolation{true};
     };
 
     // node change (bone, entity)
@@ -45,6 +47,7 @@ namespace ui
     {
         bool is_changed_selected_entity{false};
         bool is_changed_transform{false};
+        bool is_manipulated{false};
         int selected_id{-1};
         // glm::mat4 before_transform;
         glm::mat4 new_transform{1.0f};
@@ -54,6 +57,7 @@ namespace ui
     {
         bool is_picking{false};
         bool is_bone_picking_mode{false};
+        bool is_clicked_picking_mode{false};
         int x{0};
         int y{0};
     };

@@ -202,16 +202,16 @@ namespace anim
         glStencilMask(~0); // https://community.khronos.org/t/how-to-clear-stencil-buffer-after-stencil-test/15882/4
         glDisable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-        glEnable(GL_STENCIL_TEST);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-        glStencilMask(0x00);
+        // glDisable(GL_STENCIL_TEST);
+        glDisable(GL_STENCIL_TEST);
+        // glStencilMask(0x00);
+        // glStencilFunc(GL_EQUAL, 1, 0xFF);
+        // glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_KEEP, GL_KEEP);
     }
     void Framebuffer::unbind()
     {
         if (is_msaa_)
         {
-            // 2. now blit multisampled buffer(s) to normal colorbuffer of intermediate FBO. Image is stored in screenTexture
             glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_);
             glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_FBO_);
             glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);

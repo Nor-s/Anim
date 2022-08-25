@@ -12,30 +12,30 @@ namespace anim
 {
     glm::mat4 TransformComponent::get_mat4() const
     {
-        glm::mat4 rotation = glm::toMat4(glm::quat(rotation_));
+        glm::mat4 rotation = glm::toMat4(glm::quat(mRotation));
 
-        return glm::translate(glm::mat4(1.0f), translation_) * rotation * glm::scale(glm::mat4(1.0f), scale_);
+        return glm::translate(glm::mat4(1.0f), mTranslation) * rotation * glm::scale(glm::mat4(1.0f), mScale);
     }
     const glm::vec3 &TransformComponent::get_translation() const
     {
-        return translation_;
+        return mTranslation;
     }
     const glm::vec3 &TransformComponent::get_rotation() const
     {
-        return rotation_;
+        return mRotation;
     }
     const glm::vec3 &TransformComponent::get_scale() const
     {
-        return scale_;
+        return mScale;
     }
     TransformComponent &TransformComponent::set_translation(const glm::vec3 &vec)
     {
-        translation_ = vec;
+        mTranslation = vec;
         return *this;
     }
     TransformComponent &TransformComponent::set_scale(const glm::vec3 &vec)
     {
-        scale_ = vec;
+        mScale = vec;
 
         return *this;
     }
@@ -47,16 +47,16 @@ namespace anim
 
     TransformComponent &TransformComponent::set_rotation(const glm::vec3 &vec)
     {
-        rotation_ = vec;
+        mRotation = vec;
 
         return *this;
     }
     TransformComponent &TransformComponent::set_transform(const glm::mat4 &mat)
     {
         auto [t, r, s] = DecomposeTransform(mat);
-        translation_ = t;
-        rotation_ = glm::eulerAngles(r);
-        scale_ = s;
+        mTranslation = t;
+        mRotation = glm::eulerAngles(r);
+        mScale = s;
         return *this;
     }
 

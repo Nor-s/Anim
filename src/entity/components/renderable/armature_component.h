@@ -59,6 +59,8 @@ namespace anim
 
         const glm::quat &get_local_rotation();
 
+        const glm::mat4 &get_model() const;
+
         void set_shader(Shader *shader);
 
         void set_entity(Entity *entity);

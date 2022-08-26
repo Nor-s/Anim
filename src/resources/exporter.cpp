@@ -186,7 +186,7 @@ namespace anim
     }
     void init_json_pose(Json::Value &world_value, Json::Value &local_value, Entity *entity, const glm::vec3 &root_pos)
     {
-        auto transformation = entity->get_world_transformation();
+        auto transformation = entity->get_component<ArmatureComponent>()->get_model();
         TransformComponent transform{};
         transform.set_transform(transformation);
         glm::vec3 pos = transform.get_translation() - root_pos;
@@ -231,7 +231,7 @@ namespace anim
                 animator->set_current_time(time);
                 pose_comp->update();
                 TransformComponent hips{};
-                hips.set_transform(pose_root_entity->get_world_transformation());
+                hips.set_transform(pose_root_entity->get_component<ArmatureComponent>()->get_model());
                 init_json_pose(pose["world"], pose["rotation"], pose_root_entity, hips.mTranslation);
                 ret["pose"].append(pose);
                 pose_size++;

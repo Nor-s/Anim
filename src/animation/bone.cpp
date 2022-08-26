@@ -231,6 +231,12 @@ namespace anim
     }
     void Bone::replace_or_add_keyframe(const glm::mat4 &transform, float time)
     {
+        // auto [t, r, s] = DecomposeTransform(transform);
+        // float time_stamp = floorf(time) / factor_;
+        // positions_[time_stamp] = {t, time_stamp};
+        // scales_[time_stamp] = {s, time_stamp};
+        // rotations_[time_stamp] = {r, time_stamp};
+        // time_set_.insert(time_stamp);
         float time_stamp = floorf(time) / factor_;
         auto [lt, lr, ls] = DecomposeTransform(get_local_transform(time, factor_));
         auto [t, r, s] = DecomposeTransform(transform);
@@ -240,21 +246,21 @@ namespace anim
         bool is_s_changed = !(ls.x - 1e-3 < s.x && s.x < ls.x + 1e-3 && ls.y - 1e-3 < s.y && s.y < ls.y + 1e-3 && ls.z - 1e-3 < s.z && s.z < ls.z + 1e-3);
 
         // replace
-        if (positions_.find(time_stamp) != positions_.end() || is_t_changed)
+        if (positions_.find(time_stamp) != positions_.end() || is_t_changed || positions_.size() == 0)
         {
             LOG("Change POS =====");
             std::cout << t.x << " " << t.y << " " << t.z << "\n";
             std::cout << lt.x << " " << lt.y << " " << lt.z << "\n";
             positions_[time_stamp] = {t, time_stamp};
         }
-        if (rotations_.find(time_stamp) != rotations_.end() || is_r_changed)
+        if (rotations_.find(time_stamp) != rotations_.end() || is_r_changed || rotations_.size() == 0)
         {
             LOG("Change ROT");
             std::cout << r.x << " " << r.y << " " << r.z << "\n";
             std::cout << lr.x << " " << lr.y << " " << lr.z << "\n";
             rotations_[time_stamp] = {r, time_stamp};
         }
-        if (scales_.find(time_stamp) != scales_.end() || is_s_changed)
+        if (scales_.find(time_stamp) != scales_.end() || is_s_changed || scales_.size() == 0)
         {
             LOG("Change SCL");
             std::cout << ls.x << " " << ls.y << " " << ls.z << "\n";

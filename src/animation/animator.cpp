@@ -62,7 +62,7 @@ namespace anim
 
         // 애니메이션
         auto bone = animation->find_bone(node_name);
-        if (bone != nullptr)
+        if (bone != nullptr && bone->get_time_set().size() > 0)
         {
             auto local = bone->get_local_transform(current_time_, factor_);
             if (entity->get_mutable_parent()->get_component<ArmatureComponent>() == nullptr && mIsRootMotion)

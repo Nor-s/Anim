@@ -106,6 +106,10 @@ namespace anim
     {
         return id_;
     }
+    const glm::mat4 &ArmatureComponent::get_model() const
+    {
+        return model_;
+    }
     const glm::quat &ArmatureComponent::get_local_rotation()
     {
         return rotation_.back();

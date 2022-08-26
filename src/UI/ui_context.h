@@ -37,9 +37,10 @@ namespace ui
         bool clicked_import_dir{false};
         bool clicked_export_animation{false};
         bool clicked_export_all_data{false};
-        std::string path{""};
         bool is_dialog_open{false};
         bool is_export_linear_interpolation{true};
+        float import_scale{100.0f};
+        std::string path{""};
     };
 
     // node change (bone, entity)

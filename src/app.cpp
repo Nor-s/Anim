@@ -209,7 +209,7 @@ void App::process_menu_context()
     auto &menu_context = ui_context.menu;
     if (menu_context.clicked_import_model)
     {
-        shared_resources_->import(menu_context.path.c_str());
+        shared_resources_->import(menu_context.path.c_str(), menu_context.import_scale);
     }
     if (menu_context.clicked_export_animation)
     {
@@ -223,7 +223,7 @@ void App::process_menu_context()
             if (file.path().extension().compare(".fbx") == 0 || file.path().extension().compare(".gltf") == 0)
             {
                 anim::LOG("IMPORT");
-                shared_resources_->import(file.path().string().c_str());
+                shared_resources_->import(file.path().string().c_str(), menu_context.import_scale);
             }
         }
     }
@@ -255,7 +255,7 @@ void App::process_component_context()
 
 void App::import_model_or_animation(const char *const path)
 {
-    shared_resources_->import(path);
+    shared_resources_->import(path, 1.0f);
 }
 
 void App::pre_draw()

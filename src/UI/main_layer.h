@@ -56,7 +56,6 @@ namespace ui
         ComponentLayer component_layer_{};
         TimelineLayer timeline_layer_{};
         UiContext context_{};
-        bool is_dialog_open_{false};
     };
 }
 

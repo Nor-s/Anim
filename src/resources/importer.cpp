@@ -24,6 +24,7 @@ namespace anim
               aiProcess_Triangulate |
               aiProcess_GenUVCoords |
               aiProcess_SortByPType |
+              aiProcess_GlobalScale |
               aiProcess_FindDegenerates |
               aiProcess_FindInvalidData |
               aiProcess_FindInstances |
@@ -71,6 +72,7 @@ namespace anim
             Assimp::Importer importer;
             importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
             importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 128);
+            importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, mScale);
 
             const aiScene *scene = importer.ReadFile(path_.c_str(), assimp_flag_);
 

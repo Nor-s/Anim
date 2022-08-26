@@ -124,6 +124,7 @@ add_executable(Anim
 ./UI/main_layer.cpp
 ./UI/main_layer.h
 ./UI/imgui_helper.cpp
+./UI/ui_context.h
 
 event/event_history.h
 event/event_history.cpp

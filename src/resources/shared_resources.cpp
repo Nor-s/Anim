@@ -45,9 +45,10 @@ namespace anim
     {
         return shaders_[name];
     }
-    void SharedResources::import(const char *path)
+    void SharedResources::import(const char *path, float scale)
     {
         Importer import{};
+        import.mScale = scale;
         auto [model, animations] = import.read_file(path);
 
         add_animations(animations);

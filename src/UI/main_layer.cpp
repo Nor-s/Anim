@@ -1,4 +1,5 @@
 #include "main_layer.h"
+#include "ui_context.h"
 #include "imgui_helper.h"
 #include "scene_layer.h"
 
@@ -32,6 +33,7 @@
 namespace ui
 {
     static bool isLinear{true};
+    static float ImportScale{100.0f};
 
     MainLayer::MainLayer() = default;
 
@@ -114,7 +116,6 @@ namespace ui
         ImGuizmo::BeginFrame();
 
         context_ = UiContext{};
-        context_.menu.is_dialog_open = is_dialog_open_;
     }
 
     void MainLayer::end()
@@ -162,14 +163,20 @@ namespace ui
         ImGui::End();
     }
 
-    inline void InfosPane(const char *vFilter, IGFDUserDatas vUserDatas, bool *vCantContinue) // if vCantContinue is false, the user cant validate the dialog
+    inline void LinearInfosPane(const char *vFilter, IGFDUserDatas vUserDatas, bool *vCantContinue) // if vCantContinue is false, the user cant validate the dialog
     {
-        ImGui::TextColored(ImVec4(0, 1, 1, 1), "Infos Pane");
+        ImGui::TextColored(ImVec4(0, 1, 1, 1), "Export");
         ImGui::Text("Linear: ");
         ImGui::SameLine();
         ImGui::Checkbox("##check", reinterpret_cast<bool *>(vUserDatas));
     }
-
+    inline void ScaleInfosPane(const char *vFilter, IGFDUserDatas vUserDatas, bool *vCantContinue) // if vCantContinue is false, the user cant validate the dialog
+    {
+        ImGui::TextColored(ImVec4(0, 1, 1, 1), "Import");
+        ImGui::Text("Scale: ");
+        ImGui::SameLine();
+        ImGui::DragFloat("##check", reinterpret_cast<float *>(vUserDatas), 1.0f, 1.0f, 200.0f);
+    }
     void MainLayer::draw_menu_bar(float fps)
     {
         const char *menu_dialog_name[4] = {
@@ -191,34 +198,34 @@ namespace ui
             {
                 if (ImGui::MenuItem("Import: model, animation", NULL, nullptr))
                 {
-                    is_dialog_open_ = true;
                     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[0],
                                                             ICON_MD_FILE_OPEN " Open fbx, gltf ...",
                                                             filters,
-                                                            ".",
-                                                            1,
-                                                            nullptr,
+                                                            ".", "",
+                                                            std::bind(&ScaleInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
+                                                            IGFD::UserDatas(&ImportScale),
                                                             ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
                 }
                 if (ImGui::MenuItem("Import: Folder", NULL, nullptr))
                 {
-                    is_dialog_open_ = true;
-                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[1], "Choose a Directory", nullptr, ".", 1, nullptr, ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
+                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[1], "Choose a Directory",
+                                                            nullptr, ".", "",
+                                                            std::bind(&ScaleInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
+                                                            IGFD::UserDatas(&ImportScale),
+                                                            ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
                 }
                 ImGui::Separator();
                 if (ImGui::MenuItem("Export: animation(selected model)", NULL, nullptr))
                 {
-                    is_dialog_open_ = true;
                     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[2], "Save",
                                                             FILTER_MODEL,
                                                             ".", "",
-                                                            std::bind(&InfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
+                                                            std::bind(&LinearInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
                                                             IGFD::UserDatas(&isLinear),
                                                             ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
                 }
                 if (ImGui::MenuItem("Export: rotation, world pos(json)", NULL, nullptr))
                 {
-                    is_dialog_open_ = true;
                     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[3], "Save",
                                                             "Json (*.json){.json}",
                                                             ".", 1, nullptr,
@@ -247,16 +254,13 @@ namespace ui
                 }
                 ImGuiFileDialog::Instance()->Close();
             }
-            else
-            {
-                dialog_count++;
-            }
         }
-        if (dialog_count == 4)
+        if (ImGuiFileDialog::Instance()->IsOpened())
         {
-            is_dialog_open_ = false;
+            context_.menu.is_dialog_open = true;
         }
         context_.menu.is_export_linear_interpolation = isLinear;
+        context_.menu.import_scale = ImportScale;
     }
 
     void MainLayer::draw_scene(const std::string &title, Scene *scene)

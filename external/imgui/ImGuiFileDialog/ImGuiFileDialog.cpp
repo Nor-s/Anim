@@ -2480,8 +2480,11 @@ namespace IGFD
 			if (puInputPathActivated)
 			{
 				auto endIt = prCurrentPathDecomposition.end();
-				prCurrentPath = ComposeNewPath(--endIt);
-				IGFD::Utils::SetBuffer(puInputPathBuffer, MAX_PATH_BUFFER_SIZE, prCurrentPath);
+				if (endIt != prCurrentPathDecomposition.begin())
+				{
+					prCurrentPath = ComposeNewPath(--endIt);
+					IGFD::Utils::SetBuffer(puInputPathBuffer, MAX_PATH_BUFFER_SIZE, prCurrentPath);
+				}
 			}
 		}
 		if (ImGui::IsItemHovered())

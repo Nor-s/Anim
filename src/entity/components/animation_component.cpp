@@ -7,14 +7,7 @@ namespace anim
 
     void AnimationComponent::init_animation()
     {
-        if (animation_->get_fps() >= 24)
-        {
-            custom_ticks_per_second_ = 24.0f;
-        }
-        else
-        {
-            custom_ticks_per_second_ = animation_->get_fps();
-        }
+        custom_ticks_per_second_ = 24.0f;
         // current_time_ = 0.0f;
         // is_stop_ = false;
         fps_ = animation_->get_fps();

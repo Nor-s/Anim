@@ -36,4 +36,14 @@ namespace anim
     {
         entity_ = entity;
     }
+
+    std::vector<MaterialProperties *> MeshComponent::get_mutable_mat()
+    {
+        std::vector<MaterialProperties *> mats;
+        for (auto &mesh : meshes_)
+        {
+            mats.push_back(&mesh->get_mutable_mat_properties());
+        }
+        return mats;
+    }
 }

@@ -4,6 +4,7 @@
 #include "imgui_helper.h"
 #include <imgui/imgui.h>
 #include <entity/entity.h>
+#include <entity/components/renderable/mesh_component.h>
 #include <entity/components/animation_component.h>
 #include <animation/animation.h>
 
@@ -36,6 +37,10 @@ namespace ui
                         draw_animation(context, resources, root, animation);
                         ImGui::Separator();
                     }
+                }
+                if (auto mesh = entity->get_component<anim::MeshComponent>(); mesh && ImGui::CollapsingHeader("Mesh"))
+                {
+                    draw_mesh(mesh);
                 }
             }
         }
@@ -120,6 +125,15 @@ namespace ui
         if (ImGui::Button("reset"))
         {
             transform.set_translation({0.0f, 0.0f, 0.0f}).set_rotation({0.0f, 0.0f, 0.0f}).set_scale({1.0f, 1.0f, 1.0f});
+        }
+    }
+    void ComponentLayer::draw_mesh(anim::MeshComponent *mesh)
+    {
+        auto material = mesh->get_mutable_mat();
+        int idx = 0;
+        for (auto &mat : material)
+        {
+            ImGui::ColorPicker3(("diffuse " + std::to_string(idx)).c_str(), &mat->diffuse[0]);
         }
     }
 }

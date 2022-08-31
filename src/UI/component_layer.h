@@ -10,6 +10,7 @@ namespace anim
     class Entity;
     class TransformComponent;
     class AnimationComponent;
+    class MeshComponent;
 }
 
 namespace ui
@@ -25,6 +26,7 @@ namespace ui
         void draw_animation(ComponentContext &context, const anim::SharedResources *shared_resource, const anim::Entity *entity, const anim::AnimationComponent *animation);
         void draw_transform(anim::Entity *entity);
         void draw_transform_reset_button(anim::TransformComponent &transform);
+        void draw_mesh(anim::MeshComponent *mesh);
     };
 }
 

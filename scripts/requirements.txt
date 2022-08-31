@@ -32,9 +32,6 @@ pure-eval==0.2.2
 PyGLM==2.5.7
 Pygments==2.12.0
 pyparsing==3.0.9
-PyQt5==5.15.7
-PyQt5-Qt5==5.15.2
-PyQt5-sip==12.11.0
 python-dateutil==2.8.2
 pywin32==304
 pyzmq==23.2.0

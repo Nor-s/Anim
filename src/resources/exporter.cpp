@@ -171,7 +171,7 @@ namespace anim
         else
         {
             ext = "fbx";
-            format = "fbxa";
+            format = "fbx";
         }
 
         LOG(std::string(save_path) + ": " + ext);

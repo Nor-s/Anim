@@ -191,6 +191,7 @@ namespace ui
             &context_.menu.clicked_export_all_data};
         ImVec2 minSize = {650.0f, 400.0f}; // Half the display area
         const char *filters = FILTER_MODEL ",Json Animation (*.json){.json},.*";
+        static bool py_modal = false;
 
         if (ImGui::BeginMenuBar())
         {
@@ -224,26 +225,32 @@ namespace ui
                                                             IGFD::UserDatas(&isLinear),
                                                             ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
                 }
-                if (ImGui::MenuItem("Export: rotation, world pos(json)", NULL, nullptr))
-                {
-                    ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[3], "Save",
-                                                            "Json (*.json){.json}",
-                                                            ".", 1, nullptr,
-                                                            ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
-                }
+                // if (ImGui::MenuItem("Export: rotation, world pos(json)", NULL, nullptr))
+                // {
+                //     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[3], "Save",
+                //                                             "Json (*.json){.json}",
+                //                                             ".", 1, nullptr,
+                //                                             ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
+                // }
                 ImGui::EndMenu();
             }
-            HelpMarker(
-                "Import: fbx, glft2, obj ..."
-                "\n"
-                "Export: {animation glft2}");
+            if (ImGui::BeginMenu("Python"))
+            {
+                if (ImGui::MenuItem("Mediapipe", NULL, nullptr))
+                {
+                    py_modal = true;
+                }
+
+                ImGui::EndMenu();
+            }
 
             ImGui::Text("fps: %.2f", fps);
 
             ImGui::EndMenuBar();
         }
+        draw_python_modal(py_modal);
         int dialog_count = 0;
-        for (int i = 0; i < 4; i++)
+        for (int i = 0; i < 3; i++)
         {
             if (ImGuiFileDialog::Instance()->Display(menu_dialog_name[i], ImGuiWindowFlags_NoCollapse, minSize))
             {
@@ -261,6 +268,110 @@ namespace ui
         }
         context_.menu.is_export_linear_interpolation = isLinear;
         context_.menu.import_scale = ImportScale;
+    }
+    void MainLayer::draw_python_modal(bool &is_open)
+    {
+        static std::string video_path = "";
+        static std::string save_path = std::filesystem::absolute("./animation.json").string();
+        video_path.resize(200);
+        save_path.resize(200);
+        if (is_open)
+        {
+            ImGui::OpenPopup("Mediapipe");
+            is_open = false;
+        }
+        ImGuiStyle &style = ImGui::GetStyle();
+        auto color = style.Colors[ImGuiCol_Button];
+        color.x = 1.0f - color.x;
+        color.y = 1.0f - color.y;
+        color.z = 1.0f - color.z;
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, color);
+        if (ImGui::BeginPopupModal("Mediapipe", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            context_.menu.is_dialog_open = true;
+
+            ImGui::Text("Video:");
+            ImGui::SameLine();
+            auto text_cursor = ImGui::GetCursorPosX();
+            char *path = video_path.data();
+            ImGui::InputText("##video_path", path, video_path.size());
+            ImGui::SameLine();
+            auto current_cursor = ImGui::GetCursorPosX();
+            if (ImGui::Button("Open"))
+            {
+                ImGuiFileDialog::Instance()->OpenDialog("ChooseVideo", "Choose a Video",
+                                                        "Video (*.mp4 *.gif){.mp4,.gif,.avi},.*",
+                                                        ".", 1, nullptr,
+                                                        ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
+            }
+            if (ImGuiFileDialog::Instance()->Display("ChooseVideo", ImGuiWindowFlags_NoCollapse, {650.0f, 400.0f}))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    video_path = ImGuiFileDialog::Instance()->GetFilePathName();
+                }
+                ImGuiFileDialog::Instance()->Close();
+            }
+
+            ImGui::Text("Save:");
+            ImGui::SameLine(text_cursor);
+            char *s_path = save_path.data();
+            ImGui::InputText("##save_path", s_path, save_path.size());
+            ImGui::SameLine(current_cursor);
+            if (ImGui::Button("Open##2"))
+            {
+                ImGuiFileDialog::Instance()->OpenDialog("ChooseJson", "Choose a Json",
+                                                        "JSON (*.json){.json},.*",
+                                                        ".", 1, nullptr,
+                                                        ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
+            }
+            if (ImGuiFileDialog::Instance()->Display("ChooseJson", ImGuiWindowFlags_NoCollapse, {650.0f, 400.0f}))
+            {
+                if (ImGuiFileDialog::Instance()->IsOk())
+                {
+                    save_path = ImGuiFileDialog::Instance()->GetFilePathName();
+                }
+                ImGuiFileDialog::Instance()->Close();
+            }
+            ImGui::Separator();
+            ImGui::Text("FPS");
+            ImGui::NewLine();
+            ImGui::SameLine(text_cursor);
+            ImGui::DragFloat("##fps", &context_.python.fps, 1.0f, 0.0f, 144.0f);
+            ImGui::Text("Visibility");
+            ImGui::NewLine();
+            ImGui::SameLine(text_cursor);
+            ImGui::DragFloat("##visibility", &context_.python.min_visibility, 0.1f, 0.1f, 1.0f);
+            ImGui::Text("Show Plot");
+            ImGui::NewLine();
+            ImGui::SameLine(text_cursor);
+            ImGui::Checkbox("##show_plot", &context_.python.show_plot);
+            ImGui::Separator();
+            ImGui::Text("Model Complexity");
+            ImGui::NewLine();
+            ImGui::SameLine(text_cursor);
+            ImGui::DragInt("##model_complexity", &context_.python.model_complexity, 1, 0, 2);
+            ImGui::Text("Model Min Detection Confidence");
+            ImGui::NewLine();
+            ImGui::SameLine(text_cursor);
+            ImGui::DragFloat("##detection", &context_.python.min_detection_confidence, 0.1f, 0.1f, 1.0f);
+            if (ImGui::Button("OK"))
+            {
+                ImGui::CloseCurrentPopup();
+                context_.python.video_path = video_path;
+                context_.python.save_path = save_path;
+                context_.python.is_clicked_convert_btn = true;
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Close"))
+                ImGui::CloseCurrentPopup();
+            ImGui::EndPopup();
+        }
+        else
+        {
+            context_.menu.is_dialog_open = false;
+        }
+        ImGui::PopStyleColor();
     }
 
     void MainLayer::draw_scene(const std::string &title, Scene *scene)

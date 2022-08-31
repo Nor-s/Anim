@@ -1,12 +1,12 @@
 ## **devlog**
 
-### 3/25
+### **3/25**
 
 -   test model loading, pixelate, imgui
 
 ![](/screenshot/Mar-25-2022%2012-58-15.gif?raw=true)
 
-### 4/1
+### **4/1**
 
 -   ImGui docking, refactoring, camera, skybox blur
 
@@ -85,3 +85,10 @@
 -   refactor entity, components
 
 ![](/screenshot/2022-08-21.gif)
+
+### **8/30**
+
+-   refactor mediapipe to animation
+-   add embeded python
+
+![](/screenshot/88910.gif)

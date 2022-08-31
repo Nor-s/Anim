@@ -63,6 +63,18 @@ namespace ui
         int y{0};
     };
 
+    struct PythonContext
+    {
+        static inline float min_visibility{0.5f};
+        static inline float min_detection_confidence{0.8f};
+        static inline int model_complexity{1};
+        static inline bool show_plot{false};
+        static inline float fps{24.0f};
+        bool is_clicked_convert_btn{false};
+        std::string save_path;
+        std::string video_path;
+    };
+
     struct UiContext
     {
         MenuContext menu{};
@@ -70,6 +82,7 @@ namespace ui
         ComponentContext component{};
         EntityContext entity{};
         SceneContext scene{};
+        PythonContext python{};
     };
 }
 

@@ -34,8 +34,10 @@ endif()
 
 message("==========================================================")
 # python
-add_executable(py cpython/main.cpp)
-target_link_libraries(py PRIVATE Python3::Python pybind11::embed)
+add_executable(test12  cpython/main.cpp cpython/py_manager.cpp)
+target_link_libraries(test12 PUBLIC Python3::Python pybind11::embed)
+add_library(py  cpython/py_manager.cpp)
+target_link_libraries(py PUBLIC Python3::Python pybind11::embed)
 
 # new
 set(test_src
@@ -139,7 +141,7 @@ if(MSVC)
   if (CMAKE_BUILD_TYPE  MATCHES Release)
       target_link_options(Anim PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
   endif()
-  target_link_libraries(Anim  glcpp test)
+  target_link_libraries(Anim  glcpp test py)
 elseif(WIN32)
     target_compile_options(Anim  PRIVATE -Wall -Werror -std=c++17 -static)
     target_link_libraries(Anim  glcpp)

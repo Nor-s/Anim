@@ -27,6 +27,7 @@ namespace anim
         Bone *find_bone(const std::string &name);
         float get_fps();
         float get_duration();
+        float get_current_duration();
         const std::string &get_name() const;
         const char *get_path() const;
         const std::map<std::string, std::unique_ptr<Bone>> &get_name_bone_map() const;

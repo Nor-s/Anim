@@ -23,6 +23,16 @@ namespace anim
     }
     float Animation::get_fps() { return fps_; }
     float Animation::get_duration() { return duration_; }
+    float Animation::get_current_duration()
+    {
+        float ret = 0.0f;
+        for (auto &bone : name_bone_map_)
+        {
+            ret = std::max(ret, *bone.second->get_time_set().rbegin());
+        }
+        return ret;
+    }
+
     const std::string &Animation::get_name() const
     {
         return name_;
@@ -63,6 +73,7 @@ namespace anim
             const aiNode *node = ai_root_node->FindNode(name_bone.first.c_str());
             if (node && name_bone.second->get_time_set().size() != 0)
             {
+                LOG("find node:" + name_bone.first);
                 channels.emplace_back(new aiNodeAnim());
                 name_bone.second->get_ai_node(channels.back(), node->mTransformation, factor, is_linear);
                 auto time_end = *std::next(name_bone.second->get_time_set().end(), -1);
@@ -72,7 +83,8 @@ namespace anim
 
         ai_anim->mTicksPerSecond = static_cast<double>(floorf(fps_ * factor));
         ai_anim->mName = aiString(anim_name);
-        ai_anim->mDuration = static_cast<double>(duration);
+        ai_anim->mDuration = static_cast<double>(duration + 1.0);
+        LOG("duration:" + std::to_string(duration));
 
         ai_anim->mNumChannels = channels.size();
         ai_anim->mChannels = new aiNodeAnim *[channels.size()];

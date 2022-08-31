@@ -39,6 +39,7 @@ namespace anim
         {
         }
 
+        // TODO: animation fps save to animation (not animation component)
         void revoke()
         {
             scene_->set_selected_entity(entity_id_);
@@ -47,6 +48,10 @@ namespace anim
             auto root_entity = entity->get_mutable_root();
             auto anim_component = root_entity->get_component<AnimationComponent>();
             auto anim = resources_->get_mutable_animation(anim_id_);
+            if (anim_component->get_animation()->get_id() != anim_id_)
+            {
+                anim_component->set_animation(anim);
+            }
             anim_component->set_animation(anim);
             anim->replace_bone(entity->get_name(), before_transform_, time_);
             root_entity->get_component<PoseComponent>()->get_animator()->set_current_time(time_);

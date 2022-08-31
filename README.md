@@ -1,28 +1,33 @@
 # **Anim v0.0.1**
 
-Animating tool
+Animation tool
 
 ![](</screenshot/2022-08-21(1).gif>)
+
+Video to Animation
+
+![](/screenshot/88910.gif)
+
+![](/screenshot/88912.gif)
 
 ## **Feature**
 
 -   Eidit: FK animation
 -   Object selction
 -   Embeded python (only windows)
--   Export glft2
+-   Export glft2, fbx
+-   Mediapipe to Animation
 
 ## **TODO**
 
--   python script
--   compute shader for animation
--   Fix camera movement
--   Ctrl + z, Ctrl + c, Ctrl + v
 -   IK edit mode
+-   Fix camera movement
+-   Ctrl + c, Ctrl + v
 -   retargeting
 
 ## **Build**
 
--   windows: MSVC 19.33.31517.0
+-   windows: MSVC 19.33.31517.0 (VS2022 amd64)
 -   ~~ubunt(wsl2): gcc 9.4.0 x86_64-linux-gnu~~
 -   ~~mac os: Clang 13.0.0 arm64-apple-darwin21.2.0~~
 
@@ -34,6 +39,8 @@ Animating tool
 ```
 
 ## **External**
+
+### **C++**
 
 -   glad: https://glad.dav1d.de/
 
@@ -47,7 +54,7 @@ Animating tool
 
     -   timeline: https://gitlab.com/GroGy/im-neo-sequencer
     -   text editor: https://github.com/BalazsJako/ImGuiColorTextEdit
-    -   dialog: https://github.com/dfranx/ImFileDialog
+    -   dialog: https://github.com/aiekick/ImGuiFileDialog
     -   ImGuizmo: https://github.com/CedricGuillemet/ImGuizmo
 
 -   stb: https://github.com/nothings/stb
@@ -59,17 +66,22 @@ Animating tool
     -   https://github.com/juliettef/IconFontCppHeaders
     -   https://github.com/tanluteam/imgui
 
--   cpython
+-   cpython: https://github.com/python/cpython
 
--   pybind11
+-   pybind11: https://github.com/pybind/pybind11
+
+### **Python**
+
+see scripts/requirements.txt
+
+-   mediapipe==0.8.10.1
+-   PyGLM==2.5.7
+-   opencv-contrib-python==4.6.0.66
+-   matplotlib==3.5.3
 
 ## **Reference**
 
 -   [learnopengl](https://learnopengl.com/)
-
--   [texture to file](https://stackoverflow.com/questions/11863416/read-texture-bytes-with-glreadpixels)
-
--   [pixelate shader](https://github.com/genekogan/Processing-Shader-Examples/blob/master/TextureShaders/data/pixelate.glsl)
 
 -   [skeleton animation: ogldev](https://ogldev.org/www/tutorial38/tutorial38.html)
 
@@ -81,13 +93,13 @@ Animating tool
 
     -   [grid shader 2](https://github.com/martin-pr/possumwood/wiki/Infinite-ground-plane-using-GLSL-shaders)
 
-    -   [grid shader 3](https://github.com/blender/blender/blob/594f47ecd2d5367ca936cf6fc6ec8168c2b360d0/source/blender/draw/engines/overlay/shaders/grid_frag.glsl)
+    -   [grid shader 3](https://madebyevan.com/shaders/grid)
 
 ### **Resources**
 
 -   model
     -   https://www.mixamo.com/#/?page=1&type=Character
-    -   https://github.com/JoeyDeVries/LearnOpenGL/tree/master/resources/objects
+    -   https://github.com/GDQuest/godot-3d-mannequin
 -   font
     -   https://github.com/naver/d2codingfont/wiki/Open-Font-License
     -   https://github.com/juliettef/IconFontCppHeaders
@@ -95,3 +107,13 @@ Animating tool
     -   https://www.cleanpng.com/free/skybox.html
     -   https://opengameart.org/content/forest-skyboxes
     -   https://www.humus.name/index.php?page=Textures
+
+### **License**
+
+This project is dual-licensed:
+
+-   The source code is available under the Apache-2.0 license.
+-   model assets are CC-By 4.0. (resources/models/mannequiny.fbx)
+    -   https://github.com/GDQuest/godot-3d-mannequin
+    -   The Godot mannequin is a character made by Luciano Muñoz In blender 2.80
+    -   This project changed the model to mixamo rigging(auto rigging), diffuse color.

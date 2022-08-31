@@ -15,7 +15,7 @@ namespace anim
         void play();
         void stop();
         void reload();
-        void set_animation(std::shared_ptr<Animation> animation);
+        void set_animation(Animation *animation);
         void set_current_frame_num_to_time(uint32_t frame);
         void set_custom_tick_per_second(float tick_per_second);
         void set_fps(float fps);
@@ -35,7 +35,7 @@ namespace anim
         float get_tps() const;
 
     private:
-        std::shared_ptr<Animation> animation_{nullptr};
+        Animation *animation_{nullptr};
         float current_time_ = 0.0f;
         float fps_ = 24.0f;
         float custom_ticks_per_second_ = 24.0f;

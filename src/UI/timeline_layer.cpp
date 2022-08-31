@@ -69,7 +69,7 @@ namespace ui
         context.start_frame = static_cast<int>(animator_->get_start_time());
         context.end_frame = static_cast<int>(animator_->get_end_time());
         context.current_frame = static_cast<int>(animator_->get_current_time());
-        context.is_recording = animator_->get_is_recording();
+        context.is_recording = is_recording_;
         if (!context.is_stop)
         {
             context.is_stop = animator_->get_is_stop();
@@ -97,7 +97,7 @@ namespace ui
         ImGui::SameLine();
 
         auto current_cursor = ImGui::GetCursorPosX();
-        auto next_pos = ImGui::GetWindowWidth() / 2.0f - button_size.x - small_button_size.x - item_spacing;
+        auto next_pos = ImGui::GetWindowWidth() / 2.0f - button_size.x - small_button_size.x - item_spacing / 2.0;
         if (next_pos < current_cursor)
         {
             next_pos = current_cursor;
@@ -108,6 +108,7 @@ namespace ui
         ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 0.3f, 0.2f, 0.8f});
         {
             ToggleButton(ICON_KI_REC, &context.is_recording, small_button_size);
+            is_recording_ = context.is_recording;
             ImGui::PopStyleColor();
             ImGui::SameLine();
             ImGui::PushStyleColor(ImGuiCol_Text, {1.0f, 1.0f, 1.0f, 1.0f});
@@ -146,22 +147,15 @@ namespace ui
         uint32_t start = static_cast<uint32_t>(animator_->get_start_time());
         uint32_t end = static_cast<uint32_t>(animator_->get_end_time());
         uint32_t before = current;
-        // TODO: begin neo sequencer : uint32_t to int
         if (ImGui::BeginNeoSequencer("Sequencer", &current, &start, &end))
         {
-            // if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-            // {
-            //     ImGui::GetForegroundDrawList()->AddRectFilled(io.MouseClickedPos[0],
-            //                                                   io.MousePos,
-            //                                                   ImGui::GetColorU32(ImGuiCol_Button)); // Draw a line between the button and the mouse cursor
-            // }
+
             if (root_entity_ && root_entity_->get_component<AnimationComponent>())
             {
                 auto anim_component = root_entity_->get_component<AnimationComponent>();
                 if (anim_component && anim_component->get_animation())
                 {
                     draw_keyframes(ui_context, anim_component->get_animation());
-                    // draw_keyframe_popup(ui_context);
                 }
             }
             is_hovered_zoom_slider_ = false;
@@ -171,7 +165,13 @@ namespace ui
             }
             ImGui::EndNeoSequencer();
         }
-
+        // for select keyframe
+        // if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+        // {
+        //     ImGui::GetForegroundDrawList()->AddRectFilled(io.MouseClickedPos[0],
+        //                                                   io.MousePos,
+        //                                                   ImGui::GetColorU32(ImGuiCol_Button)); // Draw a line between the button and the mouse cursor
+        // }
         // update current time
         if (before != current)
         {
@@ -201,9 +201,6 @@ namespace ui
                         uint32_t ukey = static_cast<uint32_t>(floorf(key * factor));
                         if (ImGui::Keyframe(&ukey, &is_hovered) && is_hovered && ImGui::IsItemClicked())
                         {
-                            // clicked_frame_ = ukey;
-                            // clicked_time_ = key;
-                            // clicked_bone_ = bone.second.get();
                             auto selected_entity = root_entity_->find(bone.second->get_name());
                             if (selected_entity)
                             {
@@ -213,7 +210,6 @@ namespace ui
                             context.is_stop = true;
                             context.current_frame = ukey;
                             context.is_current_frame_changed = true;
-                            // ImGui::OpenPopup("my_select_popup");
                             ImGui::ItemSelect(name);
                         }
                     }
@@ -223,61 +219,4 @@ namespace ui
             ImGui::EndNeoGroup();
         }
     }
-
-    // void TimelineLayer::draw_keyframe_popup(UiContext &ui_context)
-    // {
-    //     if (clicked_bone_ != nullptr)
-    //     {
-    //         // ImGui::ShowDemoWindow()
-    //         ImGui::SameLine();
-    //         ImGui::SetNextWindowSize({400.0, 90.0});
-    //         if (ImGui::BeginPopup("my_select_popup")) //&& !ui_context.entity.is_changed_selected_entity)
-    //         {
-    //             ImGuiWindow *window = ImGui::GetCurrentWindow();
-
-    //             draw_bone_status(ui_context);
-
-    //             // if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
-    //             // {
-    //             //     clicked_bone_ = nullptr;
-    //             // }
-    //             ImGui::EndPopup();
-    //         }
-    //     }
-    // }
-    // void TimelineLayer::draw_bone_status(UiContext &ui_context)
-    // {
-    //     ImGui::Text("%s: %u", clicked_bone_->get_name().c_str(), clicked_frame_);
-    //     auto t = clicked_bone_->get_position(clicked_frame_);
-    //     auto r = clicked_bone_->get_rotation(clicked_frame_);
-    //     auto s = clicked_bone_->get_scale(clicked_frame_);
-    //     glm::vec3 tt{}, ss{};
-    //     glm::vec4 tmp_r{};
-    //     glm::quat rr{};
-    //     bool changed = false;
-
-    //     if (t)
-    //     {
-    //         tt = *t;
-    //         changed = DragFPropertyXYZ("Tr", &tt[0], 0.1f, -1000.0f, 1000.0f, "%.3f");
-    //     }
-    //     if (r)
-    //     {
-    //         tmp_r = glm::vec4{r->x, r->y, r->z, r->w};
-    //         changed |= DragFPropertyXYZ("Rt", &tmp_r[0], 0.01f, -1.0f, 1.0f, "%.3f", "", 4);
-    //         rr = glm::quat{tmp_r.a, tmp_r.r, tmp_r.g, tmp_r.b};
-    //         rr = glm::normalize(rr);
-    //     }
-    //     if (s)
-    //     {
-    //         ss = *s;
-    //         changed |= DragFPropertyXYZ("Sc", &ss[0], 0.1f, 0.1f, 179.0f, "%.3f", "");
-    //     }
-    //     if (changed)
-    //     {
-    //         // ui_context.entity.is_changed_transform = true;
-    //         // ui_context.entity.new_transform = glm::translate(glm::mat4(1.0f), tt) * glm::mat4(rr) * glm::scale(glm::mat4(1.0f), ss);
-    //     }
-    // }
-
 }

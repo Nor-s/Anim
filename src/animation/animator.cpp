@@ -62,10 +62,15 @@ namespace anim
 
         // 애니메이션
         auto bone = animation->find_bone(node_name);
-        if (bone != nullptr)
+        if (bone != nullptr && bone->get_time_set().size() > 0)
         {
+            auto local = bone->get_local_transform(current_time_, factor_);
+            if (entity->get_mutable_parent()->get_component<ArmatureComponent>() == nullptr && mIsRootMotion)
+            {
+                local = glm::mat4(glm::mat3(local));
+            }
             // 애니메이션 포즈
-            entity->set_local(bone->get_local_transform(current_time_, factor_));
+            entity->set_local(local);
             global_transformation *= entity->get_local();
         }
         // FK
@@ -105,10 +110,6 @@ namespace anim
     {
         return direction_;
     }
-    const bool Animator::get_is_recording() const
-    {
-        return is_recording_;
-    }
     const bool Animator::get_is_stop() const
     {
         return is_stop_;
@@ -141,8 +142,5 @@ namespace anim
     {
         is_stop_ = is_stop;
     }
-    void Animator::set_is_recording(bool is_recording)
-    {
-        is_recording_ = is_recording;
-    }
+
 }

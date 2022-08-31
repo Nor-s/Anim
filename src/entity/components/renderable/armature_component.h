@@ -22,6 +22,7 @@ namespace anim
     {
     public:
         static inline bool isActivate = true;
+        static inline bool isApplayLocalRotation = true;
         glm::vec3 selectionColor{1.0f, 1.0f, 1.0f};
 
         static void setShape(std::unique_ptr<Mesh> shape);
@@ -57,6 +58,8 @@ namespace anim
         int get_id();
 
         const glm::quat &get_local_rotation();
+
+        const glm::mat4 &get_model() const;
 
         void set_shader(Shader *shader);
 

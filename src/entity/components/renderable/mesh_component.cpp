@@ -20,7 +20,6 @@ namespace anim
                 mesh->draw_outline(*shader_);
             else
             {
-
                 mesh->draw(*shader_);
             }
         }
@@ -36,5 +35,15 @@ namespace anim
     void MeshComponent::set_entity(Entity *entity)
     {
         entity_ = entity;
+    }
+
+    std::vector<MaterialProperties *> MeshComponent::get_mutable_mat()
+    {
+        std::vector<MaterialProperties *> mats;
+        for (auto &mesh : meshes_)
+        {
+            mats.push_back(&mesh->get_mutable_mat_properties());
+        }
+        return mats;
     }
 }

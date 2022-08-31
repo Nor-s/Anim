@@ -73,11 +73,9 @@ void main() {
 	// angle fading
 	vec3 camera_pos = vec3(inverse(view) * vec4(0.0, 0.0, 0.0, 1.0));
 	vec3 view_dir = (camera_pos - R);
-	float dist = length(view_dir);
-	float angle_fading =  abs(view_dir.y/dist);
+	float angle_fading =  abs(view_dir.y/length(view_dir));
 
 	// grid color	
-	// https://madebyevan.com/shaders/grid/
 	float grid_ratio = get_grid(R.xz, scale);
 	color = bg_color;
 	color.rgb = mix(color.rgb, grid_color.rgb, grid_ratio);
@@ -96,8 +94,5 @@ void main() {
 	color.a *= grid_ratio; 
 	color.a = max(color.a, axes.x*x_color.a);
 	color.a = max(color.a, axes.y*z_color.a);
-	// color = vec4(angle_fading);
 	color.a *=  angle_fading*depth_fading;
-
-
 }

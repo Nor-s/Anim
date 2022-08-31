@@ -134,29 +134,45 @@ namespace anim::gl
     }
     void GLMesh::draw_outline(anim::Shader &shader)
     {
+        // glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+
+        // glEnable(GL_STENCIL_TEST);
+        // glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        // glStencilMask(0xFF);
+
+        // draw(shader);
+
+        // glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+        // glStencilMask(0x00);
+        // glDisable(GL_DEPTH_TEST);
+
+        // shader.set_float("outlineWidth", 0.4f);
+        // shader.set_bool("isOutline", true);
+        // shader.set_vec4("outlineColor", {1.0f, 0.5f, 0.06f, 1.0f});
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+
+        // draw(shader);
+        // shader.set_bool("isOutline", false);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        // glStencilMask(0xFF);
+        // glStencilFunc(GL_ALWAYS, 1, 0xFF);
+
+        // glEnable(GL_DEPTH_TEST);
+
         glEnable(GL_STENCIL_TEST);
         glStencilFunc(GL_ALWAYS, 1, 0xFF);
+        glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_REPLACE, GL_REPLACE);
         glStencilMask(0xFF);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
         draw(shader);
+        // glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-        glStencilMask(0x00);
-        glDisable(GL_DEPTH_TEST);
-
-        shader.set_float("outlineWidth", 0.4f);
-        shader.set_bool("isOutline", true);
-        shader.set_vec4("outlineColor", {1.0f, 0.5f, 0.06f, 1.0f});
-        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
-        draw(shader);
-        shader.set_bool("isOutline", false);
-        glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        glStencilMask(0xFF);
-        glStencilFunc(GL_ALWAYS, 1, 0xFF);
-
-        glEnable(GL_DEPTH_TEST);
+        // glStencilMask(0x00);
+        // glStencilFunc(GL_EQUAL, 1, 0xFF);
+        // glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_KEEP, GL_KEEP);
+        glDisable(GL_STENCIL_TEST);
     }
     void GLMesh::draw()
     {

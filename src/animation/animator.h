@@ -26,7 +26,6 @@ namespace anim
         const float get_end_time() const;
         const float get_fps() const;
         const float get_direction() const;
-        const bool get_is_recording() const;
         const bool get_is_stop() const;
         void set_current_time(float current_time);
         void set_start_time(float time);
@@ -34,7 +33,8 @@ namespace anim
         void set_fps(float fps);
         void set_direction(bool is_left);
         void set_is_stop(bool is_stop);
-        void set_is_recording(bool is_recording);
+
+        bool mIsRootMotion{false};
 
     private:
         std::vector<glm::mat4> final_bone_matrices_;
@@ -42,10 +42,9 @@ namespace anim
         float start_time_{0.0f};
         float end_time_{128.0f};
         float factor_{1.0f};
-        float fps_{30.0f};
+        float fps_{24.0f};
         bool is_stop_{false};
         float direction_{1.0f};
-        bool is_recording_{true};
     };
 }
 #endif

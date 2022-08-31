@@ -106,6 +106,10 @@ namespace anim
     {
         return id_;
     }
+    const glm::mat4 &ArmatureComponent::get_model() const
+    {
+        return model_;
+    }
     const glm::quat &ArmatureComponent::get_local_rotation()
     {
         return rotation_.back();
@@ -134,16 +138,19 @@ namespace anim
 
         for (int i = 0; i < rotation_.size(); i++)
         {
-            mat.diffuse = glm::mix(glm::vec3{0.8f, 0.8f, 0.9f}, glm::vec3{0.0f, 0.0f, 0.0f}, (float)id_ / 128.0f);
+            mat.diffuse = glm::mix(glm::vec3{0.87f, 0.87f, 0.97f}, glm::vec3{0.0f, 0.0f, 0.0f}, static_cast<float>(id_) / 128.0f);
             mat.shininess = 1.0f;
-
-            glm::mat4 r = glm::mat4(rotation_[i]);
             glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(scale_[i]));
-            shader_->set_mat4("model", world * r * s);
-            if (entity_->is_selected_ || entity_->get_mutable_root()->is_selected_)
+            if (isApplayLocalRotation)
+            {
+                s = glm::mat4(rotation_[i]) * s;
+            }
+            shader_->set_mat4("model", world * s);
+            if (entity_->is_selected_ || entity_->get_mutable_root()->is_selected_ || pose_->get_root_entity()->get_mutable_parent()->is_selected_)
             {
                 mat.shininess = 100.0f;
-                mat.diffuse = glm::vec4{1.0f, 0.5f, 0.06f, 1.0f};
+                mat.diffuse = glm::vec4{1.0f, 0.5f, 0.02f, 1.0f};
+
                 armature_->draw_outline(*shader_);
             }
             else

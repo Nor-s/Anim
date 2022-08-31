@@ -23,3 +23,7 @@ out/
 python/
 
 note/
+
+py_module/ai
+
+.DS_Store

@@ -14,6 +14,7 @@
 #include "../components/pose_component.h"
 
 #include <filesystem>
+#include <graphics/post_processing.h>
 
 namespace fs = std::filesystem;
 
@@ -29,7 +30,7 @@ MainScene::MainScene(uint32_t width, uint32_t height, std::shared_ptr<anim::Shar
         resources_ = std::move(resources);
     }
     init_framebuffer(width, height);
-    grid_framebuffer_.reset(new anim::Image{100, 100, GL_RGBA});
+    grid_framebuffer_.reset(new anim::Image{1, 1, GL_RGBA});
 
     init_camera();
 }
@@ -73,17 +74,20 @@ void MainScene::update_framebuffer()
 void MainScene::draw_to_framebuffer()
 {
     auto grid_shader = resources_->get_mutable_shader("grid");
-    // glEnable(GL_LINE_SMOOTH);
     glEnable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     framebuffer_->bind_with_depth_and_stencil(background_color_);
     {
         resources_->update();
-
         grid_framebuffer_->draw(*grid_shader);
     }
     framebuffer_->unbind();
+    if (selected_entity_)
+    {
+        resources_->mPostProcessing->execuate_outline_with_depth(framebuffer_.get());
+    }
+
 #ifndef NDEBUG
     auto error = glGetError();
     anim::LOG("main scene: " + std::to_string((int)error), error == GL_NO_ERROR);

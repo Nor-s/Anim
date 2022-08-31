@@ -7,7 +7,7 @@
 #include "scene/scene.hpp"
 #include "scene/main_scene.h"
 #include "resources/shared_resources.h"
-#include "glcpp/exporter.h"
+#include "resources/exporter.h"
 #include "entity/entity.h"
 #include "entity/components/component.h"
 #include "entity/components/animation_component.h"
@@ -15,6 +15,11 @@
 #include "animation/animator.h"
 #include "util/log.h"
 #include "UI/ui_context.h"
+#include "event/event_history.h"
+#include "resources/exporter.h"
+
+#include "cpython/py_manager.h"
+#include <pybind11/embed.h>
 
 namespace fs = std::filesystem;
 
@@ -43,6 +48,7 @@ void App::init(uint32_t width, uint32_t height, const std::string &title)
     init_ui();
     init_shared_resources();
     init_scene(width, height);
+    history_.reset(new anim::EventHistoryQueue());
 }
 void App::init_window(uint32_t width, uint32_t height, const std::string &title)
 {
@@ -58,7 +64,6 @@ void App::init_callback()
     window_->set_cursor_pos_callback(mouse_callback);
 
 #ifndef NDEBUG
-
     glfwSetErrorCallback(error_callback);
 #endif
 }
@@ -74,13 +79,8 @@ void App::init_shared_resources()
 void App::init_scene(uint32_t width, uint32_t height)
 {
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Zombie Stand Up.fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
-    // import_model_or_animation("C:\\Users\\No\\Downloads\\Vanguard (4).fbx");
-    import_model_or_animation("./resources/models/ybot.fbx");
-    // import_model_or_animation("./anim.json");
+
+    import_model_or_animation("./resources/models/mannequiny.fbx");
 }
 void App::loop()
 {
@@ -146,6 +146,8 @@ void App::post_update()
     process_timeline_context();
     process_menu_context();
     process_scene_context();
+    process_component_context();
+    process_python_context();
 }
 void App::process_timeline_context()
 {
@@ -172,19 +174,36 @@ void App::process_timeline_context()
         animator->set_is_stop(false);
         animator->set_direction(true);
     }
-    animator->set_is_recording(time_context.is_recording);
     if (entity_context.is_changed_selected_entity)
     {
         scenes_[current_scene_idx_]->set_selected_entity(entity_context.selected_id);
     }
-    if (entity_context.is_changed_transform)
+    static uint32_t count = 0u;
+    is_manipulated_ = entity_context.is_manipulated;
+    if (entity_context.is_changed_transform && time_context.is_recording)
     {
         auto selected_entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+        auto &before_transform = selected_entity->get_local();
         selected_entity->set_local(entity_context.new_transform);
         if (auto armature = selected_entity->get_component<anim::ArmatureComponent>(); armature)
         {
             armature->add_and_replace_bone();
+            if (count == 0u)
+            {
+                history_->push(std::make_unique<anim::BoneChangeEvent>(
+                    scenes_[current_scene_idx_].get(),
+                    scenes_[current_scene_idx_]->get_mutable_ref_shared_resources().get(),
+                    selected_entity->get_id(),
+                    selected_entity->get_mutable_root()->get_component<anim::AnimationComponent>()->get_animation()->get_id(),
+                    before_transform,
+                    armature->get_pose()->get_animator()->get_current_time()));
+            }
+            count++;
         }
+    }
+    else
+    {
+        count = 0u;
     }
 }
 
@@ -194,21 +213,83 @@ void App::process_menu_context()
     auto &menu_context = ui_context.menu;
     if (menu_context.clicked_import_model)
     {
-        shared_resources_->import(menu_context.path.c_str());
+        shared_resources_->import(menu_context.path.c_str(), menu_context.import_scale);
+    }
+    if (menu_context.clicked_export_animation)
+    {
+        shared_resources_->export_animation(scenes_[current_scene_idx_]->get_mutable_selected_entity(), menu_context.path.c_str(), menu_context.is_export_linear_interpolation);
+    }
+    if (menu_context.clicked_import_dir)
+    {
+        for (const auto &file : std::filesystem::directory_iterator(menu_context.path))
+        {
+            anim::LOG(file.path().string());
+            if (file.path().extension().compare(".fbx") == 0 || file.path().extension().compare(".gltf") == 0)
+            {
+                anim::LOG("IMPORT");
+                shared_resources_->import(file.path().string().c_str(), menu_context.import_scale);
+            }
+        }
+    }
+    if (menu_context.clicked_export_all_data)
+    {
+        auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+        anim::to_json_all_animation_data(menu_context.path.c_str(), entity, shared_resources_.get());
     }
 }
+
 void App::process_scene_context()
 {
     auto &ui_context = ui_->get_context();
     auto &scene_context = ui_context.scene;
-    if (scene_context.is_picking)
+    if (scene_context.is_picking && !ui_context.menu.is_dialog_open)
     {
         scenes_[current_scene_idx_]->picking(scene_context.x, scene_context.y, scene_context.is_bone_picking_mode);
     }
 }
+
+void App::process_component_context()
+{
+    auto &ui_context = ui_->get_context();
+    auto &comp_context = ui_context.component;
+    if (comp_context.is_changed_animation)
+    {
+        auto animation_comp = scenes_[current_scene_idx_]->get_mutable_selected_entity()->get_mutable_root()->get_component<anim::AnimationComponent>();
+        animation_comp->set_animation(shared_resources_->get_mutable_animation(comp_context.new_animation_idx));
+    }
+}
+
+void App::process_python_context()
+{
+    auto &ui_context = ui_->get_context();
+    auto &py_context = ui_context.python;
+    if (py_context.is_clicked_convert_btn)
+    {
+        auto selected_entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+        auto selected_root = (selected_entity) ? selected_entity->get_mutable_root() : nullptr;
+        auto pose_comp = (selected_root) ? selected_root->get_component<anim::PoseComponent>() : nullptr;
+        if (selected_entity && selected_root && pose_comp)
+        {
+            anim::Exporter exporter;
+            std::string model_info = exporter.to_json(pose_comp->get_root_entity());
+            const char *model_info_c = model_info.c_str();
+            auto py = anim::PyManager::get_instance();
+            py->get_mediapipe_pose({py_context.video_path.c_str(),
+                                    py_context.save_path.c_str(),
+                                    model_info_c,
+                                    py_context.min_visibility,
+                                    py_context.show_plot,
+                                    py_context.model_complexity,
+                                    py_context.min_detection_confidence,
+                                    py_context.fps});
+            import_model_or_animation(py_context.save_path.c_str());
+        }
+    }
+}
+
 void App::import_model_or_animation(const char *const path)
 {
-    shared_resources_->import(path);
+    shared_resources_->import(path, 100.0f);
 }
 
 void App::pre_draw()
@@ -220,6 +301,7 @@ void App::pre_draw()
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
+
 void App::draw_scene()
 {
     size_t size = scenes_.size();
@@ -234,6 +316,7 @@ void App::draw_scene()
         }
     }
 }
+
 void App::post_draw()
 {
     glfwSwapBuffers(window_->get_handle());
@@ -243,6 +326,10 @@ void App::post_draw()
 
 void App::process_input(GLFWwindow *window)
 {
+    if (!ui_->is_scene_layer_hovered("scene" + std::to_string(current_scene_idx_ + 1)) || is_manipulated_)
+    {
+        return;
+    }
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
@@ -253,6 +340,25 @@ void App::process_input(GLFWwindow *window)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::LEFT, delta_frame_);
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
+
+    static bool is_pressed_z = false;
+    bool is_released_z = false;
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+    {
+        is_pressed_z = true;
+    }
+    else if (is_pressed_z && glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE)
+    {
+        is_pressed_z = false;
+        is_released_z = true;
+    }
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && is_released_z)
+    {
+        anim::LOG("POP::HISTORY");
+        history_->pop();
+        is_released_z = false;
+        shared_resources_->get_mutable_animator()->set_is_stop(true);
+    }
 }
 
 void App::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)

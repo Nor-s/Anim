@@ -30,7 +30,7 @@ namespace ui
           scene_window_right_(0.0f),
           scene_window_top_(0.0f),
           scene_pos_(0.0f, 0.0f),
-          current_gizmo_mode_(ImGuizmo::WORLD),
+          current_gizmo_mode_(ImGuizmo::LOCAL),
           current_gizmo_operation_(ImGuizmo::OPERATION::NONE)
     {
     }
@@ -52,15 +52,16 @@ namespace ui
             height_ = viewportPanelSize.y;
             ImVec2 mouse_pos = ImGui::GetMousePos();
             int x = mouse_pos.x - scene_pos_.x;
-            int y = mouse_pos.y - scene_pos_.y;
+            int y = (scene_cursor_y_ + height_ + 16.0f) - mouse_pos.y;
             // scene->
             ImGuiWindow *window = ImGui::GetCurrentWindow();
             is_hovered_ = !ImGuizmo::IsUsing() && ImGui::IsWindowFocused() && ImGui::IsWindowHovered() && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max);
             if (ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left) && ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max))
             {
+                anim::LOG("double click" + std::to_string(x) + " " + std::to_string(y));
                 ui_context.scene.is_picking = true;
                 ui_context.scene.x = x;
-                ui_context.scene.y = height - y;
+                ui_context.scene.y = y;
             }
 
             // draw scene framebuffer
@@ -114,11 +115,16 @@ namespace ui
             if (ImGuizmo::IsUsing())
             {
                 ui_context.entity.new_transform = glm::inverse(transform) * glm::make_mat4(object_mat_ptr);
+                auto [t, r, s] = anim::DecomposeTransform(ui_context.entity.new_transform);
                 ui_context.entity.new_transform = selected_entity->get_local() * ui_context.entity.new_transform;
-                ui_context.entity.is_changed_transform = true;
-                if (selected_entity->get_component<anim::ArmatureComponent>())
+                if (glm::length2(t) < 100000.0f)
                 {
-                    ui_context.timeline.is_stop = true;
+                    ui_context.entity.is_changed_transform = true;
+                    ui_context.entity.is_manipulated = true;
+                    if (selected_entity->get_component<anim::ArmatureComponent>())
+                    {
+                        ui_context.timeline.is_stop = true;
+                    }
                 }
             }
         }
@@ -150,7 +156,12 @@ namespace ui
                 current_gizmo_operation_ = ImGuizmo::OPERATION::NONE;
                 ImGui::TableNextColumn();
                 // select
-                ToggleButton(ICON_MD_NEAR_ME, &is_bone_picking_mode_, {btn_size.x * 2, btn_size.y});
+                ToggleButton(ICON_MD_NEAR_ME, &is_bone_picking_mode_, {btn_size.x * 2, btn_size.y}, &ui_context.scene.is_clicked_picking_mode);
+                if (ui_context.scene.is_clicked_picking_mode && !is_bone_picking_mode_)
+                {
+                    ui_context.entity.is_changed_selected_entity = true;
+                    ui_context.entity.selected_id = -1;
+                }
                 ui_context.scene.is_bone_picking_mode = is_bone_picking_mode_;
                 // ImGui::PopStyleVar();
                 ImGui::SameLine();

@@ -55,6 +55,7 @@ namespace anim
         const std::set<float> &get_time_set() const;
         const std::string &get_name() const;
         float get_factor();
+        void get_ai_node(aiNodeAnim *channel, const aiMatrix4x4 &binding_pose_transform, float factor = 1.0, bool is_interpolated = true);
 
         void set_name(const std::string &name);
 
@@ -90,7 +91,8 @@ namespace anim
             return &scales_[time].scale;
         }
 
-        void replace_key_frame(const glm::mat4 &transform, float time);
+        void replace_or_add_keyframe(const glm::mat4 &transform, float time);
+        void replace_or_sub_keyframe(const glm::mat4 &transform, float time);
 
     private:
         template <class T>
@@ -117,6 +119,7 @@ namespace anim
 
         std::string name_ = "";
         glm::mat4 local_transform_{1.0f};
+        glm::mat4 bindpose_{1.0f};
         float factor_ = 1.0f;
     };
 

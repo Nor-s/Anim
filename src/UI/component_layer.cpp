@@ -4,6 +4,7 @@
 #include "imgui_helper.h"
 #include <imgui/imgui.h>
 #include <entity/entity.h>
+#include <entity/components/renderable/mesh_component.h>
 #include <entity/components/animation_component.h>
 #include <animation/animation.h>
 
@@ -26,7 +27,7 @@ namespace ui
             {
                 if (ImGui::CollapsingHeader("Transform"))
                 {
-                    // draw_transform_slider();
+                    draw_transform(entity);
                     ImGui::Separator();
                 }
                 if (auto root = entity->get_mutable_root(); root)
@@ -36,6 +37,10 @@ namespace ui
                         draw_animation(context, resources, root, animation);
                         ImGui::Separator();
                     }
+                }
+                if (auto mesh = entity->get_component<anim::MeshComponent>(); mesh && ImGui::CollapsingHeader("Mesh"))
+                {
+                    draw_mesh(mesh);
                 }
             }
         }
@@ -82,36 +87,53 @@ namespace ui
 
             ImGui::EndChild();
         }
+        auto animc = const_cast<AnimationComponent *>(animation);
+        auto anim = animc->get_mutable_animation();
+        ImGui::Text(("duration: " + std::to_string(anim->get_duration())).c_str());
+        ImGui::Text(("fps: " + std::to_string(anim->get_fps())).c_str());
+        float &fps = animc->get_mutable_custom_tick_per_second();
+        if (animation_idx != context.current_animation_idx)
+        {
+            context.new_animation_idx = animation_idx;
+            context.is_changed_animation = true;
+        }
+        ImGui::DragFloat("custom fps", &fps, 1.0f, 1.0f, 144.0f);
         ImGui::PopID();
     }
 
-    void ComponentLayer::draw_transform_slider(anim::TransformComponent &transform)
+    void ComponentLayer::draw_transform(anim::Entity *entity)
     {
-        auto vec = transform.get_rotation();
-        bool result = DragPropertyXYZ("Rotation", vec);
-        if (result)
-        {
-            transform.set_rotation(vec);
-        }
-        vec = transform.get_scale();
-        result = DragPropertyXYZ("Scale", vec);
-        if (result)
-        {
-            transform.set_scale(vec);
-        }
+        auto &world = entity->get_world_transformation();
+        auto &local = entity->get_local();
+        TransformComponent transform;
+        transform.set_transform(world);
+        ImGui::Text("World");
+        DragPropertyXYZ("Translation", transform.mTranslation);
+        DragPropertyXYZ("Rotation", transform.mRotation);
+        DragPropertyXYZ("Scale", transform.mScale);
 
-        vec = transform.get_translation();
-        result = DragPropertyXYZ("Translation", vec);
-        if (result)
-        {
-            transform.set_translation(vec);
-        }
+        ImGui::Separator();
+
+        transform.set_transform(local);
+        ImGui::Text("Local");
+        DragPropertyXYZ("Translation", transform.mTranslation);
+        DragPropertyXYZ("Rotation", transform.mRotation);
+        DragPropertyXYZ("Scale", transform.mScale);
     }
     void ComponentLayer::draw_transform_reset_button(anim::TransformComponent &transform)
     {
         if (ImGui::Button("reset"))
         {
             transform.set_translation({0.0f, 0.0f, 0.0f}).set_rotation({0.0f, 0.0f, 0.0f}).set_scale({1.0f, 1.0f, 1.0f});
+        }
+    }
+    void ComponentLayer::draw_mesh(anim::MeshComponent *mesh)
+    {
+        auto material = mesh->get_mutable_mat();
+        int idx = 0;
+        for (auto &mat : material)
+        {
+            ImGui::ColorPicker3(("diffuse " + std::to_string(idx)).c_str(), &mat->diffuse[0]);
         }
     }
 }

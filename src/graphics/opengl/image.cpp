@@ -1,6 +1,7 @@
 #include "image.h"
 #include <iostream>
 #include "../shader.h"
+#include <vector>
 
 namespace anim
 {
@@ -21,7 +22,6 @@ namespace anim
     {
         shader.use();
         glUniform1i(glGetUniformLocation(shader.get_id(), "texture_diffuse1"), 0);
-        shader.set_vec2("iResolution", glm::vec2(width_, height_));
         glBindVertexArray(quad_VAO_);
         glBindTexture(GL_TEXTURE_2D, texture_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
@@ -48,7 +48,10 @@ namespace anim
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-        glTexImage2D(GL_TEXTURE_2D, 0, format_, width_, height_, 0, format_, GL_UNSIGNED_BYTE, NULL);
+        const size_t sizet = width_ * height_ * 4;
+        std::vector<GLubyte> a(sizet, 255);
+
+        glTexImage2D(GL_TEXTURE_2D, 0, format_, width_, height_, 0, format_, GL_UNSIGNED_BYTE, a.data());
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 }

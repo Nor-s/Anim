@@ -7,6 +7,7 @@
 #include "../entity/entity.h"
 #include "model.h"
 #include "importer.h"
+#include "exporter.h"
 #include "../entity/components/component.h"
 #include "../entity/components/pose_component.h"
 #include "../entity/components/renderable/mesh_component.h"
@@ -17,10 +18,13 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../graphics/opengl/gl_mesh.h"
+#include "../graphics/post_processing.h"
 namespace anim
 {
     SharedResources::SharedResources()
     {
+        mPostProcessing.reset(new PostProcessing());
+
         init_animator();
         init_shader();
         root_entity_.reset(new Entity("All", single_entity_list_.size()));
@@ -41,15 +45,26 @@ namespace anim
     {
         return shaders_[name];
     }
-    void SharedResources::import(const char *path)
+    void SharedResources::import(const char *path, float scale)
     {
         Importer import{};
+        import.mScale = scale;
         auto [model, animations] = import.read_file(path);
 
         add_animations(animations);
-        add_entity(model);
+        add_entity(model, path);
     }
-    void SharedResources::add_entity(std::shared_ptr<Model> &model)
+    void SharedResources::export_animation(Entity *entity, const char *save_path, bool is_linear)
+    {
+        if (entity && entity->get_mutable_root())
+        {
+            Exporter exporter;
+            exporter.is_linear_ = is_linear;
+            exporter.to_glft2(entity->get_mutable_root(), save_path, model_path_[entity->get_mutable_root()->get_id()].c_str());
+        }
+    }
+
+    void SharedResources::add_entity(std::shared_ptr<Model> &model, const char *path)
     {
         if (!model)
         {
@@ -59,6 +74,7 @@ namespace anim
         convert_to_entity(entity, model, model->get_root_node(), nullptr, 0, nullptr);
         if (entity)
         {
+            model_path_[entity->get_id()] = std::string(path);
             root_entity_->add_children(std::move(entity));
         }
     }
@@ -142,16 +158,19 @@ namespace anim
     }
     void SharedResources::init_shader()
     {
-        add_shader("animation_one_color", "./resources/shaders/animation_cpu.vs", "./resources/shaders/selection_color.fs");
+        add_shader("animation_one_color", "./resources/shaders/animation_skinning.vs", "./resources/shaders/selection_color.fs");
         add_shader("model_one_color", "./resources/shaders/simple_model.vs", "./resources/shaders/selection_color.fs");
         add_shader("armature_one_color", "./resources/shaders/armature.vs", "./resources/shaders/selection_color.fs");
 
-        add_shader("armature", "./resources/shaders/armature.vs", "./resources/shaders/simple_light_model.fs");
-        add_shader("model", "./resources/shaders/simple_model.vs", "./resources/shaders/simple_light_model.fs");
-        add_shader("animation", "./resources/shaders/animation_cpu.vs", "./resources/shaders/simple_light_model.fs");
+        add_shader("armature", "./resources/shaders/armature.vs", "./resources/shaders/phong_model.fs");
+        add_shader("model", "./resources/shaders/simple_model.vs", "./resources/shaders/phong_model.fs");
+        add_shader("animation", "./resources/shaders/animation_skinning.vs", "./resources/shaders/phong_model.fs");
 
         add_shader("framebuffer", "./resources/shaders/simple_framebuffer.vs", "./resources/shaders/simple_framebuffer.fs");
         add_shader("grid", "./resources/shaders/grid.vs", "./resources/shaders/grid.fs");
+        add_shader("outline", "./resources/shaders/simple_framebuffer.vs", "./resources/shaders/outline.fs");
+
+        mPostProcessing->set_shaders(shaders_["framebuffer"].get(), shaders_["outline"].get());
 
         auto model_id = get_mutable_shader("model")->get_id();
         auto animation_id = get_mutable_shader("animation")->get_id();
@@ -224,6 +243,7 @@ namespace anim
         if (!root_entity)
         {
             root_entity = entity.get();
+            entity->set_parent(entity.get());
         }
         entity->set_root(root_entity);
         single_entity_list_.push_back(entity);
@@ -282,7 +302,7 @@ namespace anim
                 auto animation = root_entity->add_component<AnimationComponent>();
                 if (animations_.size() > 0)
                 {
-                    animation->set_animation(animations_.back());
+                    animation->set_animation(animations_.back().get());
                 }
                 pose = root_entity->add_component<PoseComponent>();
                 LOG("=============== POSE: " + parent_entity->get_name());
@@ -322,5 +342,13 @@ namespace anim
             return single_entity_list_[id].get();
         }
         return nullptr;
+    }
+    Animation *SharedResources::get_mutable_animation(int id)
+    {
+        if (id >= animations_.size() || id < 0)
+        {
+            return nullptr;
+        }
+        return animations_[id].get();
     }
 }

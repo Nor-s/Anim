@@ -1,9 +1,14 @@
-from threading import local
 import glm
 import math
 
-def calc_quat(start, end):
+g_is_abs = True
+
+def calc_quat(start, end, is_abs =False):
+        global g_is_abs
         cos_theta = glm.dot(start, end)
+        if is_abs and g_is_abs:
+            cos_theta = abs(cos_theta)
+        
         axis = glm.cross(start, end)
 
         if(cos_theta < -1.0 + 0.001) :
@@ -32,29 +37,33 @@ class Gizmo:
 
     def rotate(self, transform_mat):
         r = transform_mat * self.r
-        x = transform_mat * self.x
-        y = transform_mat * self.y
-        z = transform_mat * self.z
+        x = glm.normalize(glm.mat3(transform_mat) * self.x)
+        y = glm.normalize(glm.mat3(transform_mat) * self.y)
+        z = glm.normalize(glm.mat3(transform_mat) * self.z)
         return Gizmo(r, x, y, z)
 
-    def calc_rotation_matrix(self, world_start, world_end):
+    def calc_rotation_matrix(self, world_start, world_end, is_abs):
         local_point1 = glm.normalize(self.get_local_pos(world_start))
         local_point2 = glm.normalize(self.get_local_pos(world_end))
-        return calc_quat(local_point1, local_point2)
+        return calc_quat(local_point1, local_point2, is_abs)
         
 
-    def calc_roll(self, world_start, world_end):
+    def calc_roll(self, world_start, world_end, is_abs):
         local_point1 = glm.normalize(self.get_local_pos(world_start))
         local_point2 = glm.normalize(self.get_local_pos(world_end))
         local_point1.x = 0
         local_point2.x = 0
-        return calc_quat(local_point1, local_point2)
+        return calc_quat(local_point1, local_point2, is_abs)
 
     # def calc_roll(self, world_start, world_end):
 
     def get_origin(self):
         return self.r
 
+    # a = local point
+    # a.x * v1 + a.y * v2 + a.z* v3 = world point
+    # [v1, v2, v3] * [a.x, a.y, a.z]T = world point
+    # [a.x, a.y, a.z]T = [v1, v2, v3]^-1 * world point 
     def get_local_pos(self, world_pos):
         b = world_pos - self.r
         A = glm.mat3(self.x, self.y, self.z)

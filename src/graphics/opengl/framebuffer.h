@@ -41,6 +41,17 @@ namespace anim
 
             return {data[0], data[1], data[2]};
         }
+        void attach_depth24_stencil8(Framebuffer *framebuffer = nullptr)
+        {
+            if (framebuffer)
+            {
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, framebuffer->d24s8_RBO_);
+            }
+            else
+            {
+                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, d24s8_RBO_);
+            }
+        }
 
     private:
         void init_framebuffer();

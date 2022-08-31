@@ -27,16 +27,18 @@ namespace anim
         Bone *find_bone(const std::string &name);
         float get_fps();
         float get_duration();
+        float get_current_duration();
         const std::string &get_name() const;
         const char *get_path() const;
         const std::map<std::string, std::unique_ptr<Bone>> &get_name_bone_map() const;
         std::map<std::string, std::unique_ptr<Bone>> &get_mutable_name_bone_map();
         const AnimationType &get_type() const;
         virtual void reload();
-        void get_ai_animation(aiAnimation *ai_anim, const aiNode *ai_root_node);
+        void get_ai_animation(aiAnimation *ai_anim, const aiNode *ai_root_node, float factor = 1.0, bool is_linear = true);
         void set_id(int id);
         const int get_id() const;
         void add_and_replace_bone(const std::string &name, const glm::mat4 &transform, float time);
+        void replace_bone(const std::string &name, const glm::mat4 &transform, float time);
 
     protected:
         float duration_{0.0f};

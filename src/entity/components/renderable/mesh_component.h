@@ -13,6 +13,7 @@ namespace anim
     class Mesh;
     class Shader;
     class Entity;
+    struct MaterialProperties;
     class MeshComponent : public ComponentBase<MeshComponent>
     {
     public:
@@ -27,6 +28,8 @@ namespace anim
         void set_meshes(const std::vector<std::shared_ptr<Mesh>> &meshes);
         void set_shader(Shader *shader);
         void set_entity(Entity *entity);
+
+        std::vector<MaterialProperties *> get_mutable_mat();
 
     private:
         std::vector<std::shared_ptr<Mesh>> meshes_;

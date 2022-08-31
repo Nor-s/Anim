@@ -28,6 +28,8 @@ namespace anim
         ~Exporter() = default;
         void to_png(Framebuffer *framebuffer, const char *save_path);
         void to_json(Entity *entity, const char *save_path);
+         std::string to_json(Entity *model);
+
         void to_glft2(Entity *entity, const char *save_path, const char *model_path);
 
         bool is_linear_{true};

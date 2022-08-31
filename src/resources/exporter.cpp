@@ -64,8 +64,12 @@ namespace anim
     }
     void Exporter::to_json(Entity *model, const char *save_path)
     {
+        if (model->get_component<ArmatureComponent>() == nullptr)
+        {
+            return;
+        }
         Json::Value result_json;
-        result_json["node"] = dfs(model->get_mutable_root(), "");
+        result_json["node"] = dfs(model, "");
         result_json["name"] = "model";
         std::ofstream json_stream(save_path, std::ofstream::binary);
         json_stream << result_json.toStyledString();
@@ -74,10 +78,30 @@ namespace anim
             json_stream.close();
         }
     }
+    std::string Exporter::to_json(Entity *model)
+    {
+        if (model->get_component<ArmatureComponent>() == nullptr)
+        {
+            return "";
+        }
+        Json::Value result_json;
+        result_json["node"] = dfs(model, "");
+        result_json["name"] = "model";
+#ifndef NDEBUG
+        std::ofstream json_stream("./model.json", std::ofstream::binary);
+        json_stream << result_json.toStyledString();
+        if (json_stream.is_open())
+        {
+            json_stream.close();
+        }
+#endif
+        return std::string(result_json.toStyledString().c_str());
+    }
     Json::Value Exporter::dfs(Entity *node, const std::string &parent_name)
     {
         Json::Value node_json;
-        auto &transform = node->get_local();
+        auto armature = node->get_component<ArmatureComponent>();
+        auto &transform = armature->get_bind_pose();
         const auto &[t, r, s] = DecomposeTransform(transform);
         node_json["name"] = node->get_name();
         node_json["position"] = get_vec_json(t);
@@ -137,18 +161,21 @@ namespace anim
         Assimp::Exporter exporter;
         auto save = std::filesystem::u8path(save_path);
         std::string ext = save.extension().string();
+        std::string format = ext;
 
         if (ext.size() > 2 && ext[1] == 'g')
         {
             ext = "gltf2";
+            format = ext;
         }
         else
         {
             ext = "fbx";
+            format = "fbxa";
         }
 
         LOG(std::string(save_path) + ": " + ext);
-        if (exporter.Export(scene, ext, std::string(save_path), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices) != AI_SUCCESS)
+        if (exporter.Export(scene, format, std::string(save_path), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices) != AI_SUCCESS)
         {
             std::cerr << exporter.GetErrorString() << std::endl;
         }
@@ -223,8 +250,9 @@ namespace anim
         for (int i = 0; i < size; i++)
         {
             auto animation = resources->get_mutable_animation(i);
-            animation_comp->set_animation(animation);
-            float duration = static_cast<float>(animation_comp->get_custom_duration());
+            if (animation->get_id() != animation_comp->get_animation()->get_id())
+                animation_comp->set_animation(animation);
+            float duration = floor(animation->get_current_duration() * animation_comp->get_ticks_per_second_factor());
             for (float time = 0.0f; time <= duration; time += 1.0f)
             {
                 Json::Value pose;

@@ -12,31 +12,23 @@ Video to Animation
 
 ## **Feature**
 
--   Eidit: FK animation
+-   Edit: FK animation
 -   Object selction
 -   Embeded python (only windows)
--   Export glft2, fbx
+-   Export glTF, FBX
 -   Mediapipe to Animation
 
 ## **TODO**
 
--   IK edit mode
+-   Edit: IK 
 -   Fix camera movement
 -   Ctrl + c, Ctrl + v
--   retargeting
+    - Keyframe
+-   Retargeting
 
 ## **Build**
 
--   windows: MSVC 19.33.31517.0 (VS2022 amd64)
--   ~~ubunt(wsl2): gcc 9.4.0 x86_64-linux-gnu~~
--   ~~mac os: Clang 13.0.0 arm64-apple-darwin21.2.0~~
-
-```
- mkdir build
- cd build
- cmake .. -G Ninja
- Ninja
-```
+see [build.md](/docs/build.md)
 
 ## **External**
 
@@ -95,7 +87,7 @@ see scripts/requirements.txt
 
     -   [grid shader 3](https://madebyevan.com/shaders/grid)
 
-### **Resources**
+## **Resources**
 
 -   model
     -   https://www.mixamo.com/#/?page=1&type=Character
@@ -108,12 +100,12 @@ see scripts/requirements.txt
     -   https://opengameart.org/content/forest-skyboxes
     -   https://www.humus.name/index.php?page=Textures
 
-### **License**
+## **License**
 
-This project is dual-licensed:
 
 -   The source code is available under the Apache-2.0 license.
 -   model assets are CC-By 4.0. (resources/models/mannequiny.fbx)
     -   https://github.com/GDQuest/godot-3d-mannequin
     -   The Godot mannequin is a character made by Luciano Muñoz In blender 2.80
     -   This project changed the model to mixamo rigging(auto rigging), diffuse color.
+-   d2codingfont: SIL OPEN FONT LICENSE

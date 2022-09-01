@@ -12,7 +12,7 @@ namespace anim
         const char *output_path;
         const char *model_info;
         float min_visibility = 0.8f;
-        bool show_plot = false;
+        bool is_angle_adjustment = false;
         int model_complexity = 1;
         float min_detection_confidence = 0.8f;
         float fps = 24.0f;

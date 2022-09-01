@@ -98,7 +98,9 @@ namespace anim
             import json
             import py_module.mp_manager
             import py_module.mp_helper
+            import py_module.gizmo
             mpm = py_module.mp_manager.MediapipeManager()
+            mpm.is_show_result = False
          )");
     }
     PyManager::~PyManager()
@@ -118,15 +120,15 @@ namespace anim
             auto locals = py::dict("video_path"_a = mp_info.video_path,
                                    "model"_a = mp_info.model_info,
                                    "output_path"_a = mp_info.output_path,
-                                   "show_plot"_a = mp_info.show_plot,
+                                   "is_angle_adjustment"_a = mp_info.is_angle_adjustment,
                                    "model_complexity"_a = mp_info.model_complexity,
                                    "min_detection_confidence"_a = mp_info.min_detection_confidence,
                                    "min_visibility"_a = mp_info.min_visibility,
                                    "custom_fps"_a = mp_info.fps);
 
             py::exec(R"(
+                py_module.gizmo.g_is_abs = is_angle_adjustment
                 mpm.set_key(model_complexity, False, min_detection_confidence)
-                mpm.is_show_result = show_plot
                 mpm.min_visibility = min_visibility
                 mpm.fps = custom_fps
                 

@@ -234,12 +234,12 @@ class ModelNode:
 
     def get_vec_and_group_list(self, result_vec_list, result_group_list, parent_transform=glm.mat4(1.0),  group_list=None, is_apply_animation_transform=False):
         if is_apply_animation_transform:
-            result_vec_list.append(self.get_gizmo_apply_tmp(parent_transform).get_origin())
+            result_vec_list[self.idx] = self.get_gizmo_apply_tmp(parent_transform).get_origin()
         else:
-            result_vec_list.append(self.get_gizmo(parent_transform).get_origin())
+            result_vec_list[self.idx] = self.get_gizmo(parent_transform).get_origin()
         if group_list == None:
             group_list = []
-        group_list.append(len(result_vec_list) - 1)
+        group_list.append(self.idx)
 
         if len(self.child) == 0:
             result_group_list.append(copy.deepcopy(group_list))
@@ -255,14 +255,18 @@ class ModelNode:
                     result_vec_list, result_group_list, group_list=group_list, parent_transform=copy.deepcopy(parent_transform*self.get_transform()), is_apply_animation_transform=is_apply_animation_transform)
 
     def tmp_to_json(self, bones_json, visibility_list,  min_visibility=0.6):
-        [t, r, s] = decompose(self.animation_transform)
+        transform = decompose(self.animation_transform)
         visibility = visibility_list[self.idx]
+        t = glm.vec3(0.0, 0.0, 0.0)
+        r = transform[1]
+        s = glm.vec3(1.0, 1.0, 1.0)
+
         if visibility >= min_visibility and (not (r.w == 1.0 and r.x == 0.0 and r.y == 0.0 and r.z == 0.0)):
             bone_json = {
                 "name": self.prefix + self.name,
                 "rotation": glm_quat_to_json(r),
                 "position": glm_vec3_to_json(t),
-                "scale": glm_vec3_to_json(s) #glm.vec3(1.0, 1.0, 1.0))
+                "scale": glm_vec3_to_json(s)
             }
             bones_json["bones"].append(bone_json)
         for child in self.child:

@@ -225,6 +225,7 @@ namespace ui
                                                             IGFD::UserDatas(&isLinear),
                                                             ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_ConfirmOverwrite);
                 }
+                // for data extract (for deep learning)
                 // if (ImGui::MenuItem("Export: rotation, world pos(json)", NULL, nullptr))
                 // {
                 //     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[3], "Save",
@@ -342,10 +343,10 @@ namespace ui
             ImGui::NewLine();
             ImGui::SameLine(text_cursor);
             ImGui::DragFloat("##visibility", &context_.python.min_visibility, 0.1f, 0.1f, 1.0f);
-            ImGui::Text("Show Plot");
+            ImGui::Text("Angle Adjustment");
             ImGui::NewLine();
             ImGui::SameLine(text_cursor);
-            ImGui::Checkbox("##show_plot", &context_.python.show_plot);
+            ImGui::Checkbox("##is_angle_adjustment", &context_.python.is_angle_adjustment);
             ImGui::Separator();
             ImGui::Text("Model Complexity");
             ImGui::NewLine();

@@ -1,3 +1,16 @@
+The source code is available under the Apache-2.0 license.
+
+model assets are CC-By 4.0. (resources/models/mannequiny.fbx, The Godot mannequin is a character made by Luciano Muñoz In blender 2.80. This project changed the model to mixamo rigging(auto rigging), diffuse color.
+)
+Creative Commons Attribution 4.0 International Public License
+Read the full license on: https://creativecommons.org/licenses/by/4.0/legalcode
+
+d2codingfont is SIL OPEN FONT LICENSE
+
+
+
+
+
                                  Apache License
                            Version 2.0, January 2004
                         http://www.apache.org/licenses/
@@ -199,3 +212,6 @@
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
    limitations under the License.
+
+
+

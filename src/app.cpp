@@ -278,7 +278,7 @@ void App::process_python_context()
                                     py_context.save_path.c_str(),
                                     model_info_c,
                                     py_context.min_visibility,
-                                    py_context.show_plot,
+                                    py_context.is_angle_adjustment,
                                     py_context.model_complexity,
                                     py_context.min_detection_confidence,
                                     py_context.fps});

@@ -301,7 +301,7 @@ def mediapipe_to_mixamo2(mp_manager,
                 anim_result_json["frames"].append(bones_json)
                 if is_show_result:
                     rg = []
-                    rv = []
+                    rv = [None] * len(glm_list)
                     mixamo_bindingpose_root_node.get_vec_and_group_list(
                         rv, rg, is_apply_animation_transform=True)
                     matplotlib.pyplot.clf()

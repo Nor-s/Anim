@@ -1,4 +1,4 @@
-# **Anim v0.0.1**
+# **Anim v0.1.0**
 
 Animation tool
 

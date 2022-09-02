@@ -2,6 +2,8 @@
 #include "../util/utility.h"
 #include <string>
 #include <util/log.h>
+#include <glm/gtx/string_cast.hpp>
+
 
 namespace anim
 {
@@ -202,12 +204,7 @@ namespace anim
 
     glm::mat4 Bone::interpolate_position(float animation_time)
     {
-        // const KeyPosition &p1Index = get_end<KeyPosition>(positions_, animation_time, {glm::vec3(0.0f, 0.0f, 0.0f), animation_time});
-        // const KeyPosition &p0Index = get_start<KeyPosition>(positions_, animation_time, {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f});
-        // int idx = get_start_vec<KeyPosition>(pos_, animation_time);
-        // const KeyPosition &p0Index = pos_[idx];
-        // const KeyPosition &p1Index = pos_[(idx == pos_.size() - 1) ? idx : idx + 1];
-        const auto &[p0Index, p1Index] = get_start_end<KeyPosition>(positions_, animation_time, {glm::vec3(0.0f, 0.0f, 0.0f), 0.0f});
+        const auto &[p0Index, p1Index] = get_start_end<KeyPosition>(positions_, animation_time, KeyPosition{glm::vec3(0.0f, 0.0f, 0.0f), 0.0f});
         float scaleFactor = get_scale_factor(p0Index.get_time(),
                                              p1Index.get_time(), animation_time);
         return glm::translate(glm::mat4(1.0f), glm::mix(p0Index.position, p1Index.position, scaleFactor));
@@ -215,7 +212,7 @@ namespace anim
 
     glm::mat4 Bone::interpolate_rotation(float animation_time)
     {
-        const auto &[p0Index, p1Index] = get_start_end<KeyRotation>(rotations_, animation_time, {glm::quat(1.0f, 0.0f, 0.0f, 0.0f), 0.0f});
+        const auto &[p0Index, p1Index] = get_start_end<KeyRotation>(rotations_, animation_time, KeyRotation{glm::quat(1.0f, 0.0f, 0.0f, 0.0f), 0.0f});
         float scaleFactor = get_scale_factor(p0Index.get_time(),
                                              p1Index.get_time(), animation_time);
         glm::quat finalRotation = glm::slerp(p0Index.orientation, p1Index.orientation, (float)scaleFactor);
@@ -224,19 +221,14 @@ namespace anim
 
     glm::mat4 Bone::interpolate_scaling(float animation_time)
     {
-        const auto &[p0Index, p1Index] = get_start_end<KeyScale>(scales_, animation_time, {glm::vec3(1.0f, 1.0f, 1.0f), 0.0f});
+        const auto &[p0Index, p1Index] = get_start_end<KeyScale>(scales_, animation_time, KeyScale{glm::vec3(1.0f, 1.0f, 1.0f), 0.0f});
+        
         float scaleFactor = get_scale_factor(p0Index.get_time(),
                                              p1Index.get_time(), animation_time);
         return glm::scale(glm::mat4(1.0f), glm::mix(p0Index.scale, p1Index.scale, scaleFactor));
     }
     void Bone::replace_or_add_keyframe(const glm::mat4 &transform, float time)
     {
-        // auto [t, r, s] = DecomposeTransform(transform);
-        // float time_stamp = floorf(time) / factor_;
-        // positions_[time_stamp] = {t, time_stamp};
-        // scales_[time_stamp] = {s, time_stamp};
-        // rotations_[time_stamp] = {r, time_stamp};
-        // time_set_.insert(time_stamp);
         float time_stamp = floorf(time) / factor_;
         auto [lt, lr, ls] = DecomposeTransform(get_local_transform(time, factor_));
         auto [t, r, s] = DecomposeTransform(transform);
@@ -244,134 +236,59 @@ namespace anim
         bool is_t_changed = !(lt.x - 1e-3 < t.x && t.x < lt.x + 1e-3 && lt.y - 1e-3 < t.y && t.y < lt.y + 1e-3 && lt.z - 1e-3 < t.z && t.z < lt.z + 1e-3);
         bool is_r_changed = !(lr.x - 1e-3 < r.x && r.x < lr.x + 1e-3 && lr.y - 1e-3 < r.y && r.y < lr.y + 1e-3 && lr.z - 1e-3 < r.z && r.z < lr.z + 1e-3);
         bool is_s_changed = !(ls.x - 1e-3 < s.x && s.x < ls.x + 1e-3 && ls.y - 1e-3 < s.y && s.y < ls.y + 1e-3 && ls.z - 1e-3 < s.z && s.z < ls.z + 1e-3);
+        bool is_add = false;
 
         // replace
         if (positions_.find(time_stamp) != positions_.end() || is_t_changed || positions_.size() == 0)
         {
-            LOG("Change POS =====");
-            std::cout << t.x << " " << t.y << " " << t.z << "\n";
-            std::cout << lt.x << " " << lt.y << " " << lt.z << "\n";
+            is_add = true;
             positions_[time_stamp] = {t, time_stamp};
         }
         if (rotations_.find(time_stamp) != rotations_.end() || is_r_changed || rotations_.size() == 0)
         {
-            LOG("Change ROT");
-            std::cout << r.x << " " << r.y << " " << r.z << "\n";
-            std::cout << lr.x << " " << lr.y << " " << lr.z << "\n";
+            is_add = true;
             rotations_[time_stamp] = {r, time_stamp};
         }
         if (scales_.find(time_stamp) != scales_.end() || is_s_changed || scales_.size() == 0)
         {
-            LOG("Change SCL");
-            std::cout << ls.x << " " << ls.y << " " << ls.z << "\n";
-            std::cout << s.x << " " << s.y << " " << s.z << "\n";
+            is_add = true;
             scales_[time_stamp] = {s, time_stamp};
         }
-
-        time_set_.insert(time_stamp);
+        if(is_add) {
+            time_set_.insert(time_stamp);
+        }
     }
-    // TODO: 여러 변환이 적용되었을 경우 revoke 잘 동작하지 않음
     void Bone::replace_or_sub_keyframe(const glm::mat4 &transform, float time)
     {
         float time_stamp = floorf(time) / factor_;
-        auto [lt, lr, ls] = DecomposeTransform(get_local_transform(time, factor_));
         auto [t, r, s] = DecomposeTransform(transform);
-
-        bool is_t_changed = !(lt.x - 1e-2 < t.x && t.x < lt.x + 1e-2 && lt.y - 1e-2 < t.y && t.y < lt.y + 1e-2 && lt.z - 1e-2 < t.z && t.z < lt.z + 1e-2);
-        bool is_r_changed = !(lr.x - 1e-2 < r.x && r.x < lr.x + 1e-2 && lr.y - 1e-2 < r.y && r.y < lr.y + 1e-2 && lr.z - 1e-2 < r.z && r.z < lr.z + 1e-2);
-        bool is_s_changed = !(ls.x - 1e-2 < s.x && s.x < ls.x + 1e-2 && ls.y - 1e-2 < s.y && s.y < ls.y + 1e-2 && ls.z - 1e-2 < s.z && s.z < ls.z + 1e-2);
-        auto [ip, ir, is] = std::tuple{positions_.find(time_stamp),
-                                       rotations_.find(time_stamp),
-                                       scales_.find(time_stamp)};
-        // positions
-        if (ip != positions_.end() && !is_t_changed)
-        {
-            LOG(" - - Erase position");
-            positions_.erase(ip);
-        }
-        else if (ip != positions_.end())
-        {
-            ip->second.position = t;
-        }
-        LOG("==================");
-        std::cout << t.x << " " << t.y << " " << t.z << "\n";
-        std::cout << lt.x << " " << lt.y << " " << lt.z << "\n";
-        LOG("------------------");
-
-        // rotations
-        if (ir != rotations_.end() && !is_r_changed)
-        {
-            LOG(" - - Erase rotation");
-            rotations_.erase(ir);
-        }
-        else if (ir != rotations_.end())
-        {
-            ir->second.orientation = r;
-        }
-        std::cout << r.x << " " << r.y << " " << r.z << "\n";
-        std::cout << lr.x << " " << lr.y << " " << lr.z << "\n";
-        LOG("------------------");
-
-        // scales
-        if (is != scales_.end() && !is_s_changed)
-        {
-            LOG(" - - Erase scale");
-            scales_.erase(is);
-        }
-        else if (is != scales_.end())
-        {
-            is->second.scale = s;
-        }
-        std::cout << s.x << " " << s.y << " " << s.z << "\n";
-        std::cout << ls.x << " " << ls.y << " " << ls.z << "\n";
-        LOG("==================");
-
-        auto [iip, iir, iis] = std::tuple{positions_.find(time_stamp),
+        auto [it_t, it_r, it_s] = std::tuple{positions_.find(time_stamp),
                                           rotations_.find(time_stamp),
                                           scales_.find(time_stamp)};
-        glm::vec3 temp_t, temp_s;
-        glm::quat tmp_q;
-        if (iip != positions_.end())
-        {
-            temp_t = iip->second.position;
-            positions_.erase(iip);
+        bool is_erased = false;
+        if (it_t != positions_.end()) {
+            is_erased = true;
+            positions_.erase(it_t);
         }
-        if (iir != rotations_.end())
-        {
-            tmp_q = iir->second.orientation;
-            rotations_.erase(iir);
+        if(it_r != rotations_.end()) {
+            is_erased = true;
+            rotations_.erase(it_r);
         }
-        if (iis != scales_.end())
-        {
-            temp_s = iis->second.scale;
-            scales_.erase(iis);
+        if(it_s != scales_.end()) {
+            is_erased = true;
+            scales_.erase(it_s);
         }
-        auto temp_transform = get_local_transform(time, factor_);
-        auto [t_t, t_r, t_s] = DecomposeTransform(temp_transform);
-
-        bool is_t_changed2 = !(t_t.x - 1e-2 < t.x && t.x < t_t.x + 1e-2 && t_t.y - 1e-2 < t.y && t.y < t_t.y + 1e-2 && t_t.z - 1e-2 < t.z && t.z < t_t.z + 1e-2);
-        bool is_r_changed2 = !(t_r.x - 1e-2 < r.x && r.x < t_r.x + 1e-2 && t_r.y - 1e-2 < r.y && r.y < t_r.y + 1e-2 && t_r.z - 1e-2 < r.z && r.z < t_r.z + 1e-2);
-        bool is_s_changed2 = !(t_s.x - 1e-2 < s.x && s.x < t_s.x + 1e-2 && t_s.y - 1e-2 < s.y && s.y < t_s.y + 1e-2 && t_s.z - 1e-2 < s.z && s.z < t_s.z + 1e-2);
-
-        if (is_t_changed2)
-        {
-            push_position(temp_t, time_stamp);
-        }
-        if (is_r_changed2)
-        {
-            push_rotation(tmp_q, time_stamp);
-        }
-        if (is_s_changed2)
-        {
-            push_scale(temp_s, time_stamp);
-        }
-
-        auto [iiip, iiir, iiis] = std::tuple{positions_.find(time_stamp),
-                                             rotations_.find(time_stamp),
-                                             scales_.find(time_stamp)};
-        if (time_set_.find(time_stamp) != time_set_.end() && iiip == positions_.end() && iiir == rotations_.end() && iiis == scales_.end())
-        {
-            time_set_.erase(time_stamp);
+        time_set_.erase(time_stamp);
+        if(is_erased) {
+            auto erased_transform = get_local_transform(time, factor_);
+            auto [lt, lr, ls] = DecomposeTransform(erased_transform);
+            float tolerance = 1e-3;
+            bool is_t_changed = !(lt.x - tolerance < t.x && t.x < lt.x + tolerance && lt.y - tolerance < t.y && t.y < lt.y + tolerance && lt.z - tolerance < t.z && t.z < lt.z + tolerance);
+            bool is_r_changed = !(lr.x - tolerance < r.x && r.x < lr.x + tolerance && lr.y - tolerance < r.y && r.y < lr.y + tolerance && lr.z - tolerance < r.z && r.z < lr.z + tolerance);
+            bool is_s_changed = !(ls.x - tolerance < s.x && s.x < ls.x + tolerance && ls.y - tolerance < s.y && s.y < ls.y + tolerance && ls.z - tolerance < s.z && s.z < ls.z + tolerance);
+            if(is_t_changed || is_r_changed || is_s_changed || time_stamp == 0.0f) {
+                replace_or_add_keyframe(transform, time);
+            }
         }
     }
 }

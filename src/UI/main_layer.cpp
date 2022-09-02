@@ -290,7 +290,7 @@ namespace ui
         if (ImGui::BeginPopupModal("Mediapipe", NULL, ImGuiWindowFlags_AlwaysAutoResize))
         {
             context_.menu.is_dialog_open = true;
-
+            ImGui::Text("You must have a selected model.");
             ImGui::Text("Video:");
             ImGui::SameLine();
             auto text_cursor = ImGui::GetCursorPosX();

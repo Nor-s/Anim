@@ -81,6 +81,7 @@ void App::init_scene(uint32_t width, uint32_t height)
     scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
 
     import_model_or_animation("./resources/models/mannequiny.fbx");
+    scenes_[current_scene_idx_]->set_selected_entity(1);
 }
 void App::loop()
 {
@@ -331,8 +332,6 @@ void App::process_input(GLFWwindow *window)
     {
         return;
     }
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        glfwSetWindowShouldClose(window, true);
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::FORWARD, delta_frame_);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)

@@ -162,6 +162,10 @@ namespace anim
         auto save = std::filesystem::u8path(save_path);
         std::string ext = save.extension().string();
         std::string format = ext;
+        std::string output_path{save_path};
+        if(ext.size() < 3) {
+            output_path += ".fbx";
+        }
 
         if (ext.size() > 2 && ext[1] == 'g')
         {
@@ -175,7 +179,7 @@ namespace anim
         }
 
         LOG(std::string(save_path) + ": " + ext);
-        if (exporter.Export(scene, format, std::string(save_path), aiProcess_Triangulate | aiProcess_JoinIdenticalVertices) != AI_SUCCESS)
+        if (exporter.Export(scene, format, output_path, aiProcess_Triangulate | aiProcess_JoinIdenticalVertices) != AI_SUCCESS)
         {
             std::cerr << exporter.GetErrorString() << std::endl;
         }

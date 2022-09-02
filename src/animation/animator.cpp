@@ -18,6 +18,7 @@ namespace anim
 {
 
     Animator::Animator()
+    : is_stop_(true)
     {
         final_bone_matrices_.reserve(MAX_BONE_NUM);
         for (unsigned int i = 0U; i < MAX_BONE_NUM; i++)

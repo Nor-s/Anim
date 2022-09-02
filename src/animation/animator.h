@@ -37,14 +37,14 @@ namespace anim
         bool mIsRootMotion{false};
 
     private:
-        std::vector<glm::mat4> final_bone_matrices_;
+        bool is_stop_{true};
         float current_time_{0.0f};
         float start_time_{0.0f};
         float end_time_{128.0f};
         float factor_{1.0f};
         float fps_{24.0f};
-        bool is_stop_{false};
         float direction_{1.0f};
+        std::vector<glm::mat4> final_bone_matrices_;
     };
 }
 #endif

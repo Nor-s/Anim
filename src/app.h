@@ -59,6 +59,7 @@ public:
     float fps_ = 0.0f;
     int frames_ = 0;
     bool is_manipulated_ = false;
+    bool is_dialog_open_ = false;
     std::vector<std::shared_ptr<Scene>> scenes_;
 
 private:

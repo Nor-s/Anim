@@ -34,6 +34,7 @@ namespace ui
           current_gizmo_operation_(ImGuizmo::OPERATION::NONE)
     {
     }
+    // TODO: delete hard coding(scene_cursor_y_ + height_ + 16.0f, 16.0f is font size)
     void SceneLayer::draw(const char *title, Scene *scene, UiContext &ui_context)
     {
         static ImGuiWindowFlags sceneWindowFlags = 0;
@@ -77,7 +78,10 @@ namespace ui
         ImGui::PopStyleVar();
 
         draw_mode_window(ui_context);
+
     }
+
+    // TODO: delete hard coding(scene_cursor_y_ + 16.0f, 16.0f is font size)
     void SceneLayer::draw_gizmo(Scene *scene, UiContext &ui_context)
     {
         bool useSnap = true;
@@ -89,7 +93,7 @@ namespace ui
         scene_window_top_ = 0;
         // imguizmo setting
         ImGuizmo::SetDrawlist();
-        ImGuizmo::SetRect(scene_pos_.x, scene_pos_.y, width_, height_);
+        ImGuizmo::SetRect(scene_pos_.x, (scene_cursor_y_ + 16.0f), width_, height_);
         scene_window_right_ = scene_pos_.x + width_;
         scene_window_top_ = scene_pos_.y;
 
@@ -126,11 +130,13 @@ namespace ui
                         ui_context.timeline.is_stop = true;
                     }
                 }
+                is_hovered_ = false;
             }
         }
-        is_hovered_ = is_hovered_ && (!ImGuizmo::IsUsing() && !ImGuizmo::IsOver() && !ui_context.entity.is_changed_transform);
         ImGuizmo::ViewManipulate(cameraView, 8.0f, ImVec2{scene_window_right_ - 128.0f, scene_window_top_ + 16.0f}, ImVec2{128, 128}, ImU32{0x00000000});
     }
+
+    // TODO: delete hard coding(mode_window_pos)
     void SceneLayer::draw_mode_window(UiContext &ui_context)
     {
         ImGuiIO &io = ImGui::GetIO();

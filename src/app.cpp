@@ -242,7 +242,8 @@ void App::process_scene_context()
 {
     auto &ui_context = ui_->get_context();
     auto &scene_context = ui_context.scene;
-    if (scene_context.is_picking && !ui_context.menu.is_dialog_open)
+    is_dialog_open_ = ui_context.menu.is_dialog_open;
+    if (scene_context.is_picking && !is_dialog_open_)
     {
         scenes_[current_scene_idx_]->picking(scene_context.x, scene_context.y, scene_context.is_bone_picking_mode);
     }
@@ -326,7 +327,7 @@ void App::post_draw()
 
 void App::process_input(GLFWwindow *window)
 {
-    if (!ui_->is_scene_layer_hovered("scene" + std::to_string(current_scene_idx_ + 1)) || is_manipulated_)
+    if (is_dialog_open_ || !ui_->is_scene_layer_hovered("scene" + std::to_string(current_scene_idx_ + 1)) || is_manipulated_)
     {
         return;
     }
@@ -342,7 +343,7 @@ void App::process_input(GLFWwindow *window)
         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
 
     static bool is_pressed_z = false;
-    bool is_released_z = false;
+    static bool is_released_z = false;
     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
     {
         is_pressed_z = true;
@@ -364,17 +365,19 @@ void App::process_input(GLFWwindow *window)
 void App::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
 {
     auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
-    if (app->is_pressed_ && app->scenes_.size() > app->current_scene_idx_)
-    {
-        app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
-        app->prev_mouse_.x = xposIn;
-        app->prev_mouse_.y = yposIn;
-    }
-    if (app->is_pressed_scroll_ && app->scenes_.size() > app->current_scene_idx_)
-    {
-        app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll_press((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
-        app->prev_mouse_.x = xposIn;
-        app->prev_mouse_.y = yposIn;
+    if(app->ui_ &&app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1))) {
+        if (app->is_pressed_ && app->scenes_.size() > app->current_scene_idx_ )
+        {
+            app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
+            app->prev_mouse_.x = xposIn;
+            app->prev_mouse_.y = yposIn;
+        }
+        if (app->is_pressed_scroll_ && app->scenes_.size() > app->current_scene_idx_)
+        {
+            app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll_press((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
+            app->prev_mouse_.x = xposIn;
+            app->prev_mouse_.y = yposIn;
+        }
     }
     app->cur_mouse_.x = xposIn;
     app->cur_mouse_.y = yposIn;

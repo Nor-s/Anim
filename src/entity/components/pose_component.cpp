@@ -14,15 +14,6 @@ namespace anim
     }
     void PoseComponent::set_bone_info_map(std::unordered_map<std::string, BoneInfo> &bone_info_map)
     {
-
-        if (bone_info_map_.empty())
-        {
-            printf("%d , %d ", (int)bone_info_map_.size(), (int)bone_info_map.size());
-        }
-        else
-        {
-            printf("%d , %d ", (int)bone_info_map_.size(), (int)bone_info_map.size());
-        }
         for (const auto &entry : bone_info_map)
         {
             bone_info_map_[entry.first] = BoneInfo{entry.second.get_id(), entry.second.get_offset()};

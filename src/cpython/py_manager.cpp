@@ -83,9 +83,9 @@ namespace anim
                                         app_path.wstring() + L";" +
                                         python_path.wstring() + L";" +
                                         exe_path.wstring();
-#ifndef NDEBUG
+#ifndef NDEBUG        
+std::wcout << pythonPath << "\n";
 #endif
-        std::wcout << pythonPath << "\n";
 #else
         // TODO: implement for Linux
 #endif

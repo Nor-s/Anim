@@ -276,14 +276,15 @@ void App::process_python_context()
             std::string model_info = exporter.to_json(pose_comp->get_root_entity());
             const char *model_info_c = model_info.c_str();
             auto py = anim::PyManager::get_instance();
-            py->get_mediapipe_pose({py_context.video_path.c_str(),
+            py->get_mediapipe_pose(anim::MediapipeInfo{py_context.video_path.c_str(),
                                     py_context.save_path.c_str(),
                                     model_info_c,
                                     py_context.min_visibility,
                                     py_context.is_angle_adjustment,
                                     py_context.model_complexity,
                                     py_context.min_detection_confidence,
-                                    py_context.fps});
+                                    py_context.fps,
+                                    &py_context.factor});
             import_model_or_animation(py_context.save_path.c_str());
         }
     }

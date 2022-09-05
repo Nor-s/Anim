@@ -8,6 +8,7 @@
 #include "../entity/components/transform_component.h"
 #include "../entity/components/animation_component.h"
 #include "../animation/animation.h"
+#include "importer.h"
 
 #include <stb/stb_image.h>
 #include <stb/stb_image_write.h>
@@ -134,15 +135,19 @@ namespace anim
                             aiProcess_SplitLargeMeshes |
                             aiProcess_Triangulate |
                             aiProcess_GenUVCoords |
+                            // aiProcess_GlobalScale |
                             aiProcess_SortByPType |
                             aiProcess_FindDegenerates |
                             aiProcess_FindInvalidData |
                             aiProcess_FindInstances |
                             aiProcess_ValidateDataStructure |
+            //aiProcess_OptimizeGraph|
                             aiProcess_OptimizeMeshes;
 
         importer.SetPropertyBool(AI_CONFIG_IMPORT_FBX_PRESERVE_PIVOTS, false);
         importer.SetPropertyInteger(AI_CONFIG_PP_SBBC_MAX_BONES, 128);
+        // importer.SetPropertyFloat(AI_CONFIG_GLOBAL_SCALE_FACTOR_KEY, 100.0);
+
 
         aiScene *scene = const_cast<aiScene *>(importer.ReadFile(model_path, assimp_flag_));
         // //       // aiScene *scene = new aiScene();

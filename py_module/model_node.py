@@ -1,7 +1,7 @@
 import glm
 import copy
 import math
-from .gizmo import Gizmo
+from .gizmo import Gizmo, calc_quat
 from .mixamo import Mixamo
 
 
@@ -66,24 +66,36 @@ def calc_transform(position, rotation, scale):
     rot = pos * glm.mat4(rotation)
     return glm.scale(rot, scale)
 
-def calc_hip_transform_1(mixamo_list, hips_gizmo, left_up_leg_gizmo, spine_gizmo):
-    transform = hips_gizmo.calc_rotation_matrix(
-        left_up_leg_gizmo.get_origin(), mixamo_list[Mixamo.LeftUpLeg], is_abs = False)
 
-    hip_gizmo_r = hips_gizmo.rotate(transform)
+def get_normal(triangle):
+    a = triangle[0]
+    b = triangle[1]
+    c = triangle[2]
+    return glm.normalize(glm.cross(b - a, c - a))
 
-    roll = hip_gizmo_r.calc_roll(
-        transform*spine_gizmo.get_origin(), mixamo_list[Mixamo.Spine], is_abs = False)
-    return transform * roll
+# http://renderdan.blogspot.com/2006/05/rotation-matrix-from-axis-vectors.html
+def generate_matrix(tangent, normal, binormal):
+    tan = -glm.vec4(tangent, 0.0)
+    binorm = glm.vec4(binormal, 0.0)
+    norm = -glm.vec4(normal, 0.0)
 
+    return glm.mat4(tan,  binorm, norm, glm.vec4(0.0, 0.0, 0.0, 1.0))
 
-def calc_hip_transform(mixamo_list, hips_node, left_up_leg_node, spine_node):
+def calc_hip_transform(mixamo_list, hips_node, left_leg_node, right_leg_node, spine_node):
     hip_gizmo = hips_node.get_gizmo()
-    left_up_leg_gizmo = left_up_leg_node.get_gizmo(hips_node.get_transform())
-    spine_gizmo = spine_node.get_gizmo(hips_node.get_transform())
+    tleft_leg_local = hip_gizmo.get_local_pos(mixamo_list[Mixamo.LeftUpLeg])
+    tright_leg_local = hip_gizmo.get_local_pos(mixamo_list[Mixamo.RightUpLeg])
+    tspine_local = hip_gizmo.get_local_pos(mixamo_list[Mixamo.Spine])
+    src_triangle = [tleft_leg_local, tright_leg_local, tspine_local]
 
-    return calc_hip_transform_1(mixamo_list, hip_gizmo, left_up_leg_gizmo, spine_gizmo)
- 
+    normal_vec = get_normal(src_triangle)
+    tangent_vec = glm.normalize(tright_leg_local)
+    binormal_vec = glm.normalize(glm.cross(normal_vec, tangent_vec))
+
+    mat = generate_matrix(tangent_vec, normal_vec, binormal_vec)
+    t, r, s = decompose(mat)
+    return glm.mat4(r)
+
 
 class ModelNode:
     def __init__(self, gizmo=Gizmo()):
@@ -111,7 +123,7 @@ class ModelNode:
                 return [True, node]
         return [False, None]
 
-    def set_mixamo(self, model_json, mixamo_idx_map, before_transform=None):
+    def set_mixamo(self, model_json, mixamo_idx_map, before_transform=None, parent_transform = glm.mat4(1.0)):
         idx = model_json["name"].find(":")
         self.prefix = model_json["name"][:idx+1]
         model_name = model_json["name"][idx+1:]
@@ -126,11 +138,13 @@ class ModelNode:
         if self.name == Mixamo.LeftUpLeg.name or self.name == Mixamo.RightUpLeg.name:
             self.position.y = 0
             self.position.z = 0
+        self.global_transform = parent_transform * self.get_transform()
 
         # find child
         childlist = model_json["child"]
         transform_list = [None] * len(childlist)
         transform_list_idx = -1
+        parent_transform_list = [self.global_transform] * len(childlist)
 
         for child in childlist:
             transform_list_idx += 1
@@ -139,7 +153,7 @@ class ModelNode:
             if child_name in mixamo_idx_map:
                 new_node = ModelNode()
                 new_node.set_mixamo(child, mixamo_idx_map, copy.deepcopy(
-                    transform_list[transform_list_idx]))
+                    transform_list[transform_list_idx]), parent_transform_list[transform_list_idx])
                 self.child.append(new_node)
             else:
                 for child_of_child in child["child"]:
@@ -149,6 +163,7 @@ class ModelNode:
                     scale = pixel3d_json_to_glm_vec(child["scale"])
                     transform = calc_transform(position, rotation, scale)
                     transform_list.append(transform)
+                    parent_transform_list.append(self.global_transform*transform)
 
     def normalize_spine(self, parent_node=None, parent_transform=glm.mat4(1.0)):
         if Mixamo.Spine.name in self.name or self.name == Mixamo.LeftArm.name or self.name == Mixamo.RightArm.name or self.name == Mixamo.Neck.name:
@@ -179,7 +194,7 @@ class ModelNode:
                 return child
         return None
 
-    def calc_animation(self, mixamo_list, parent_transform=glm.mat4(1.0), world_mixamo_adjust=glm.vec3(0.0, 0.0, 0.0)):
+    def calc_animation(self, mixamo_list,  parent_transform=glm.mat4(1.0), world_mixamo_adjust=glm.vec3(0.0, 0.0, 0.0)):
         self.animation_transform = glm.mat4(1.0)
         current_gizmo = self.get_gizmo(parent_transform)
 
@@ -187,6 +202,7 @@ class ModelNode:
             self.animation_transform = calc_hip_transform(mixamo_list,
                                                     self,
                                                     self.find_child(Mixamo.LeftUpLeg.name),
+                                                    self.find_child(Mixamo.RightUpLeg.name),
                                                     self.find_child(Mixamo.Spine.name))
         elif self.name == Mixamo.Spine2.name:
             neck = None

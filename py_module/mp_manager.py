@@ -13,6 +13,7 @@ class MediapipeManager():
         self.max_frame_num = 5000
         self.is_show_result = True
         self.fps = 24
+        self.factor = 0.0
 
     def set_key(self, model_complexity=1, static_image_mode=False, min_detection_confidence=0.7):
         self.key = str(model_complexity) + ' ' + \
@@ -23,7 +24,9 @@ class MediapipeManager():
             self.pose_dict[self.key] = self.mp_pose.Pose(
                 static_image_mode=(items[2] == "True"),
                 min_detection_confidence=float(items[1]),
-                model_complexity=int(items[0])
+                model_complexity=int(items[0]),
+                smooth_landmarks=True,
+                min_tracking_confidence=0.5
             )
 
     def get_pose(self):

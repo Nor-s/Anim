@@ -6,6 +6,7 @@ import matplotlib
 import os
 from .mixamo import Mixamo
 from .model_node import ModelNode
+import copy
 
 def get_3d_len(left):
     return math.sqrt((left["x"])**2 + (left["y"])**2 + (left["z"])**2)
@@ -252,13 +253,19 @@ def mediapipe_to_mixamo2(mp_manager,
         mp_idx_mm_idx_map[mp_idx] = mm_idx
 
     # for hips move var
-    _, model_right_up_leg = find_model_json(
-        mixamo_bindingpose_json["node"], Mixamo.RightUpLeg.name)
+    _, model_right_up_leg = find_model_json(mixamo_bindingpose_json["node"], Mixamo.RightUpLeg.name)
+    __, model_right_leg = find_model_json(mixamo_bindingpose_json["node"], Mixamo.RightLeg.name)
+
     model_scale = 100
     if _ != False:
         model_scale = get_3d_len(model_right_up_leg["position"])*2.0
+    model_scale2 =1.0
+    if __ !=False:
+        model_scale2 = get_3d_len(model_right_leg["position"])
+    hip_move_list = []
     origin = None
-    factor = 1.0
+    factor = 0.0
+    factor_list = []
     width = cap.get(cv2.CAP_PROP_FRAME_WIDTH)
     height = cap.get(cv2.CAP_PROP_FRAME_HEIGHT)
 
@@ -288,7 +295,7 @@ def mediapipe_to_mixamo2(mp_manager,
             height2, width2, _ = cap_image.shape
             height = height2
             width = width2
-            cap_image, glm_list, visibility_list, hip2d_left, hip2d_right = detect_pose_to_glm_pose(
+            cap_image, glm_list, visibility_list, hip2d_left, hip2d_right, leg2d = detect_pose_to_glm_pose(
                 mp_manager, cap_image, mp_idx_mm_idx_map)
             if glm_list[0] != None:
                 bones_json = {
@@ -314,21 +321,40 @@ def mediapipe_to_mixamo2(mp_manager,
                     hip2d_right.x *= width
                     hip2d_right.y *= height
                     hip2d_right.z *= width
+                    leg2d.x *=width
+                    leg2d.y *=height
+                    leg2d.z *=width
+
                     if origin == None:
                         origin = avg_vec3(hip2d_left, hip2d_right)
-                        hips2d_scale = glm.distance(hip2d_left, hip2d_right)
-                        factor = model_scale/hips2d_scale
                     else:
-                        hips_bone_json = find_bones(
-                            anim_result_json["frames"][-1]["bones"], Mixamo.Hips.name)
-                        if hips_bone_json != None:
-                            set_hips_position(hips_bone_json["position"], origin, avg_vec3(
-                                hip2d_left, hip2d_right),  factor)
+                        hips2d_scale = glm.distance(hip2d_left, hip2d_right)
+                        leg2d_scale = glm.distance(leg2d, hip2d_right)
+                        factor_list.append(model_scale2/leg2d_scale)
+                        factor = max(factor, model_scale/hips2d_scale)
+                        hip_move_list.append([len(anim_result_json["frames"]) -1, avg_vec3(hip2d_left, hip2d_right)])
 
             cv2.imshow('MediaPipe pose', cap_image)
             key = cv2.waitKey(5)
             if key & 0xFF == 27:
                 break
+        factor_list.sort()
+        factor_list_avg = sum(factor_list)/len(factor_list)
+        factor_list_avg = max(factor_list_avg, factor_list[int(len(factor_list)*0.8)])
+        factor = max(factor,factor_list_avg)
+        if mp_manager.factor != 0.0:
+           factor = mp_manager.factor
+        print("factor", factor)
+        for hips_bone in hip_move_list:
+            set_hips_position(find_bones(anim_result_json["frames"][hips_bone[0]]["bones"], Mixamo.Hips.name)["position"],
+                              origin, 
+                              hips_bone[1], 
+                              factor)
+        if anim_result_json["frames"][0]["time"] != 0.0:
+            tmp_json = copy.deepcopy(anim_result_json["frames"][0])
+            tmp_json["time"] = 0.0
+            anim_result_json["frames"].append(tmp_json)
+        
         cap.release()
         # matplotlib.pyplot.close(fig)
         cv2.destroyAllWindows()
@@ -405,7 +431,8 @@ def detect_pose_to_glm_pose(mp_manager, image, mp_idx_mm_idx_map):
                 landmark[mp_idx].x, -landmark[mp_idx].y, -landmark[mp_idx].z)
             visibility_list[mm_idx] = landmark[mp_idx].visibility
 
-    # calculate hips2d
+    # 2d landmarks
+    leg2d = None
     if results.pose_landmarks:
         landmark = results.pose_landmarks.landmark
         hip2d_left.x = landmark[mp_manager.mp_pose.PoseLandmark.LEFT_HIP].x
@@ -413,11 +440,13 @@ def detect_pose_to_glm_pose(mp_manager, image, mp_idx_mm_idx_map):
         hip2d_left.z = landmark[mp_manager.mp_pose.PoseLandmark.LEFT_HIP].z
         hip2d_right = glm.vec3(landmark[mp_manager.mp_pose.PoseLandmark.RIGHT_HIP].x,
                                landmark[mp_manager.mp_pose.PoseLandmark.RIGHT_HIP].y, landmark[mp_manager.mp_pose.PoseLandmark.RIGHT_HIP].z)
+        leg2d = glm.vec3(landmark[26].x, landmark[26].y, landmark[26].z)
+        
 
     mp_manager.mp_drawing.draw_landmarks(image=output_image, landmark_list=results.pose_landmarks,
                                          connections=mp_manager.mp_pose.POSE_CONNECTIONS, landmark_drawing_spec=mp_manager.mp_drawing_styles.get_default_pose_landmarks_style())
 
-    return output_image, glm_list, visibility_list, hip2d_left, hip2d_right
+    return output_image, glm_list, visibility_list, hip2d_left, hip2d_right, leg2d
 
 
 def avg_vec3(v1, v2):
@@ -431,6 +460,6 @@ def set_hips_position(hips_bone_json, origin_hips, current_hips, factor):
     x = (current_hips.x - origin_hips.x) * factor
     y = (current_hips.y - origin_hips.y) * factor
     z = (current_hips.z - origin_hips.z) * factor
-    hips_bone_json["x"] = x
+    hips_bone_json["x"] = x 
     hips_bone_json["y"] = -y
     hips_bone_json["z"] = z

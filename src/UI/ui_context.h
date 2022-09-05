@@ -70,6 +70,7 @@ namespace ui
         static inline int model_complexity{1};
         static inline bool is_angle_adjustment{false};
         static inline float fps{24.0f};
+        static inline float factor{0.0f};
         bool is_clicked_convert_btn{false};
         std::string save_path;
         std::string video_path;

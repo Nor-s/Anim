@@ -117,6 +117,10 @@ std::wcout << pythonPath << "\n";
     {
         try
         {
+            float factor = 0.0f;
+            if(mp_info.factor) {
+                factor = *mp_info.factor;
+            }
             auto locals = py::dict("video_path"_a = mp_info.video_path,
                                    "model"_a = mp_info.model_info,
                                    "output_path"_a = mp_info.output_path,
@@ -124,19 +128,24 @@ std::wcout << pythonPath << "\n";
                                    "model_complexity"_a = mp_info.model_complexity,
                                    "min_detection_confidence"_a = mp_info.min_detection_confidence,
                                    "min_visibility"_a = mp_info.min_visibility,
-                                   "custom_fps"_a = mp_info.fps);
+                                   "custom_fps"_a = mp_info.fps,
+                                   "custom_factor"_a = factor);
 
             py::exec(R"(
                 py_module.gizmo.g_is_abs = is_angle_adjustment
                 mpm.set_key(model_complexity, False, min_detection_confidence)
                 mpm.min_visibility = min_visibility
                 mpm.fps = custom_fps
+                mpm.factor = custom_factor
                 
                 _, animjson = py_module.mp_helper.mediapipe_to_mixamo(mpm, model, video_path)
                 with open(output_path, 'w') as f:
                     json.dump(animjson, f, indent=2)
+
+                custom_factor = mpm.factor
             )",
                      py::globals(), locals);
+            // *mp_info.factor = locals["custom_factor"].cast<float>();
         }
         catch (const std::exception &e)
         {

@@ -359,6 +359,10 @@ namespace ui
                 ImGuiFileDialog::Instance()->Close();
             }
             ImGui::Separator();
+            ImGui::Text("Factor");
+            ImGui::NewLine();
+            ImGui::SameLine(text_cursor);
+            ImGui::DragFloat("##factor", &context_.python.factor, 0.1f, 0.0f, 10.0f);
             ImGui::Text("FPS");
             ImGui::NewLine();
             ImGui::SameLine(text_cursor);
@@ -375,7 +379,7 @@ namespace ui
             ImGui::Text("Model Complexity");
             ImGui::NewLine();
             ImGui::SameLine(text_cursor);
-            ImGui::DragInt("##model_complexity", &context_.python.model_complexity, 1, 0, 2);
+            ImGui::DragInt("##model_complexity", &context_.python.model_complexity, 1, 0, 1);
             ImGui::Text("Model Min Detection Confidence");
             ImGui::NewLine();
             ImGui::SameLine(text_cursor);

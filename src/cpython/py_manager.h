@@ -16,6 +16,7 @@ namespace anim
         int model_complexity = 1;
         float min_detection_confidence = 0.8f;
         float fps = 24.0f;
+        float *factor = nullptr;
     };
     class PyManager
     {

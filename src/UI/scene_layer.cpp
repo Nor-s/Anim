@@ -85,7 +85,7 @@ namespace ui
     void SceneLayer::draw_gizmo(Scene *scene, UiContext &ui_context)
     {
         bool useSnap = true;
-        float snap_value = 1.0f;
+        float snap_value = 0.1f;
         float snap[3] = {snap_value, snap_value, snap_value};
 
         ImGuiIO &io = ImGui::GetIO();

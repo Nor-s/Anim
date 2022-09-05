@@ -15,6 +15,7 @@
 #include <imgui/ImGuizmo.h>
 #include <imgui/icons/icons.h>
 #include <fstream>
+#include <sstream>
 
 #include <ImGuiFileDialog/ImGuiFileDialog.h>
 #ifdef _WIN32
@@ -37,7 +38,9 @@ namespace ui
 
     MainLayer::MainLayer() = default;
 
-    MainLayer::~MainLayer() = default;
+    MainLayer::~MainLayer(){
+        shutdown();
+    }
 
     void MainLayer::init(GLFWwindow *window)
     {
@@ -65,6 +68,7 @@ namespace ui
     }
     void MainLayer::init_bookmark()
     {
+
         // define style for all directories
         ImGuiFileDialog::Instance()->SetFileStyle(IGFD_FileStyleByTypeDir, "", ImVec4(0.02f, 0.02f, 0.02f, 1.0f), ICON_MD_FOLDER);
         // define style for all files
@@ -98,13 +102,31 @@ namespace ui
         //     if (std::filesystem::exists(homePath + "/Pictures", ec))
         // }
 #endif
+        std::ifstream wif("./bookmark");
+        if(wif.good()) {
+            std::stringstream ss;
+            ss << wif.rdbuf();
+            ImGuiFileDialog::Instance()->DeserializeBookmarks(ss.str());
+        }
+        if (wif.is_open())
+        {
+            wif.close();
+        }
     }
 
     void MainLayer::shutdown()
-    {
+    {        
+        std::ofstream bookmark_stream("./bookmark");
+        std::string bookmark = ImGuiFileDialog::Instance()->SerializeBookmarks(false);
+        bookmark_stream << bookmark; 
+        if(bookmark_stream.is_open()) {
+            bookmark_stream.close();
+        }
+       
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
+
     }
 
     void MainLayer::begin()
@@ -130,7 +152,7 @@ namespace ui
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
             glfwMakeContextCurrent(backup_current_context);
-        }
+        } 
     }
 
     void MainLayer::draw_dock(float fps)
@@ -170,13 +192,14 @@ namespace ui
         ImGui::SameLine();
         ImGui::Checkbox("##check", reinterpret_cast<bool *>(vUserDatas));
     }
-    inline void ScaleInfosPane(const char *vFilter, IGFDUserDatas vUserDatas, bool *vCantContinue) // if vCantContinue is false, the user cant validate the dialog
-    {
-        ImGui::TextColored(ImVec4(0, 1, 1, 1), "Import");
-        ImGui::Text("Scale: ");
-        ImGui::SameLine();
-        ImGui::DragFloat("##check", reinterpret_cast<float *>(vUserDatas), 1.0f, 1.0f, 200.0f);
-    }
+    // TODO: IMPORT OPTION: SCALE  
+    // inline void ScaleInfosPane(const char *vFilter, IGFDUserDatas vUserDatas, bool *vCantContinue) // if vCantContinue is false, the user cant validate the dialog
+    // {
+    //     ImGui::TextColored(ImVec4(0, 1, 1, 1), "Import");
+    //     ImGui::Text("Scale: ");
+    //     ImGui::SameLine();
+    //     ImGui::DragFloat("##check", reinterpret_cast<float *>(vUserDatas), 1.0f, 1.0f, 200.0f);
+    // }
     void MainLayer::draw_menu_bar(float fps)
     {
         const char *menu_dialog_name[4] = {
@@ -202,17 +225,18 @@ namespace ui
                     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[0],
                                                             ICON_MD_FILE_OPEN " Open fbx, gltf ...",
                                                             filters,
-                                                            ".", "",
-                                                            std::bind(&ScaleInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
-                                                            IGFD::UserDatas(&ImportScale),
+                                                            ".", 1, nullptr,
+                                                            // std::bind(&ScaleInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
+                                                            // IGFD::UserDatas(&ImportScale),
                                                             ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
                 }
                 if (ImGui::MenuItem("Import: Folder", NULL, nullptr))
                 {
                     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[1], "Choose a Directory",
-                                                            nullptr, ".", "",
-                                                            std::bind(&ScaleInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
-                                                            IGFD::UserDatas(&ImportScale),
+                                                            nullptr, 
+                                                            ".", 1, nullptr,
+                                                            // std::bind(&ScaleInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
+                                                            // IGFD::UserDatas(&ImportScale),
                                                             ImGuiFileDialogFlags_Modal | ImGuiFileDialogFlags_DisableCreateDirectoryButton);
                 }
                 ImGui::Separator();
@@ -342,7 +366,7 @@ namespace ui
             ImGui::Text("Visibility");
             ImGui::NewLine();
             ImGui::SameLine(text_cursor);
-            ImGui::DragFloat("##visibility", &context_.python.min_visibility, 0.1f, 0.1f, 1.0f);
+            ImGui::DragFloat("##visibility", &context_.python.min_visibility, 0.1f, 0.0f, 1.0f);
             ImGui::Text("Angle Adjustment");
             ImGui::NewLine();
             ImGui::SameLine(text_cursor);

@@ -118,7 +118,9 @@ namespace ui
         ImGui::Text("Local");
         DragPropertyXYZ("Translation", transform.mTranslation);
         DragPropertyXYZ("Rotation", transform.mRotation);
-        DragPropertyXYZ("Scale", transform.mScale);
+        DragPropertyXYZ("Scale", transform.mScale);        
+       // entity->set_local(transform.get_mat4());
+
     }
     void ComponentLayer::draw_transform_reset_button(anim::TransformComponent &transform)
     {

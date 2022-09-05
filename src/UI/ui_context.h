@@ -65,8 +65,8 @@ namespace ui
 
     struct PythonContext
     {
-        static inline float min_visibility{0.5f};
-        static inline float min_detection_confidence{0.8f};
+        static inline float min_visibility{0.0f};
+        static inline float min_detection_confidence{0.5f};
         static inline int model_complexity{1};
         static inline bool is_angle_adjustment{false};
         static inline float fps{24.0f};

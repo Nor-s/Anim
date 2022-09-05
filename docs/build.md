@@ -51,7 +51,6 @@ You need to move the files to this folder: build/bin/
 
 #### **Cmake with Ninja**
 
-https://ninja-build.org/
 
 ```
 cmake .. -G Ninja -DCMAKE_CXX_COMPILER="C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.33.31517/bin/Hostx64/x64/cl.exe"

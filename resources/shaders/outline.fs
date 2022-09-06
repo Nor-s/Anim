@@ -15,15 +15,15 @@ void make_kernel(inout float kernel[9], sampler2D tex, vec2 coord)
 	float h = outlineWidth / iResolution.y;
     vec3 grey_scale = vec3(0.299, 0.587, 0.114);
 
-	kernel[0] = length(dot(texture2D(tex, coord + vec2( -w, -h)).xyz, grey_scale));
-	kernel[1] = length(dot(texture2D(tex, coord + vec2(0.0, -h)).xyz, grey_scale));
-	kernel[2] = length(dot(texture2D(tex, coord + vec2(  w, -h)).xyz, grey_scale));
-	kernel[3] = length(dot(texture2D(tex, coord + vec2( -w, 0.0)).xyz, grey_scale));
-	kernel[4] = length(dot(texture2D(tex, coord).xyz, grey_scale));
-	kernel[5] = length(dot(texture2D(tex, coord + vec2(  w, 0.0)).xyz, grey_scale));
-	kernel[6] = length(dot(texture2D(tex, coord + vec2( -w, h)).xyz, grey_scale));
-	kernel[7] = length(dot(texture2D(tex, coord + vec2(0.0, h)).xyz, grey_scale));
-	kernel[8] = length(dot(texture2D(tex, coord + vec2(  w, h)).xyz, grey_scale));
+	kernel[0] = length(dot(texture(tex, coord + vec2( -w, -h)).xyz, grey_scale));
+	kernel[1] = length(dot(texture(tex, coord + vec2(0.0, -h)).xyz, grey_scale));
+	kernel[2] = length(dot(texture(tex, coord + vec2(  w, -h)).xyz, grey_scale));
+	kernel[3] = length(dot(texture(tex, coord + vec2( -w, 0.0)).xyz, grey_scale));
+	kernel[4] = length(dot(texture(tex, coord).xyz, grey_scale));
+	kernel[5] = length(dot(texture(tex, coord + vec2(  w, 0.0)).xyz, grey_scale));
+	kernel[6] = length(dot(texture(tex, coord + vec2( -w, h)).xyz, grey_scale));
+	kernel[7] = length(dot(texture(tex, coord + vec2(0.0, h)).xyz, grey_scale));
+	kernel[8] = length(dot(texture(tex, coord + vec2(  w, h)).xyz, grey_scale));
 }
 void main() {
     float xFilter[9] = float[9](-2,0,2,

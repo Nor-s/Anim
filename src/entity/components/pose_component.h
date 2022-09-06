@@ -3,7 +3,7 @@
 
 #include "component.h"
 #include "../../resources/model.h"
-#include "../../../animation/animator.h"
+#include "../../animation/animator.h"
 #include "../../graphics/shader.h"
 
 #include <unordered_map>

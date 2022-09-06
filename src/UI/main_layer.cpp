@@ -25,8 +25,8 @@
 #include <lmcons.h>
 // #pragma comment(lib, "Shell32.lib")
 #else
-// #include <unistd.h>
-// #include <pwd.h>
+#include <unistd.h>
+#include <pwd.h>
 #endif
 
 #define FILTER_MODEL "Model files (*.fbx *.gltf){.fbx,.gltf,.glb}"
@@ -38,7 +38,8 @@ namespace ui
 
     MainLayer::MainLayer() = default;
 
-    MainLayer::~MainLayer(){
+    MainLayer::~MainLayer()
+    {
         shutdown();
     }
 
@@ -84,26 +85,28 @@ namespace ui
         ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_DESCRIPTION " Documents", std::filesystem::path(userPath).append("Documents").string());
         ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_DOWNLOAD " Downloads", std::filesystem::path(userPath).append("Downloads").string());
         ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_FAVORITE " Anim", std::filesystem::path("./").string());
-#else
-        // std::error_code ec;
-
-        // // Quick Access
-        // struct passwd *pw;
-        // uid_t uid;
-        // uid = geteuid();
-        // pw = getpwuid(uid);
-        // if (pw)
-        // {
-        //     std::string homePath = "/home/" + std::string(pw->pw_name);
-        //     if (std::filesystem::exists(homePath, ec))
-        //     if (std::filesystem::exists(homePath + "/Desktop", ec))
-        //     if (std::filesystem::exists(homePath + "/Documents", ec))
-        //     if (std::filesystem::exists(homePath + "/Downloads", ec))
-        //     if (std::filesystem::exists(homePath + "/Pictures", ec))
-        // }
+#elif __APPLE__
+        std::string user_name;
+        user_name = "/Users/" + std::string(getenv("USER"));
+        std::string homePath = user_name;
+        std::cout << homePath << "\n";
+        if (std::filesystem::exists(homePath + "/Desktop"))
+        {
+            ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_MONITOR " Desktop", std::filesystem::path(homePath + "/Desktop").string());
+        }
+        if (std::filesystem::exists(homePath + "/Documents"))
+        {
+            ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_DESCRIPTION " Documents", homePath + "/Documents");
+        }
+        if (std::filesystem::exists(homePath + "/Downloads"))
+        {
+            ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_DOWNLOAD " Downloads", homePath + "/Downloads");
+        }
+        ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_FAVORITE " Anim", std::filesystem::path("./").string());
 #endif
         std::ifstream wif("./bookmark");
-        if(wif.good()) {
+        if (wif.good())
+        {
             std::stringstream ss;
             ss << wif.rdbuf();
             ImGuiFileDialog::Instance()->DeserializeBookmarks(ss.str());
@@ -115,18 +118,18 @@ namespace ui
     }
 
     void MainLayer::shutdown()
-    {        
+    {
         std::ofstream bookmark_stream("./bookmark");
         std::string bookmark = ImGuiFileDialog::Instance()->SerializeBookmarks(false);
-        bookmark_stream << bookmark; 
-        if(bookmark_stream.is_open()) {
+        bookmark_stream << bookmark;
+        if (bookmark_stream.is_open())
+        {
             bookmark_stream.close();
         }
-       
+
         ImGui_ImplOpenGL3_Shutdown();
         ImGui_ImplGlfw_Shutdown();
         ImGui::DestroyContext();
-
     }
 
     void MainLayer::begin()
@@ -152,7 +155,7 @@ namespace ui
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
             glfwMakeContextCurrent(backup_current_context);
-        } 
+        }
     }
 
     void MainLayer::draw_dock(float fps)
@@ -192,7 +195,7 @@ namespace ui
         ImGui::SameLine();
         ImGui::Checkbox("##check", reinterpret_cast<bool *>(vUserDatas));
     }
-    // TODO: IMPORT OPTION: SCALE  
+    // TODO: IMPORT OPTION: SCALE
     // inline void ScaleInfosPane(const char *vFilter, IGFDUserDatas vUserDatas, bool *vCantContinue) // if vCantContinue is false, the user cant validate the dialog
     // {
     //     ImGui::TextColored(ImVec4(0, 1, 1, 1), "Import");
@@ -233,7 +236,7 @@ namespace ui
                 if (ImGui::MenuItem("Import: Folder", NULL, nullptr))
                 {
                     ImGuiFileDialog::Instance()->OpenDialog(menu_dialog_name[1], "Choose a Directory",
-                                                            nullptr, 
+                                                            nullptr,
                                                             ".", 1, nullptr,
                                                             // std::bind(&ScaleInfosPane, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3), 150, 1,
                                                             // IGFD::UserDatas(&ImportScale),

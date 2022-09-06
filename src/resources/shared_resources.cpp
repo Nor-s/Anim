@@ -75,7 +75,7 @@ namespace anim
         if (entity)
         {
             model_path_[entity->get_id()] = std::string(path);
-            root_entity_->add_children(std::move(entity));
+            root_entity_->add_children(entity);
         }
     }
     void SharedResources::add_animations(const std::vector<std::shared_ptr<Animation>> &animations)

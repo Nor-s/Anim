@@ -89,8 +89,8 @@ namespace ui
         }
         auto animc = const_cast<AnimationComponent *>(animation);
         auto anim = animc->get_mutable_animation();
-        ImGui::Text(("duration: " + std::to_string(anim->get_duration())).c_str());
-        ImGui::Text(("fps: " + std::to_string(anim->get_fps())).c_str());
+        ImGui::Text("duration: %f", anim->get_duration());
+        ImGui::Text("fps: %f", anim->get_fps());
         float &fps = animc->get_mutable_custom_tick_per_second();
         if (animation_idx != context.current_animation_idx)
         {
@@ -118,9 +118,8 @@ namespace ui
         ImGui::Text("Local");
         DragPropertyXYZ("Translation", transform.mTranslation);
         DragPropertyXYZ("Rotation", transform.mRotation);
-        DragPropertyXYZ("Scale", transform.mScale);        
-       // entity->set_local(transform.get_mat4());
-
+        DragPropertyXYZ("Scale", transform.mScale);
+        // entity->set_local(transform.get_mat4());
     }
     void ComponentLayer::draw_transform_reset_button(anim::TransformComponent &transform)
     {

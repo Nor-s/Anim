@@ -15,7 +15,7 @@ namespace anim::gl
         GLMesh(const std::vector<Vertex> &vertices);
         ~GLMesh();
         void draw(anim::Shader &shader) override;
-        void draw_outline(anim::Shader &shader);
+        void draw_outline(anim::Shader &shader) override;
 
     private:
         void init_buffer();

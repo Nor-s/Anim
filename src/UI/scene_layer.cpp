@@ -78,7 +78,6 @@ namespace ui
         ImGui::PopStyleVar();
 
         draw_mode_window(ui_context);
-
     }
 
     // TODO: delete hard coding(scene_cursor_y_ + 16.0f, 16.0f is font size)
@@ -103,7 +102,7 @@ namespace ui
         float *cameraProjection = const_cast<float *>(glm::value_ptr(camera->get_projection()));
         auto selected_entity = scene->get_mutable_selected_entity();
 
-        if (selected_entity && current_gizmo_mode_ != ImGuizmo::OPERATION::NONE)
+        if (selected_entity && current_gizmo_operation_ != ImGuizmo::OPERATION::NONE)
         {
             auto &transform = selected_entity->get_world_transformation();
             glm::mat4 object_matrix = transform;

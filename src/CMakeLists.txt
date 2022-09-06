@@ -5,6 +5,9 @@ set(GLCPP_SRC
     glcpp/application.hpp
     # glcpp/cubemap.cpp
 )
+if(APPLE)
+  SET(CMAKE_OSX_DEPLOYMENT_TARGET 12.4)
+endif()
 
 add_library(glcpp STATIC ${GLCPP_SRC})
 
@@ -98,7 +101,9 @@ set(test_src
 add_library(test STATIC ${test_src})
 
 
+if(MSVC)
 target_compile_options(test PUBLIC  "/utf-8")
+endif()
 target_link_libraries(test PUBLIC ${LIBs} glm assimp::assimp)
 target_include_directories(test PUBLIC ./
  ./entity/
@@ -147,7 +152,7 @@ elseif(WIN32)
     target_link_libraries(Anim  glcpp)
     target_include_directories(Anim  PUBLIC ./)
 else()
-    target_link_libraries(Anim  glcpp)
+    target_link_libraries(Anim  glcpp test py)
 endif()
 
 message("==========================================================")

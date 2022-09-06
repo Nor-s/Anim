@@ -69,9 +69,26 @@ ninja
 
 -   ~~gcc 9.4.0 x86_64-linux-gnu~~
 
-## **Mac**
+## **Mac OS (silicon)**
 
--   ~~Clang 13.0.0 arm64-apple-darwin21.2.0~~
+-   Clang 13.0.0 arm64-apple-darwin21.2.0
+-   Python 3.10 and newer
+-   Homebrew 3.5.9
+
+```bash
+xcode-select --install
+brew install pkg-config openssl@1.1 xz gdbm tcl-tk
+```
+
+```bash
+git clone --recursive https://github.com/Nor-s/Anim.git
+cd Anim
+
+mkdir build
+cd build
+cmake ..
+make
+```
 
 
 ## **Error handling**

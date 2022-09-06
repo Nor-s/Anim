@@ -40,6 +40,19 @@ std::wstring getExecutableDir()
         return executableDir.substr(0, pos);
     return L"\\";
 }
+#elif __APPLE__
+#include <mach-o/dyld.h>
+#include <sys/syslimits.h>
+std::wstring getExecutableDir()
+{
+    char path[PATH_MAX + 1];
+    uint32_t size = sizeof(path);
+    if (_NSGetExecutablePath(path, &size) == 0)
+        printf("executable path is %s\n", path);
+    auto exe_path = std::filesystem::path(path);
+    return exe_path.parent_path().wstring();
+}
+
 #else
 std::wstring getExecutableDir()
 {
@@ -67,10 +80,9 @@ namespace anim
 
     PyManager::PyManager()
     {
+#ifdef IS_WINDOWS
         const auto exe_path = std::filesystem::path(getExecutableDir());
         auto python_path = exe_path / "python";
-
-#ifdef IS_WINDOWS
         const std::wstring pythonHome = python_path.wstring();
         auto lib_path = python_path / "Lib";
         auto dll_path = python_path / "DLLs";
@@ -83,15 +95,27 @@ namespace anim
                                         app_path.wstring() + L";" +
                                         python_path.wstring() + L";" +
                                         exe_path.wstring();
-#ifndef NDEBUG        
-std::wcout << pythonPath << "\n";
-#endif
-#else
-        // TODO: implement for Linux
-#endif
         Py_OptimizeFlag = 1;
         Py_SetPath(pythonPath.c_str());
-        Py_SetPythonHome(pythonHome.c_str());
+        Py_SetPythonHome(L"/Users/soongunno/githubRepo/Anim/Anim/build/bin/python/bin");
+#ifndef NDEBUG
+        std::wcout << pythonPath << "\n";
+#endif
+#else
+        // auto lib_path = python_path / "lib";
+        // auto dll_path = lib_path / "python3.10";
+        // auto dynload_path = lib_path / "python3.10" / "lib-dynload";
+        // auto site_path = lib_path / "python3.10" / "site-packages";
+        // auto app_path = exe_path / "py_module";
+
+        // const std::wstring pythonPath = lib_path.wstring() + L";" +
+        //                                 dll_path.wstring() + L";" +
+        //                                 site_path.wstring() + L";" +
+        //                                 app_path.wstring() + L";" +
+        //                                 python_path.wstring() + L";" +
+        //                                 exe_path.wstring() + L";" +
+        //                                 dynload_path.wstring();
+#endif
         py::initialize_interpreter();
 
         py::exec(R"(
@@ -118,7 +142,8 @@ std::wcout << pythonPath << "\n";
         try
         {
             float factor = 0.0f;
-            if(mp_info.factor) {
+            if (mp_info.factor)
+            {
                 factor = *mp_info.factor;
             }
             auto locals = py::dict("video_path"_a = mp_info.video_path,

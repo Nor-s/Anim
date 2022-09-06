@@ -10,8 +10,8 @@
 #include <graphics/opengl/image.h>
 #include <graphics/opengl/framebuffer.h>
 
-#include "../components/component.h"
-#include "../components/pose_component.h"
+#include "../entity/components/component.h"
+#include "../entity/components/pose_component.h"
 
 #include <filesystem>
 #include <graphics/post_processing.h>

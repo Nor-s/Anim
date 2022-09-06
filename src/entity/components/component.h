@@ -20,7 +20,7 @@ namespace anim
     {
     public:
         virtual ~ComponentBase() = default;
-        virtual void update(){};
+        virtual void update() override{};
         static TypeID type;
         TypeID get_type() const override { return T::type; }
     };

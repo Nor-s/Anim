@@ -69,6 +69,15 @@ namespace anim
             animation->add_and_replace_bone(name, transform, animator_->get_current_time());
         }
     }
+    void PoseComponent::sub_current_bone(const std::string &name) 
+    {
+        Animation *animation = (animation_component_) ? animation_component_->get_mutable_animation() : nullptr;
+        if (animation)
+        {
+            animation->sub_bone(name, animator_->get_current_time());
+        }  
+    }
+
     Entity *PoseComponent::find(int bone_id)
     {
         return find(bone_id, armature_root_);

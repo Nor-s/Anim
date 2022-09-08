@@ -141,12 +141,15 @@ namespace ui
 
     void TimelineLayer::draw_sequencer(UiContext &ui_context)
     {
-        ImGuiIO &io = ImGui::GetIO();
         auto &context = ui_context.timeline;
         uint32_t current = static_cast<uint32_t>(animator_->get_current_time());
         uint32_t start = static_cast<uint32_t>(animator_->get_start_time());
         uint32_t end = static_cast<uint32_t>(animator_->get_end_time());
         uint32_t before = current;
+        auto win_pos = ImGui::GetWindowPos();
+        auto viewportPanelSize = ImGui::GetContentRegionAvail();
+        win_pos.y = ImGui::GetCursorPosY();
+
         if (ImGui::BeginNeoSequencer("Sequencer", &current, &start, &end))
         {
 
@@ -163,15 +166,10 @@ namespace ui
             {
                 is_hovered_zoom_slider_ = true;
             }
+            
             ImGui::EndNeoSequencer();
         }
-        // for select keyframe
-        // if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-        // {
-        //     ImGui::GetForegroundDrawList()->AddRectFilled(io.MouseClickedPos[0],
-        //                                                   io.MousePos,
-        //                                                   ImGui::GetColorU32(ImGuiCol_Button)); // Draw a line between the button and the mouse cursor
-        // }
+
         // update current time
         if (before != current)
         {
@@ -180,14 +178,56 @@ namespace ui
         }
     }
 
+    //TODO: Refactor drag logic
     void TimelineLayer::draw_keyframes(UiContext &ui_context, const Animation *animation)
     {
+        static ImRect border{};
+        static float mouse_wheel = 0.0f;
+        static int selected_frame_count = 0;
+
         auto &context = ui_context.timeline;
         auto &entity_context = ui_context.entity;
+
+        // for select keyframe
+        ImGuiWindow *window = ImGui::GetCurrentWindow();
+        ImGuiIO &io = ImGui::GetIO();
+        bool is_released = false;
+        auto start_pos = io.MouseClickedPos[0];
+        bool is_okay_start_drag = false;
+        if(window->InnerRect.Contains(start_pos) &&!ImGui::IsCurrentFrameHovered() && !ImGui::IsZoomSliderHovered()) {
+            is_okay_start_drag = true;
+        }
+        if(ImGui::IsMouseHoveringRect(window->InnerRect.Min, window->InnerRect.Max)) {
+            if (is_okay_start_drag && ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            {
+                ImGui::GetForegroundDrawList()->AddRectFilled(start_pos,
+                                                              io.MousePos,
+                                                              ImGui::GetColorU32(ImGuiCol_Button)); // Draw a line between the button and the mouse cursor
+                border.Min.x = std::min(start_pos.x, io.MousePos.x);
+                border.Max.x = std::max(start_pos.x, io.MousePos.x);
+                border.Min.y = std::min(start_pos.y, io.MousePos.y);
+                border.Max.y = std::max(start_pos.y, io.MousePos.y);
+            }
+            else {
+                is_released = true;
+            }
+            if(is_released && ImGui::IsMouseClicked(ImGuiMouseButton_Right)&& !ImGui::IsPopupOpen("keyframe_popup")) {
+                ImGui::OpenPopup("drag_popup");
+            }
+        }
+        
+        bool is_selected_keyframe_delete = draw_drag_popup();
+        if(!ImGui::IsPopupOpen("drag_popup")&&(ImGui::IsMouseClicked(ImGuiMouseButton_Left) || mouse_wheel != io.MouseWheel ||ImGui::IsMouseClicked(ImGuiMouseButton_Middle))) 
+        {
+            border = ImRect{};
+        }
+        mouse_wheel = io.MouseWheel;
+        
+        // draw transform keyframes
         if (ImGui::BeginNeoGroup("Transform", &is_opened_transform_))
         {
             auto &name_bone_map = animation->get_name_bone_map();
-            bool is_hovered = false;
+            std::vector<std::pair<Bone*, float>> selected_bone_list;
             for (auto &bone : name_bone_map)
             {
                 float factor = bone.second->get_factor();
@@ -196,27 +236,94 @@ namespace ui
 
                 if (ImGui::BeginNeoTimeline(name))
                 {
+                    int inside_count = 0;
                     for (auto key : keys)
                     {
+                        bool is_hovered = false;
                         uint32_t ukey = static_cast<uint32_t>(floorf(key * factor));
-                        if (ImGui::Keyframe(&ukey, &is_hovered) && is_hovered && ImGui::IsItemClicked())
+                        bool change_selected_entity = false;
+                        bool is_inside_border = false;
+                        if (ImGui::Keyframe(&ukey, border, &is_inside_border, &is_hovered) && is_hovered && ImGui::IsItemClicked())
                         {
-                            auto selected_entity = root_entity_->find(bone.second->get_name());
-                            if (selected_entity)
-                            {
-                                entity_context.is_changed_selected_entity = true;
-                                entity_context.selected_id = selected_entity->get_id();
-                            }
-                            context.is_stop = true;
-                            context.current_frame = ukey;
-                            context.is_current_frame_changed = true;
-                            ImGui::ItemSelect(name);
+                            change_selected_entity = true;
                         }
+                        if(is_selected_keyframe_delete && is_inside_border) 
+                        {
+                            context.is_stop = true;
+                            selected_bone_list.push_back(std::make_pair(bone.second.get(), key));
+                        } 
+                        
+                        else 
+                        {
+                            if(is_inside_border) 
+                            {
+                                inside_count++;
+                                change_selected_entity = true;
+                            }
+                            if(is_hovered && selected_frame_count == 0 &&!is_inside_border &&ImGui::IsItemClicked(ImGuiMouseButton_Right)) 
+                            {
+                                change_selected_entity = true;
+                                ImGui::OpenPopup("keyframe_popup");
+                            }
+                            if(change_selected_entity) 
+                            {
+                                auto selected_entity = root_entity_->find(bone.second->get_name());
+                                if (selected_entity)
+                                {
+                                    entity_context.is_changed_selected_entity = true;
+                                    entity_context.selected_id = selected_entity->get_id();
+                                }
+                                context.is_stop = true;
+                                context.current_frame = ukey;
+                                context.is_current_frame_changed = true;
+                                if(!is_inside_border) {
+                                    ImGui::ItemSelect(name);
+                                }
+                            }
+                        }
+                    }        
+                    selected_frame_count = inside_count;
+                    
+                    for(auto &bone : selected_bone_list) 
+                    {
+                        bone.first->sub_keyframe(bone.second, true);
                     }
                     ImGui::EndNeoTimeLine();
                 }
             }
             ImGui::EndNeoGroup();
         }
+
+        draw_keyframe_popup(ui_context);
     }
+
+    void TimelineLayer::draw_keyframe_popup(UiContext &ui_context) 
+    {
+        if(ImGui::BeginPopup("keyframe_popup")) {
+            ImGui::Text("current frame: %d", ui_context.timeline.current_frame); 
+            if (ImGui::Button("Delete")&&!ui_context.timeline.is_current_frame_changed) 
+            {
+                LOG("clicked button");              
+                ui_context.timeline.is_delete_current_frame = true;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+    
+    bool TimelineLayer::draw_drag_popup()
+    {
+        bool is_delete = false;
+        if(ImGui::BeginPopup("drag_popup")) {
+            ImGui::Text("Selected Keyframe"); 
+            if (ImGui::Button("Delete")) 
+            {
+                is_delete = true;
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+        return is_delete;
+    }
+
 }

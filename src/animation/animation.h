@@ -38,6 +38,7 @@ namespace anim
         void set_id(int id);
         const int get_id() const;
         void add_and_replace_bone(const std::string &name, const glm::mat4 &transform, float time);
+        void sub_bone(const std::string &name, float time);
         void replace_bone(const std::string &name, const glm::mat4 &transform, float time);
 
     protected:

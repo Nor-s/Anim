@@ -192,7 +192,7 @@ void App::process_timeline_context()
             if (count == 0u)
             {
                 history_->push(std::make_unique<anim::BoneChangeEvent>(
-                    scenes_[current_scene_idx_].get(),
+                scenes_[current_scene_idx_].get(),
                     scenes_[current_scene_idx_]->get_mutable_ref_shared_resources().get(),
                     selected_entity->get_id(),
                     selected_entity->get_mutable_root()->get_component<anim::AnimationComponent>()->get_animation()->get_id(),
@@ -205,6 +205,23 @@ void App::process_timeline_context()
     else
     {
         count = 0u;
+    }
+    if(time_context.is_delete_current_frame) 
+    {
+        anim::LOG("delete current bone");
+        auto selected_entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
+        auto &before_transform = selected_entity->get_local();
+        if (auto armature = selected_entity->get_component<anim::ArmatureComponent>(); armature)
+        {
+            armature->get_pose()->sub_current_bone(armature->get_name());
+            history_->push(std::make_unique<anim::BoneChangeEvent>(
+                scenes_[current_scene_idx_].get(),
+                scenes_[current_scene_idx_]->get_mutable_ref_shared_resources().get(),
+                selected_entity->get_id(),
+                selected_entity->get_mutable_root()->get_component<anim::AnimationComponent>()->get_animation()->get_id(),
+                before_transform,
+                armature->get_pose()->get_animator()->get_current_time()));
+        }
     }
 }
 

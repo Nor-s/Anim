@@ -53,6 +53,8 @@ namespace anim
 
         void set_local_rotation(int idx, const glm::quat &quat);
 
+        const std::string& get_name() const;
+
         float get_local_scale();
 
         int get_id();

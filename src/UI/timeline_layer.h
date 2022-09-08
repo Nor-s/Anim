@@ -32,9 +32,12 @@ namespace ui
     private:
         inline void init_context(UiContext &ui_context, Scene *scene);
         void draw_animator_status(UiContext &ui_context);
+
         // TODO: Fix neo sequencer error when start frame is not 0"
         void draw_sequencer(UiContext &ui_context);
         void draw_keyframes(UiContext &ui_context, const anim::Animation *animation);
+        void draw_keyframe_popup(UiContext &ui_context);
+        bool draw_drag_popup();
 
         std::shared_ptr<TextEditLayer> text_editor_;
         bool is_hovered_zoom_slider_{false};

@@ -89,7 +89,6 @@ namespace ui
         std::string user_name;
         user_name = "/Users/" + std::string(getenv("USER"));
         std::string homePath = user_name;
-        std::cout << homePath << "\n";
         if (std::filesystem::exists(homePath + "/Desktop"))
         {
             ImGuiFileDialog::Instance()->AddBookmark(ICON_MD_MONITOR " Desktop", std::filesystem::path(homePath + "/Desktop").string());

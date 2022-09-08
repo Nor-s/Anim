@@ -21,6 +21,7 @@ namespace anim
         void set_shader(Shader *shader);
         void set_armature_root(Entity *armature_root);
         void add_bone(const std::string &name, BoneInfo info);
+        void sub_current_bone(const std::string &name);
         void update() override;
         Entity *get_root_entity();
         Animator *get_animator();

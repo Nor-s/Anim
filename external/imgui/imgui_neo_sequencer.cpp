@@ -4,13 +4,13 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 
 #include "imgui_neo_sequencer.h"
-#include "imgui_internal.h"
 #include "imgui_neo_internal.h"
 
 #include <stack>
 #include <iostream>
 #include <unordered_map>
 #include <algorithm>
+#include <vector>
 
 namespace ImGui
 {
@@ -44,6 +44,10 @@ namespace ImGui
 
 		bool HoldingZoomSlider = false;
 		bool HoverZoomSlider = false;
+
+		bool IsRightClickedCurrentFrame = false;
+		bool IsCurrentFrameHovered = false;
+
 	};
 
 	static ImGuiNeoSequencerStyle style; // NOLINT(cert-err58-cpp)
@@ -107,6 +111,7 @@ namespace ImGui
 	static void processCurrentFrame(uint32_t *frame, ImGuiNeoSequencerInternalData &context)
 	{
 		auto pointerRect = getCurrentFrameBB(*frame, context);
+		
 		pointerRect.Min -= ImVec2{2.0f, 2.0f};
 		pointerRect.Max += ImVec2{2.0f, 2.0f};
 
@@ -152,13 +157,21 @@ namespace ImGui
 
 		context.CurrentFrameColor = GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_FramePointer);
 
+		context.IsRightClickedCurrentFrame = false;
+		context.IsCurrentFrameHovered = false;
+
 		if (IsItemHovered())
-		{
+		{			
+			context.IsCurrentFrameHovered = true;
+			if(IsMouseClicked(ImGuiMouseButton_Right)) {
+				context.IsRightClickedCurrentFrame = true;
+			}
 			context.CurrentFrameColor = GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_FramePointerHovered);
 		}
 
 		if (context.HoldingCurrentFrame)
 		{
+
 			if (IsMouseDragging(ImGuiMouseButton_Left, 0.0f) || IsMouseClicked(ImGuiMouseButton_Left))
 			{
 				const auto mousePosX = GetMousePos().x;
@@ -217,7 +230,7 @@ namespace ImGui
 		currentTimelineHeight = 0.0f;
 	}
 
-	static bool createKeyframe(uint32_t *frame, bool *is_hovered = nullptr)
+	static bool createKeyframe(uint32_t *frame, const ImRect& select_bound, bool *is_inside, bool *is_hovered = nullptr)
 	{
 		const auto &imStyle = GetStyle();
 		auto &context = sequencerData[currentSequencer];
@@ -232,6 +245,8 @@ namespace ImGui
 						 ImVec2{timelineOffset + context.ValuesWidth, 0};
 
 		const auto bbPos = pos - ImVec2{currentTimelineHeight / 2, 0};
+
+		const auto center = pos + ImVec2{0, currentTimelineHeight / 2.f};
 
 		const ImRect bb = {bbPos, bbPos + ImVec2{currentTimelineHeight, currentTimelineHeight}};
 
@@ -257,11 +272,16 @@ namespace ImGui
 				}
 			}
 		}
-
-		drawList->AddCircleFilled(pos + ImVec2{0, currentTimelineHeight / 2.f},
+		if(select_bound.Contains(center))
+ 	    {
+			*is_inside = true;
+			color = ColorConvertFloat4ToU32(GetStyleNeoSequencerColorVec4(ImGuiNeoSequencerCol_SelectedKeyframe));
+		}
+		drawList->AddCircleFilled(center,
 								  currentTimelineHeight / 3.0f,
 								  color,
 								  4);
+
 
 		return true;
 	}
@@ -797,17 +817,12 @@ namespace ImGui
 		currentTimelineDepth--;
 	}
 
-	bool BeginCreateKeyframe(uint32_t *frame)
+
+	bool Keyframe(uint32_t *frame, const ImRect& select_bound, bool* is_inside, bool *is_hovered)
 	{
-		return createKeyframe(frame);
+		return createKeyframe(frame, select_bound, is_inside, is_hovered);
 	}
-	bool Keyframe(uint32_t *frame, bool *is_hovered)
-	{
-		return createKeyframe(frame, is_hovered);
-	}
-	void EndCreateKeyframe()
-	{
-	}
+
 
 	void PushNeoSequencerStyleColor(ImGuiNeoSequencerCol idx, ImU32 col)
 	{
@@ -841,9 +856,18 @@ namespace ImGui
 	bool IsZoomSliderHovered()
 	{
 		auto &context = sequencerData[currentSequencer];
-		return context.HoverZoomSlider;
+		return context.HoverZoomSlider || context.HoldingZoomSlider;
+	}
+    bool IsCurrentFrameHovered() {
+		auto &context = sequencerData[currentSequencer];
+		return context.IsCurrentFrameHovered || context.HoldingCurrentFrame;
 	}
 
+	bool IsCurrentFrameRightClicked()
+	{
+		auto &context = sequencerData[currentSequencer];
+		return context.IsRightClickedCurrentFrame;
+	}
 }
 
 ImGuiNeoSequencerStyle::ImGuiNeoSequencerStyle()
@@ -871,4 +895,5 @@ ImGuiNeoSequencerStyle::ImGuiNeoSequencerStyle()
 	Colors[ImGuiNeoSequencerCol_ZoomBarSliderEndsHovered] = ImVec4{0.93f, 0.93f, 0.93f, 0.93f};
 
 	Colors[ImGuiNeoSequencerCol_KeyframeWithCurrentFrame] = ImVec4(0.06f, 0.53f, 0.98f, 1.00f);
+	Colors[ImGuiNeoSequencerCol_SelectedKeyframe] = ImVec4(0.26f, 0.73f, 0.1f, 1.00f);
 }

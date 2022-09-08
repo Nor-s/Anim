@@ -6,6 +6,7 @@
 #define IMGUI_NEO_SEQUENCER_H
 
 #include "imgui.h"
+#include "imgui_internal.h"
 #include <vector>
 #include <stdint.h>
 
@@ -47,6 +48,7 @@ enum ImGuiNeoSequencerCol_
     ImGuiNeoSequencerCol_KeyframePressed,
 
     ImGuiNeoSequencerCol_KeyframeWithCurrentFrame,
+    ImGuiNeoSequencerCol_SelectedKeyframe,
     ImGuiNeoSequencerCol_FramePointerLine,
 
     ImGuiNeoSequencerCol_ZoomBarBg,
@@ -94,12 +96,12 @@ namespace ImGui
     IMGUI_API bool BeginNeoTimeline(const char *label, bool *open = nullptr, ImGuiNeoTimelineFlags flags = ImGuiNeoTimelineFlags_None);
     IMGUI_API void EndNeoTimeLine(); // Call only when BeginNeoTimeline() returns true!!
 
-    IMGUI_API bool BeginCreateKeyframe();
-    IMGUI_API bool Keyframe(uint32_t *frame, bool *is_hovered = nullptr);
-    IMGUI_API void EndCreateKeyframe();
+    IMGUI_API bool Keyframe(uint32_t *frame, const ImRect& select_bound, bool* is_inside, bool *is_hovered = nullptr);
     IMGUI_API void ItemSelect(const char *label);
 
     IMGUI_API bool IsZoomSliderHovered();
+    IMGUI_API bool IsCurrentFrameHovered();
+    IMGUI_API bool IsCurrentFrameRightClicked();
 }
 
 #endif // IMGUI_NEO_SEQUENCER_H

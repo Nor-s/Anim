@@ -12,6 +12,12 @@ namespace ui
         int current_animation_idx{-1};
         int new_animation_idx{-1};
         bool is_changed_animation{false};
+        ComponentContext()
+            : current_animation_idx(-1),
+              new_animation_idx(-1),
+              is_changed_animation(false)
+        {
+        }
     };
 
     // Change animator status (play/pause, fps, current time, start time, end time)
@@ -28,6 +34,11 @@ namespace ui
         int current_frame{0};
         bool is_forward{false};
         bool is_backward{false};
+        bool is_delete_current_frame{false};
+        TimelineContext()
+            : is_recording(false), is_clicked_play_back(false), is_clicked_play(false), is_stop(false), is_current_frame_changed(false), fps(1.0f), start_frame(0), end_frame(200), current_frame(0), is_forward(false), is_backward(false), is_delete_current_frame(false)
+        {
+        }
     };
 
     // import, export
@@ -41,6 +52,16 @@ namespace ui
         bool is_export_linear_interpolation{true};
         float import_scale{100.0f};
         std::string path{""};
+        MenuContext()
+            : clicked_import_model(false),
+              clicked_import_dir(false),
+              clicked_export_animation(false),
+              clicked_export_all_data(false),
+              is_dialog_open(false),
+              is_export_linear_interpolation(true),
+              import_scale(100.0f)
+        {
+        }
     };
 
     // node change (bone, entity)
@@ -50,8 +71,15 @@ namespace ui
         bool is_changed_transform{false};
         bool is_manipulated{false};
         int selected_id{-1};
-        // glm::mat4 before_transform;
         glm::mat4 new_transform{1.0f};
+        EntityContext()
+            : is_changed_selected_entity(false),
+              is_changed_transform(false),
+              is_manipulated(false),
+              selected_id(-1),
+              new_transform(1.0f)
+        {
+        }
     };
 
     struct SceneContext
@@ -61,6 +89,14 @@ namespace ui
         bool is_clicked_picking_mode{false};
         int x{0};
         int y{0};
+        SceneContext()
+            : is_picking(false),
+              is_bone_picking_mode(false),
+              is_clicked_picking_mode(false),
+              x(0),
+              y(0)
+        {
+        }
     };
 
     struct PythonContext
@@ -74,6 +110,12 @@ namespace ui
         bool is_clicked_convert_btn{false};
         std::string save_path;
         std::string video_path;
+        PythonContext()
+            : is_clicked_convert_btn(false),
+              save_path(""),
+              video_path("")
+        {
+        }
     };
 
     struct UiContext
@@ -84,6 +126,15 @@ namespace ui
         EntityContext entity{};
         SceneContext scene{};
         PythonContext python{};
+        UiContext()
+            : menu(),
+              timeline(),
+              component(),
+              entity(),
+              scene(),
+              python()
+        {
+        }
     };
 }
 

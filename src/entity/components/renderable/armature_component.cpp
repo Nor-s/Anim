@@ -98,6 +98,10 @@ namespace anim
         }
         rotation_[idx] = quat;
     }
+    const std::string& ArmatureComponent::get_name() const 
+    {
+        return name_;
+    }
     float ArmatureComponent::get_local_scale()
     {
         return scale_.back();
@@ -161,8 +165,6 @@ namespace anim
     }
     void ArmatureComponent::add_and_replace_bone()
     {
-        glm::mat4 local = entity_->get_local();
-
-        pose_->add_and_replace_bone(name_, local);
+        pose_->add_and_replace_bone(name_, entity_->get_local());
     }
 }

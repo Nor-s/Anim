@@ -227,6 +227,7 @@ namespace anim
                                              p1Index.get_time(), animation_time);
         return glm::scale(glm::mat4(1.0f), glm::mix(p0Index.scale, p1Index.scale, scaleFactor));
     }
+
     void Bone::replace_or_add_keyframe(const glm::mat4 &transform, float time)
     {
         float time_stamp = floorf(time) / factor_;
@@ -258,10 +259,33 @@ namespace anim
             time_set_.insert(time_stamp);
         }
     }
+
     void Bone::replace_or_sub_keyframe(const glm::mat4 &transform, float time)
     {
         float time_stamp = floorf(time) / factor_;
         auto [t, r, s] = DecomposeTransform(transform);
+        auto [it_t, it_r, it_s] = std::tuple{positions_.find(time_stamp),
+                                          rotations_.find(time_stamp),
+                                          scales_.find(time_stamp)};
+        sub_keyframe(time);
+
+        auto erased_transform = get_local_transform(time, factor_);
+        auto [lt, lr, ls] = DecomposeTransform(erased_transform);
+        float tolerance = 1e-3;
+        bool is_t_changed = !(lt.x - tolerance < t.x && t.x < lt.x + tolerance && lt.y - tolerance < t.y && t.y < lt.y + tolerance && lt.z - tolerance < t.z && t.z < lt.z + tolerance);
+        bool is_r_changed = !(lr.x - tolerance < r.x && r.x < lr.x + tolerance && lr.y - tolerance < r.y && r.y < lr.y + tolerance && lr.z - tolerance < r.z && r.z < lr.z + tolerance);
+        bool is_s_changed = !(ls.x - tolerance < s.x && s.x < ls.x + tolerance && ls.y - tolerance < s.y && s.y < ls.y + tolerance && ls.z - tolerance < s.z && s.z < ls.z + tolerance);
+        if(is_t_changed || is_r_changed || is_s_changed || time_stamp == 0.0f) {
+            replace_or_add_keyframe(transform, time);
+        }
+    }
+
+    bool Bone::sub_keyframe(float time, bool is_animation_time) 
+    {
+        float time_stamp = floorf(time) / factor_;
+        if(is_animation_time) {
+            time_stamp = time;
+        }
         auto [it_t, it_r, it_s] = std::tuple{positions_.find(time_stamp),
                                           rotations_.find(time_stamp),
                                           scales_.find(time_stamp)};
@@ -279,16 +303,7 @@ namespace anim
             scales_.erase(it_s);
         }
         time_set_.erase(time_stamp);
-        if(is_erased) {
-            auto erased_transform = get_local_transform(time, factor_);
-            auto [lt, lr, ls] = DecomposeTransform(erased_transform);
-            float tolerance = 1e-3;
-            bool is_t_changed = !(lt.x - tolerance < t.x && t.x < lt.x + tolerance && lt.y - tolerance < t.y && t.y < lt.y + tolerance && lt.z - tolerance < t.z && t.z < lt.z + tolerance);
-            bool is_r_changed = !(lr.x - tolerance < r.x && r.x < lr.x + tolerance && lr.y - tolerance < r.y && r.y < lr.y + tolerance && lr.z - tolerance < r.z && r.z < lr.z + tolerance);
-            bool is_s_changed = !(ls.x - tolerance < s.x && s.x < ls.x + tolerance && ls.y - tolerance < s.y && s.y < ls.y + tolerance && ls.z - tolerance < s.z && s.z < ls.z + tolerance);
-            if(is_t_changed || is_r_changed || is_s_changed || time_stamp == 0.0f) {
-                replace_or_add_keyframe(transform, time);
-            }
-        }
+
+        return is_erased;
     }
 }

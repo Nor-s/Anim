@@ -55,6 +55,7 @@ namespace anim
     }
     void Animation::reload()
     {
+        // TODO: REIMPORT
 #ifndef NDEBUG
         std::cout << "reload:anim" << std::endl;
 #endif
@@ -118,6 +119,16 @@ namespace anim
             bone->replace_or_add_keyframe(glm::mat4(1.0f), 0.0f);
         }
     }
+    void Animation::sub_bone(const std::string &name, float time) 
+    {
+        auto bone = find_bone(name);
+        if (bone)
+        {
+            LOG("bone: " + name);
+            bone->sub_keyframe(time);
+        }
+    }
+
     void Animation::replace_bone(const std::string &name, const glm::mat4 &transform, float time)
     {
         auto bone = find_bone(name);

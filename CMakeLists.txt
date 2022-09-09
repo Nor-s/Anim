@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.21)
-# include(ExternalProject)
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
-# cmake_minimum_required(VERSION 3.12...3.15)
 message("Using CMake version ${CMAKE_VERSION}")
+
+# for CCACHE
 if(APPLE)
   find_program(CCACHE_PROGRAM ccache)
   if(CCACHE_PROGRAM)
@@ -17,6 +17,7 @@ project(
   VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
 
+# for ninja(unix)
 if (UNIX AND NOT APPLE)
     set(CMAKE_MAKE_PROGRAM /usr/bin/ninja CACHE FILEPATH "")
 endif()
@@ -24,6 +25,7 @@ endif()
 message("CMAKE_RUNTIME_OUTPUT_DIRECTORY : ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message("CMAKE_BINARY_DIR : ${CMAKE_BINARY_DIR}")
 
+#  for apple ccache
 if(APPLE)
   get_property(RULE_LAUNCH_COMPILE GLOBAL PROPERTY RULE_LAUNCH_COMPILE)
   if(RULE_LAUNCH_COMPILE AND CMAKE_GENERATOR STREQUAL "Xcode")
@@ -44,6 +46,7 @@ if(APPLE)
 endif()
 
 
+# for output directory
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -52,9 +55,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR}/bin)
 file(COPY py_module DESTINATION ${CMAKE_BINARY_DIR}/bin)
 file(COPY imgui.ini DESTINATION ${CMAKE_BINARY_DIR}/bin)
+file(COPY LICENSE DESTINATION ${CMAKE_BINARY_DIR}/bin)
+
 message("==========================================================")
 message("Build python")
-
 if (APPLE)
   execute_process(COMMAND sh "scripts/build_python_osx.sh" WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}) 
   if (NOT EXISTS ${CMAKE_BINARY_DIR}/bin/python/bin/python)
@@ -69,8 +73,6 @@ else()
     file(COPY ${CMAKE_CURRENT_LIST_DIR}/python/python3.dll DESTINATION ${CMAKE_BINARY_DIR}/bin)
   endif()
 endif()
-
-
 message("==========================================================")
 
 message("Compiler")
@@ -78,7 +80,7 @@ message(STATUS " - ID       \t: ${CMAKE_CXX_COMPILER_ID}")
 message(STATUS " - Version  \t: ${CMAKE_CXX_COMPILER_VERSION}")
 message(STATUS " - Path     \t: ${CMAKE_CXX_COMPILER}")
 
-# option(BUILD_SHARED_LIBS OFF)
+# for external option
 option(JSONCPP_WITH_TESTS OFF)
 option(GLFW_BUILD_DOCS OFF)
 option(ASSIMP_BUILD_ZLIB ON)
@@ -91,11 +93,12 @@ endif()
 set(ASSIMP_BUILD_ZLIB ON)
 set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+
+# add external libraries
 message("GLAD")
 add_subdirectory(external/glad/)
 message("STB")
 add_library(STB_IMAGE "external/stb/stb_image.cpp")
-
 
 
 if(WIN32)

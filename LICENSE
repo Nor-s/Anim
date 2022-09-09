@@ -1,14 +1,100 @@
-The source code is available under the Apache-2.0 license.
-
 model assets are CC-By 4.0. (resources/models/mannequiny.fbx, The Godot mannequin is a character made by Luciano Muñoz In blender 2.80. This project changed the model to mixamo rigging(auto rigging), diffuse color.
 )
 Creative Commons Attribution 4.0 International Public License
 Read the full license on: https://creativecommons.org/licenses/by/4.0/legalcode
 
+---------------------------------------------------------------------------
+
 d2codingfont is SIL OPEN FONT LICENSE
 
+https://github.com/naver/d2codingfont/wiki/Open-Font-License
+
+---------------------------------------------------------------------------
+
+cpython 3.10
+Python Software Foundation License Version 2.
+https://github.com/python/cpython/blob/main/LICENSE
+
+---------------------------------------------------------------------------
+
+pybind11 2.10.0 
+Copyright (c) 2016 Wenzel Jakob 
+https://github.com/pybind/pybind11/blob/master/LICENSE
+
+---------------------------------------------------------------------------
+
+assimp 5.24
+Copyright (c) 2006-2021, assimp team
+https://github.com/assimp/assimp/blob/master/LICENSE
+
+---------------------------------------------------------------------------
+mediapipe 0.8.10.1
+Apache-2.0 license
+https://github.com/google/mediapipe/blob/master/LICENSE
+
+PyGLM 2.5.7
+zlib License
+https://github.com/Zuzu-Typ/PyGLM/blob/master/LICENSE
+
+---------------------------------------------------------------------------
+
+stb
+MIT License
+https://github.com/nothings/stb/blob/master/LICENSE
+
+---------------------------------------------------------------------------
+
+imgui
+MIT License
+https://github.com/ocornut/imgui/blob/master/LICENSE.txt
+
+- im-neo-sequencer 
+   https://gitlab.com/GroGy/im-neo-sequencer/-/blob/main/LICENSE
 
 
+- ImGuiColorTextEdit
+   https://github.com/BalazsJako/ImGuiColorTextEdit/blob/master/LICENSE
+
+
+- ImGuiFileDialog
+   https://github.com/aiekick/ImGuiFileDialog/blob/master/LICENSE
+
+- ImGuizmo
+    https://github.com/CedricGuillemet/ImGuizmo/blob/master/LICENSE
+
+---------------------------------------------------------------------------
+
+jsoncpp 1.8.0
+MIT License
+https://github.com/open-source-parsers/jsoncpp/blob/master/LICENSE
+
+
+---------------------------------------------------------------------------
+
+glm 0.9.9.8
+MIT License
+https://github.com/g-truc/glm/blob/master/copying.txt
+
+---------------------------------------------------------------------------
+
+glad 0.1.35
+MIT License
+https://github.com/Dav1dde/glad/blob/master/LICENSE
+
+---------------------------------------------------------------------------
+
+glfw 3.3
+zlib License
+https://github.com/glfw/glfw/blob/master/LICENSE.md
+
+---------------------------------------------------------------------------
+
+IconFontCppHeaders
+zlib License
+https://github.com/juliettef/IconFontCppHeaders/blob/main/licence.txt
+
+---------------------------------------------------------------------------
+The source code is available under the Apache-2.0 license.(only src folder)
 
 
                                  Apache License

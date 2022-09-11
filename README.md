@@ -1,14 +1,13 @@
 # **Anim v0.1.0**
 
-Animation tool
+|Animation tool|Video to Animation (only mixamorig character)|
+|-|-|
+|![](/screenshot/88912.gif)| ![](/screenshot/88910.gif)|
 
-![](</screenshot/2022-08-21(1).gif>)
+## **Demo**
 
-Video to Animation
+[![Video Label](http://img.youtube.com/vi/vaIjhVUIC5Q/0.jpg)](https://www.youtube.com/watch?v=vaIjhVUIC5Q)
 
-![](/screenshot/88910.gif)
-
-![](/screenshot/88912.gif)
 
 ## **Feature**
 

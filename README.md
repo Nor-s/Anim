@@ -23,7 +23,8 @@
 -   Fix camera movement
 -   Ctrl + c, Ctrl + v
     - Keyframe
--   Retargeting
+-   Retargeting 
+-   Mediapipe Pose -> Mediapipe Holistic (Hands)
 
 ## **Build**
 

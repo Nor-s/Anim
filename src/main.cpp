@@ -1,3 +1,5 @@
+#define IMGUI_IMPL_OPENGL_LOADER_GLAD
+
 #include "app.h"
 
 int main()

@@ -1,49 +1,54 @@
 # opengl library wrapper
-set(GLCPP_SRC
-    glcpp/window.cpp
-    glcpp/camera.cpp
-    glcpp/application.hpp
-    # glcpp/cubemap.cpp
-)
+# set(GLCPP_SRC
+#     glcpp/window.cpp
+#     glcpp/camera.cpp
+#     glcpp/application.hpp
+#     # glcpp/cubemap.cpp
+# )
 if(APPLE)
   SET(CMAKE_OSX_DEPLOYMENT_TARGET 12.4)
 endif()
 
-add_library(glcpp STATIC ${GLCPP_SRC})
+# add_library(glcpp STATIC ${GLCPP_SRC})
 
-set(LIBs STB_IMAGE imgui glad  jsoncpp_static)
-
-
-if(MSVC)
-   target_compile_options(glcpp PUBLIC  "/utf-8")
-  if (CMAKE_BUILD_TYPE MATCHES Release)
-    target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
- endif()
-  target_link_libraries(glcpp PUBLIC ${LIBs} glm assimp::assimp)
-  target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
+set(LIBs STB_IMAGE imgui  glad jsoncpp_static)
 
 
-elseif(WIN32)
-    target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -static)
+# if(MSVC)
+#    target_compile_options(glcpp PUBLIC  "/utf-8")
+#   if (CMAKE_BUILD_TYPE MATCHES Release)
+#     target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
+#  endif()
+#   target_link_libraries(glcpp PUBLIC ${LIBs} glm assimp::assimp)
+#   target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
 
-    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
-    target_link_libraries(glcpp PUBLIC ${LIBs} assimp::assimp glm -lpthread -lgdi32 -lopengl32 -static)
-else()
-    target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
 
-    target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
-    target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm::glm -ldl -lpthread)
-endif()
+# elseif(WIN32)
+#     target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17 -static)
+
+#     target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
+#     target_link_libraries(glcpp PUBLIC ${LIBs} assimp::assimp glm -lpthread -lgdi32 -lopengl32 -static)
+# else()
+#     target_compile_options(glcpp PRIVATE -Wall -Werror -std=c++17)
+
+#     target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
+#     target_link_libraries(glcpp PUBLIC ${LIBs} assimp glm::glm -ldl -lpthread)
+# endif()
 
 message("==========================================================")
 # python
-add_executable(test12  cpython/main.cpp cpython/py_manager.cpp)
-target_link_libraries(test12 PUBLIC Python3::Python pybind11::embed)
-add_library(py  cpython/py_manager.cpp)
+# add_executable(test12  cpython/main.cpp cpython/py_manager.cpp)
+# target_link_libraries(test12 PUBLIC Python3::Python pybind11::embed)
+add_library(py STATIC cpython/py_manager.cpp)
 target_link_libraries(py PUBLIC Python3::Python pybind11::embed)
 
 # new
 set(test_src
+    
+    glcpp/window.cpp
+    glcpp/camera.cpp
+    glcpp/application.hpp
+
     graphics/mesh.cpp
     graphics/opengl/gl_shader.cpp
     graphics/opengl/gl_mesh.cpp
@@ -146,13 +151,13 @@ if(MSVC)
   if (CMAKE_BUILD_TYPE  MATCHES Release)
       target_link_options(Anim PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
   endif()
-  target_link_libraries(Anim  glcpp test py)
+  target_link_libraries(Anim  test py)
 elseif(WIN32)
     target_compile_options(Anim  PRIVATE -Wall -Werror -std=c++17 -static)
-    target_link_libraries(Anim  glcpp)
+    target_link_libraries(Anim  test py)
     target_include_directories(Anim  PUBLIC ./)
 else()
-    target_link_libraries(Anim  glcpp test py)
+    target_link_libraries(Anim  test py)
 endif()
 
 message("==========================================================")

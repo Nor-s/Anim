@@ -27,4 +27,4 @@ set(IMGUI_INC_DIRS
 )
 add_library(imgui STATIC ${IMGUI_SOURCES} ${IMGUI_ICONS} ImGuiFileDialog/ImGuiFileDialog.cpp)
 target_include_directories(imgui PUBLIC ${IMGUI_INC_DIRS} ../SDL/include ../SDL ..)
-target_link_libraries(imgui PUBLIC SDL2::SDL2main SDL2::SDL2-static)
+target_link_libraries(imgui PUBLIC SDL2::SDL2)

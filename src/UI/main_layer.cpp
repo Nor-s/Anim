@@ -11,7 +11,14 @@
 #define IMGUI_IMPL_OPENGL_LOADER_GLAD
 #include <imgui/imgui.h>
 #include <imgui/imgui_impl_opengl3.h>
-#include <imgui/imgui_impl_glfw.h>
+
+#include "imgui_impl_sdl.h"
+#include <SDL.h>
+#if defined(IMGUI_IMPL_OPENGL_ES2)
+#include <SDL_opengles2.h>
+#else
+#include <SDL_opengl.h>
+#endif
 #include <imgui/ImGuizmo.h>
 #include <imgui/icons/icons.h>
 #include <fstream>
@@ -43,7 +50,7 @@ namespace ui
         shutdown();
     }
 
-    void MainLayer::init(GLFWwindow *window)
+    void MainLayer::init(SDL_Window *window, void* context)
     {
         const char *glsl_version = "#version 330";
 
@@ -63,7 +70,7 @@ namespace ui
         style.FramePadding.y = 1.0f;
         io.Fonts->AddFontFromFileTTF("./resources/font/D2Coding.ttf", 16.0f, NULL, io.Fonts->GetGlyphRangesKorean());
         ImGui::LoadInternalIcons(io.Fonts);
-        ImGui_ImplGlfw_InitForOpenGL(window, true);
+        ImGui_ImplSDL2_InitForOpenGL(window, context);
         ImGui_ImplOpenGL3_Init(glsl_version);
         init_bookmark();
     }
@@ -127,14 +134,14 @@ namespace ui
         }
 
         ImGui_ImplOpenGL3_Shutdown();
-        ImGui_ImplGlfw_Shutdown();
+        ImGui_ImplSDL2_Shutdown();
         ImGui::DestroyContext();
     }
 
     void MainLayer::begin()
     {
         ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
+        ImGui_ImplSDL2_NewFrame();
         ImGui::NewFrame();
         ImGuizmo::SetOrthographic(false); // is perspective
         ImGuizmo::BeginFrame();
@@ -150,10 +157,12 @@ namespace ui
         ImGuiIO &io = ImGui::GetIO();
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         {
-            GLFWwindow *backup_current_context = glfwGetCurrentContext();
+            SDL_Window* backup_current_window = SDL_GL_GetCurrentWindow();
+            SDL_GLContext backup_current_context = SDL_GL_GetCurrentContext();
             ImGui::UpdatePlatformWindows();
             ImGui::RenderPlatformWindowsDefault();
-            glfwMakeContextCurrent(backup_current_context);
+            SDL_GL_MakeCurrent(backup_current_window, backup_current_context);
+
         }
     }
 
@@ -439,5 +448,8 @@ namespace ui
     const UiContext &MainLayer::get_context() const
     {
         return context_;
+    }
+    void MainLayer::process_events(SDL_Event& event) {
+        ImGui_ImplSDL2_ProcessEvent(&event);
     }
 }

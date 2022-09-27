@@ -20,7 +20,8 @@
 
 #include "cpython/py_manager.h"
 #include <pybind11/embed.h>
-
+#include <chrono>
+#include <ctime> 
 namespace fs = std::filesystem;
 
 #ifndef NDEBUG
@@ -43,34 +44,42 @@ App::~App()
 
 void App::init(uint32_t width, uint32_t height, const std::string &title)
 {
+    anim::LOG("INIT APP START");
     stbi_set_flip_vertically_on_load(true);
+    anim::LOG("INIT WINDOW START");
     init_window(width, height, title);
+    anim::LOG("INIT WINDOW END");
+    anim::LOG("INIT UI START");
     init_ui();
+    anim::LOG("INIT UI END");
+    anim::LOG("INIT SHARED RESORUCE START");
     init_shared_resources();
+    anim::LOG("INIT SHARED RESORUCE END");
     init_scene(width, height);
     history_.reset(new anim::EventHistoryQueue());
+    anim::LOG("INIT APP END");
 }
 void App::init_window(uint32_t width, uint32_t height, const std::string &title)
 {
     window_ = std::make_unique<glcpp::Window>(width, height, title);
     window_->set_factor();
-    window_->set_user_pointer(this);
+    // window_->set_user_pointer(this);
     init_callback();
 }
 void App::init_callback()
 {
-    window_->set_scroll_callback(scroll_callback);
-    window_->set_mouse_button_callback(mouse_btn_callback);
-    window_->set_cursor_pos_callback(mouse_callback);
+    // window_->set_scroll_callback(scroll_callback);
+    // window_->set_mouse_button_callback(mouse_btn_callback);
+    // window_->set_cursor_pos_callback(mouse_callback);
 
 #ifndef NDEBUG
-    glfwSetErrorCallback(error_callback);
+    // glfwSetErrorCallback(error_callback);
 #endif
 }
 void App::init_ui()
 {
     ui_ = std::make_unique<ui::MainLayer>();
-    ui_->init(window_->get_handle());
+    ui_->init(window_->get_handle(), window_->get_context());
 }
 void App::init_shared_resources()
 {
@@ -85,8 +94,8 @@ void App::init_scene(uint32_t width, uint32_t height)
 }
 void App::loop()
 {
-    glfwSwapInterval(0);
-    start_time_ = static_cast<float>(glfwGetTime());
+    // glfwSwapInterval(0);
+    start_time_ = static_cast<float>(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
 
     while (!window_->should_close())
     {
@@ -130,7 +139,7 @@ void App::update_window()
 }
 void App::update_time()
 {
-    float current_time = static_cast<float>(glfwGetTime());
+    float current_time = static_cast<float>(std::chrono::system_clock::to_time_t(std::chrono::system_clock::now()));
     frames_++;
     if (current_time - start_time_ >= 1.0)
     {
@@ -314,7 +323,9 @@ void App::import_model_or_animation(const char *const path)
 
 void App::pre_draw()
 {
-    process_input(window_->get_handle());
+    // process_input(window_->get_handle());
+    window_->process_events();
+    ui_->process_events(window_->get_event());
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, window_->get_width(), window_->get_height());
@@ -339,95 +350,93 @@ void App::draw_scene()
 
 void App::post_draw()
 {
-    glfwSwapBuffers(window_->get_handle());
-
-    glfwPollEvents();
+    window_->swap_window();    
 }
 
-void App::process_input(GLFWwindow *window)
-{
-    if (is_dialog_open_ || !ui_->is_scene_layer_hovered("scene" + std::to_string(current_scene_idx_ + 1)) || is_manipulated_)
-    {
-        return;
-    }
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::FORWARD, delta_frame_);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::BACKWARD, delta_frame_);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::LEFT, delta_frame_);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
+// void App::process_input(GLFWwindow *window)
+// {
+//     if (is_dialog_open_ || !ui_->is_scene_layer_hovered("scene" + std::to_string(current_scene_idx_ + 1)) || is_manipulated_)
+//     {
+//         return;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+//         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::FORWARD, delta_frame_);
+//     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+//         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::BACKWARD, delta_frame_);
+//     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+//         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::LEFT, delta_frame_);
+//     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+//         scenes_[current_scene_idx_]->get_mutable_ref_camera()->process_keyboard(glcpp::RIGHT, delta_frame_);
 
-    static bool is_pressed_z = false;
-    static bool is_released_z = false;
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
-    {
-        is_pressed_z = true;
-    }
-    else if (is_pressed_z && glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE)
-    {
-        is_pressed_z = false;
-        is_released_z = true;
-    }
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && is_released_z)
-    {
-        anim::LOG("POP::HISTORY");
-        history_->pop();
-        is_released_z = false;
-        shared_resources_->get_mutable_animator()->set_is_stop(true);
-    }
-}
+//     static bool is_pressed_z = false;
+//     static bool is_released_z = false;
+//     if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+//     {
+//         is_pressed_z = true;
+//     }
+//     else if (is_pressed_z && glfwGetKey(window, GLFW_KEY_Z) == GLFW_RELEASE)
+//     {
+//         is_pressed_z = false;
+//         is_released_z = true;
+//     }
+//     if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && is_released_z)
+//     {
+//         anim::LOG("POP::HISTORY");
+//         history_->pop();
+//         is_released_z = false;
+//         shared_resources_->get_mutable_animator()->set_is_stop(true);
+//     }
+// }
+// 
+// void App::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
+// {
+//     auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
+//     if(app->ui_ &&app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1))) {
+//         if (app->is_pressed_ && app->scenes_.size() > app->current_scene_idx_ )
+//         {
+//             app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
+//             app->prev_mouse_.x = xposIn;
+//             app->prev_mouse_.y = yposIn;
+//         }
+//         if (app->is_pressed_scroll_ && app->scenes_.size() > app->current_scene_idx_)
+//         {
+//             app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll_press((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
+//             app->prev_mouse_.x = xposIn;
+//             app->prev_mouse_.y = yposIn;
+//         }
+//     }
+//     app->cur_mouse_.x = xposIn;
+//     app->cur_mouse_.y = yposIn;
+// }
 
-void App::mouse_callback(GLFWwindow *window, double xposIn, double yposIn)
-{
-    auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
-    if(app->ui_ &&app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1))) {
-        if (app->is_pressed_ && app->scenes_.size() > app->current_scene_idx_ )
-        {
-            app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_movement((static_cast<float>(yposIn) - app->prev_mouse_.y) / 3.6f, (static_cast<float>(xposIn) - app->prev_mouse_.x) / 3.6f);
-            app->prev_mouse_.x = xposIn;
-            app->prev_mouse_.y = yposIn;
-        }
-        if (app->is_pressed_scroll_ && app->scenes_.size() > app->current_scene_idx_)
-        {
-            app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll_press((static_cast<float>(yposIn) - app->prev_mouse_.y), (static_cast<float>(xposIn) - app->prev_mouse_.x), app->delta_frame_);
-            app->prev_mouse_.x = xposIn;
-            app->prev_mouse_.y = yposIn;
-        }
-    }
-    app->cur_mouse_.x = xposIn;
-    app->cur_mouse_.y = yposIn;
-}
+// void App::mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
+// {
+//     auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
+//     if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+//     {
+//         app->prev_mouse_.x = app->cur_mouse_.x;
+//         app->prev_mouse_.y = app->cur_mouse_.y;
+//         app->is_pressed_ = true;
+//     }
+//     else
+//     {
+//         app->is_pressed_ = false;
+//     }
+//     if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+//     {
+//         app->prev_mouse_.x = app->cur_mouse_.x;
+//         app->prev_mouse_.y = app->cur_mouse_.y;
+//         app->is_pressed_scroll_ = true;
+//     }
+//     else
+//     {
+//         app->is_pressed_scroll_ = false;
+//     }
+// }
 
-void App::mouse_btn_callback(GLFWwindow *window, int button, int action, int mods)
-{
-    auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
-    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
-    {
-        app->prev_mouse_.x = app->cur_mouse_.x;
-        app->prev_mouse_.y = app->cur_mouse_.y;
-        app->is_pressed_ = true;
-    }
-    else
-    {
-        app->is_pressed_ = false;
-    }
-    if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_PRESS && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
-    {
-        app->prev_mouse_.x = app->cur_mouse_.x;
-        app->prev_mouse_.y = app->cur_mouse_.y;
-        app->is_pressed_scroll_ = true;
-    }
-    else
-    {
-        app->is_pressed_scroll_ = false;
-    }
-}
-
-void App::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
-{
-    auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
-    if (app->scenes_.size() > app->current_scene_idx_ && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
-        app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll(yoffset);
-}
+// void App::scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+// {
+//     auto app = static_cast<App *>(glfwGetWindowUserPointer(window));
+//     if (app->scenes_.size() > app->current_scene_idx_ && app->ui_ && app->ui_->is_scene_layer_hovered("scene" + std::to_string(app->current_scene_idx_ + 1)))
+//         app->scenes_[app->current_scene_idx_]->get_mutable_ref_camera()->process_mouse_scroll(yoffset);
+// }

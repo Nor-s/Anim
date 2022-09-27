@@ -28,3 +28,5 @@ py_module/ai
 
 .DS_Store
 scripts/get-pip.py
+
+docs/doxygen

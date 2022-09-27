@@ -9,7 +9,8 @@
 #include <memory>
 #include <map>
 
-struct GLFWwindow;
+struct SDL_Window;
+union SDL_Event;
 
 class Scene;
 namespace anim
@@ -32,7 +33,8 @@ namespace ui
         MainLayer();
         ~MainLayer();
 
-        void init(GLFWwindow *window);
+        void init(SDL_Window *window, void * context);
+
         void begin();
         void end();
         void draw_dock(float fps);
@@ -45,6 +47,8 @@ namespace ui
         bool is_scene_layer_hovered(const std::string &title);
 
         const UiContext &get_context() const;
+
+        void process_events(SDL_Event& event);
 
     private:
         void init_bookmark();

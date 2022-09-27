@@ -1,4 +1,6 @@
 #include "window.h"
+#include <iostream>
+#include <iomanip> // for setw
 
 namespace glcpp
 {
@@ -19,118 +21,129 @@ namespace glcpp
     }
     bool Window::should_close()
     {
-        return glfwWindowShouldClose(handle_);
+        return is_window_close_;
     }
-    void Window::close()
-    {
-        glfwSetWindowShouldClose(handle_, GLFW_TRUE);
-    }
+
     void Window::process_events()
     {
-        glfwPollEvents();
+        SDL_PollEvent(&event_);
+        switch (event_.type) {
+                case SDL_QUIT:
+                    is_window_close_ = true;
+                    break;
+        }
     }
 
     void Window::init_glfw()
     {
-        if (!glfwInit())
+        #ifndef NDEBUG
+        std::cout<<"Window::init_SDL START"<<std::endl;
+        #endif
+        SDL_SetMainReady();
+        // INITIALIZE SDL:
+        if (SDL_Init(SDL_INIT_EVENTS | SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER ) < 0) 
         {
-            throw std::runtime_error("GLFW couldn't be initialized.");
+            throw(std::string("Failed to initialize SDL: ") + SDL_GetError());
         }
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        // CONFIGURE OPENGL ATTRIBUTES USING SDL:
+        int context_flags = SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
 #ifndef NDEBUG
-        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+        context_flags |= SDL_GL_CONTEXT_DEBUG_FLAG;
 #endif
-        // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-#ifdef __APPLE__
-        glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
-#endif
-        handle_ = glfwCreateWindow(width_, height_, title_.c_str(), nullptr, nullptr);
-        if (!handle_)
-        {
-            glfwTerminate();
-            throw std::runtime_error("GLFW failed to create window");
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, context_flags);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+        SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+        SDL_WindowFlags window_flags = (SDL_WindowFlags)(SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
+        // CREATE AND SDL WINDOW CONFIGURED FOR OPENGL:
+        if (0 == (handle_ = SDL_CreateWindow("OpenGL Init Example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width_, height_, window_flags))) {
+            throw(std::string("Failed to create window: ") + SDL_GetError());
         }
-        glfwMakeContextCurrent(handle_);
+        // CREATE THE OPENGL CONTEXT AND MAKE IT CURRENT:
+        if(NULL == (gl_context_ = SDL_GL_CreateContext(handle_))) {
+            throw(std::string("Failed to create OpenGL context"));
+        }        
+        else {
+            SDL_GL_MakeCurrent(handle_, gl_context_);
+        }
+        SDL_GL_SetSwapInterval(1); // Enable vsync
         // glad: load all OpenGL function pointers
         // ---------------------------------------
-        if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+        #ifndef NDEBUG
+        std::cout<<"Window::init_GLAD START"<<std::endl;
+        #endif
+        if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
         {
             throw std::runtime_error("Failed to initialize GLAD");
         }
+        #ifndef NDEBUG
+        std::cout<<"Window::init_GLAD END"<<std::endl;
+        #endif
+        // LOG OPENGL VERSION, VENDOR (IMPLEMENTATION), RENDERER, GLSL, ETC.:
+        std::cout << std::setw(34) << std::left << "OpenGL Version: " << GLVersion.major << "." << GLVersion.minor << std::endl;
+        std::cout << std::setw(34) << std::left << "OpenGL Shading Language Version: " << (char *)glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl;
+        std::cout << std::setw(34) << std::left << "OpenGL Vendor:" << (char *)glGetString(GL_VENDOR) << std::endl;
+        std::cout << std::setw(34) << std::left << "OpenGL Renderer:" << (char *)glGetString(GL_RENDERER) << std::endl;
+        #ifndef NDEBUG
+        std::cout<<"Window::init_SDL END"<<std::endl;
+        #endif
     }
     void Window::destroy_window()
     {
-        glfwDestroyWindow(handle_);
-        glfwTerminate();
+        if (handle_)
+        {
+            SDL_DestroyWindow(handle_);
+        }
+        SDL_Quit();
         handle_ = nullptr;
     }
     void Window::wait_events()
     {
-        glfwWaitEvents();
+        SDL_WaitEvent(&event_);
     }
     void Window::set_factor()
     {
         int frame_width, frame_height;
         int window_width, window_height;
-        glfwGetFramebufferSize(handle_, &frame_width, &frame_height);
-        glfwGetWindowSize(handle_, &window_width, &window_height);
+        SDL_GL_GetDrawableSize(handle_, &frame_width, &frame_height);
+        SDL_GetWindowSize(handle_, &window_width, &window_height);
         if (window_width != 0)
             factor_ = frame_width / window_width;
         else
             factor_ = 1;
     }
 
-    void Window::set_window(uint32_t width, uint32_t height, const std::string &title)
-    {
-        set_size(width, height);
-
-        set_title(title);
-    }
     void Window::set_size(uint32_t width, uint32_t height)
     {
         width_ = width;
         height_ = height;
     }
-    void Window::set_title(const std::string &title)
-    {
-        title_ = title;
-        glfwSetWindowTitle(handle_, title_.c_str());
-    }
-    void Window::set_user_pointer(void *pointer)
-    {
-        glfwSetWindowUserPointer(handle_, pointer);
-    }
-    void Window::set_framebuffer_size_callback(void (*fp)(GLFWwindow *window, int width, int height))
-    {
-        glfwSetFramebufferSizeCallback(handle_, fp);
-    }
-    void Window::set_drop_callback(void (*fp)(GLFWwindow *window, int count, const char **paths))
-    {
-        glfwSetDropCallback(handle_, fp);
-    }
-    void Window::set_scroll_callback(void (*fp)(GLFWwindow *window, double xoffset, double yoffset))
-    {
-        glfwSetScrollCallback(handle_, fp);
-    }
-    void Window::set_mouse_button_callback(void (*fp)(GLFWwindow *window, int button, int action, int modes))
-    {
-        glfwSetMouseButtonCallback(handle_, fp);
-    }
-    void Window::set_cursor_pos_callback(void (*fp)(GLFWwindow *window, double xpos, double ypos))
-    {
-        glfwSetCursorPosCallback(handle_, fp);
-    }
 
-    GLFWwindow *Window::get_handle() const
+    SDL_Window *Window::get_handle() const
     {
         return handle_;
     }
+
+    SDL_GLContext &Window::get_context(){
+        return gl_context_;
+    }
+    
+    SDL_Event &Window::get_event(){
+        return event_;
+    }
+
     std::pair<uint32_t, uint32_t> Window::get_size() const
     {
         return std::make_pair(width_, height_);
     }
+
     uint32_t Window::get_width() const
     {
         return width_ * factor_;
@@ -152,25 +165,25 @@ namespace glcpp
     {
         return static_cast<float>(width_) / static_cast<float>(height_);
     }
-    std::pair<const char **, uint32_t> Window::get_required_instance_extensions() const
-    {
-        uint32_t glfw_extension_count;
-        auto glfw_extensions = glfwGetRequiredInstanceExtensions(&glfw_extension_count);
-        return std::make_pair(glfw_extensions, glfw_extension_count);
-    }
+
     std::pair<int, int> Window::get_framebuffer_size() const
     {
         std::pair<int, int> size{0, 0};
-        glfwGetFramebufferSize(handle_, &size.first, &size.second);
+        SDL_GL_GetDrawableSize(handle_, &size.first, &size.second);
         return size;
     }
     void Window::update_window()
     {
         int width;
         int height;
-        glfwGetWindowSize(handle_, &width, &height);
+        SDL_GetWindowSize(handle_, &width, &height);
         width_ = width;
         height_ = height;
         set_factor();
     }
+
+    void Window::swap_window(){
+        SDL_GL_SwapWindow(handle_);
+    }
+
 }

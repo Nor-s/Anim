@@ -67,7 +67,7 @@
 -   an screenshot in Blender.
     ![](/screenshot/screenshot.gif)
 
-### **08/05**
+### **08/05 Restart, to make it into an animation tool**
 
 -   simple lighting, add imguizmo
 

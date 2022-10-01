@@ -21,4 +21,7 @@
 [submodule "extern/cpython"]
 	path = external/cpython
 	url = https://github.com/python/cpython.git
-	branch = 3.10
+	branch = 3.7
+[submodule "external/VIBE"]
+	path = external/VIBE
+	url = https://github.com/mkocabas/VIBE.git

@@ -22,3 +22,6 @@
 	path = external/cpython
 	url = https://github.com/python/cpython.git
 	branch = 3.7
+[submodule "external/ROMP"]
+	path = external/ROMP
+	url = https://github.com/Arthur151/ROMP.git

@@ -103,7 +103,7 @@ see scripts/requirements.txt
 ## **License**
 
 
--   The source code is available under the Apache-2.0 license.
+-   The source code(/src) is available under the Apache-2.0 license.
 -   model assets are CC-By 4.0. (resources/models/mannequiny.fbx)
     -   https://github.com/GDQuest/godot-3d-mannequin
     -   The Godot mannequin is a character made by Luciano Muñoz In blender 2.80

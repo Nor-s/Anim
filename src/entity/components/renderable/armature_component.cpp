@@ -48,7 +48,7 @@ namespace anim
     {
         return offset_;
     }
-    const glm::mat4 &ArmatureComponent::get_bind_pose() const
+    const glm::mat4 &ArmatureComponent::get_bindpose() const
     {
         return bind_pose_;
     }

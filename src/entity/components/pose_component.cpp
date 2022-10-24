@@ -61,6 +61,10 @@ namespace anim
     {
         return animator_;
     }
+    AnimationComponent *PoseComponent::get_animation_component() {
+        return animation_component_;
+    }
+
     void PoseComponent::add_and_replace_bone(const std::string &name, const glm::mat4 &transform)
     {
         Animation *animation = (animation_component_) ? animation_component_->get_mutable_animation() : nullptr;

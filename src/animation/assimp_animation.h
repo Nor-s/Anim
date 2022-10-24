@@ -26,6 +26,8 @@ namespace anim
     private:
         void init_animation(const aiAnimation *animation, const aiScene *scene, const char *path);
         void process_bones(const aiAnimation *animation, const aiNode *root_node);
+        void process_bindpose(const aiNode *node);
+
     };
 
 }

@@ -27,6 +27,7 @@ namespace anim
         void export_animation(Entity *entity, const char *path, bool is_linear);
         void add_entity(std::shared_ptr<Model> &model, const char *path);
         void add_animations(const std::vector<std::shared_ptr<Animation>> &animations);
+        void add_animation(std::shared_ptr<Animation> animation);
         void add_shader(const std::string &name, const char *vs_path, const char *fs_path);
         void convert_to_entity(std::shared_ptr<Entity> &entity,
                                std::shared_ptr<Model> &model,

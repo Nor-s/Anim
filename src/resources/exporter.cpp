@@ -102,7 +102,7 @@ namespace anim
     {
         Json::Value node_json;
         auto armature = node->get_component<ArmatureComponent>();
-        auto &transform = armature->get_bind_pose();
+        auto &transform = armature->get_bindpose();
         const auto &[t, r, s] = DecomposeTransform(transform);
         node_json["name"] = node->get_name();
         node_json["position"] = get_vec_json(t);
@@ -197,7 +197,7 @@ namespace anim
         glm::mat4 transform = entity->get_local();
         if (armature)
         {
-            transform = armature->get_bind_pose();
+            transform = armature->get_bindpose();
         }
 
         ai_node->mName = aiString(entity->get_name().c_str());

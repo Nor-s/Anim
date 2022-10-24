@@ -87,6 +87,9 @@ namespace ui
 
             ImGui::EndChild();
         }
+        if(ImGui::Button("SMPL -> Mixamo")) {
+            context.is_clicked_retargeting = true;
+        }
         auto animc = const_cast<AnimationComponent *>(animation);
         auto anim = animc->get_mutable_animation();
         ImGui::Text("duration: %f", anim->get_duration());

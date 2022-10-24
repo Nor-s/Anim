@@ -209,10 +209,11 @@ namespace ui
 
                 ImGui::PopStyleVar();
                 ImGui::SameLine();
+                
                 // view mode
                 bool &is_activate_mesh = anim::MeshComponent::isActivate;
                 ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
-                ToggleButton(ICON_MD_PERSON_OFF, &is_activate_mesh, btn_size);
+                ToggleButton(ICON_MD_PERSON, &is_activate_mesh, btn_size);
                 ImGui::SameLine();
                 ImGui::PushFont(io.Fonts->Fonts[ICON_FA]);
                 ToggleButton(ICON_FA_BONE, &anim::ArmatureComponent::isActivate, btn_size);

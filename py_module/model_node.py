@@ -1,6 +1,7 @@
 import glm
 import copy
 import math
+
 from .gizmo import Gizmo, calc_quat
 from .mixamo import Mixamo
 
@@ -12,12 +13,12 @@ def find_2d_angle(cx, cy, ex, ey):
     return theta
 
 
-def pixel3d_json_to_glm_vec(pixel3d_json):
-    return glm.vec3(pixel3d_json['x'], pixel3d_json['y'], pixel3d_json['z'])
+def json_to_glm_vec(json_3d):
+    return glm.vec3(json_3d['x'], json_3d['y'], json_3d['z'])
 
 
-def pixel3d_json_to_glm_quat(pixel3d_json):
-    return glm.quat(w=pixel3d_json['w'], x=pixel3d_json['x'], y=pixel3d_json['y'], z=pixel3d_json['z'])
+def json_to_glm_quat(json_4d):
+    return glm.quat(w=json_4d['w'], x=json_4d['x'], y=json_4d['y'], z=json_4d['z'])
 
 
 def glm_vec3_to_json(vec):
@@ -130,9 +131,9 @@ class ModelNode:
         self.name = model_name
         self.idx = mixamo_idx_map[model_name]
 
-        self.position = pixel3d_json_to_glm_vec(model_json["position"])
-        self.rotate = pixel3d_json_to_glm_quat(model_json["rotation"])
-        self.scale = pixel3d_json_to_glm_vec(model_json["scale"])
+        self.position = json_to_glm_vec(model_json["position"])
+        self.rotate = json_to_glm_quat(model_json["rotation"])
+        self.scale = json_to_glm_vec(model_json["scale"])
         if before_transform != None:
             self.position, self.rotate, self.scale = decompose(before_transform*self.get_transform())
         if self.name == Mixamo.LeftUpLeg.name or self.name == Mixamo.RightUpLeg.name:
@@ -158,9 +159,9 @@ class ModelNode:
             else:
                 for child_of_child in child["child"]:
                     childlist.append(child_of_child)
-                    position = pixel3d_json_to_glm_vec(child["position"])
-                    rotation = pixel3d_json_to_glm_quat(child["rotation"])
-                    scale = pixel3d_json_to_glm_vec(child["scale"])
+                    position = json_to_glm_vec(child["position"])
+                    rotation = json_to_glm_quat(child["rotation"])
+                    scale = json_to_glm_vec(child["scale"])
                     transform = calc_transform(position, rotation, scale)
                     transform_list.append(transform)
                     parent_transform_list.append(self.global_transform*transform)

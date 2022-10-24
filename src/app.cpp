@@ -13,6 +13,7 @@
 #include "entity/components/animation_component.h"
 #include "entity/components/renderable/armature_component.h"
 #include "animation/animator.h"
+#include "animation/retargeter.h"
 #include "util/log.h"
 #include "UI/ui_context.h"
 #include "event/event_history.h"
@@ -229,15 +230,15 @@ void App::process_menu_context()
 {
     auto &ui_context = ui_->get_context();
     auto &menu_context = ui_context.menu;
-    if (menu_context.clicked_import_model)
+    if (menu_context.is_clicked_import_model)
     {
         shared_resources_->import(menu_context.path.c_str(), menu_context.import_scale);
     }
-    if (menu_context.clicked_export_animation)
+    if (menu_context.is_clicked_export_animation)
     {
         shared_resources_->export_animation(scenes_[current_scene_idx_]->get_mutable_selected_entity(), menu_context.path.c_str(), menu_context.is_export_linear_interpolation);
     }
-    if (menu_context.clicked_import_dir)
+    if (menu_context.is_clicked_import_dir)
     {
         for (const auto &file : std::filesystem::directory_iterator(menu_context.path))
         {
@@ -249,7 +250,7 @@ void App::process_menu_context()
             }
         }
     }
-    if (menu_context.clicked_export_all_data)
+    if (menu_context.is_clicked_export_all_data)
     {
         auto entity = scenes_[current_scene_idx_]->get_mutable_selected_entity();
         anim::to_json_all_animation_data(menu_context.path.c_str(), entity, shared_resources_.get());
@@ -275,6 +276,11 @@ void App::process_component_context()
     {
         auto animation_comp = scenes_[current_scene_idx_]->get_mutable_selected_entity()->get_mutable_root()->get_component<anim::AnimationComponent>();
         animation_comp->set_animation(shared_resources_->get_mutable_animation(comp_context.new_animation_idx));
+    }
+    if(comp_context.is_clicked_retargeting) {
+        auto pose_comp = scenes_[current_scene_idx_]->get_mutable_selected_entity()->get_mutable_root()->get_component<anim::PoseComponent>();
+        auto retargeter = anim::MixamoRetargeter();
+        shared_resources_->add_animation(retargeter.retarget(pose_comp));
     }
 }
 

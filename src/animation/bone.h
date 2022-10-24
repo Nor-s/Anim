@@ -19,9 +19,9 @@ namespace anim
     {
         glm::vec3 position;
         float time;
-        const float get_time(float factor = 1.0f) const
+        const float get_time() const
         {
-            return time * factor;
+            return time;
         }
     };
 
@@ -29,9 +29,9 @@ namespace anim
     {
         glm::quat orientation;
         float time;
-        const float get_time(float factor = 1.0f) const
+        const float get_time() const
         {
-            return time * factor;
+            return time;
         }
     };
 
@@ -39,9 +39,9 @@ namespace anim
     {
         glm::vec3 scale;
         float time;
-        const float get_time(float factor = 1.0f) const
+        const float get_time() const
         {
-            return time * factor;
+            return time;
         }
     };
 
@@ -52,16 +52,21 @@ namespace anim
         Bone(const std::string &name, const aiNodeAnim *channel, const glm::mat4 &inverse_binding_pose);
         void update(float animation_time, float factor);
         glm::mat4 &get_local_transform(float animation_time, float factor);
+        const glm::mat4& get_bindpose() const;
         const std::set<float> &get_time_set() const;
         const std::string &get_name() const;
         float get_factor();
         void get_ai_node(aiNodeAnim *channel, const aiMatrix4x4 &binding_pose_transform, float factor = 1.0, bool is_interpolated = true);
 
         void set_name(const std::string &name);
-
-        void push_position(const glm::vec3 &pos, float time);
-        void push_rotation(const glm::quat &quat, float time);
-        void push_scale(const glm::vec3 &scale, float time);
+        void set_bindpose(const glm::mat4 &bindpose);
+        /**
+         * TODO: floor(time) 는 assimp fbx exporter에서 내보낸 fbx 파일을 위한 것
+         * 데이터 손실 가능성 있으므로 수정해야함
+        */
+        void push_position(const glm::vec3 &pos, float time, bool is_floor = true);
+        void push_rotation(const glm::quat &quat, float time, bool is_floor = true);
+        void push_scale(const glm::vec3 &scale, float time, bool is_floor = true);
 
         glm::vec3 *get_position(float animation_time)
         {

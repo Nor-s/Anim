@@ -5,8 +5,14 @@ import math
 import matplotlib
 import os
 from .mixamo import Mixamo
-from .model_node import ModelNode
+from .model_node import ModelNode, json_to_glm_vec, json_to_glm_quat, calc_transform
+# from .one_euro_filter import OneEuroFilter
 import copy
+import numpy as np
+
+def smooth_pose(one_euro_filter, pose, time):
+    t = np.ones_like(pose) * time
+    return one_euro_filter(t, pose)
 
 def get_3d_len(left):
     return math.sqrt((left["x"])**2 + (left["y"])**2 + (left["z"])**2)
@@ -181,6 +187,20 @@ def get_mixamo_name_mediapipe_name_map():
         mm_name_mp_name_map[mixamo_names[idx][0]] = mixamo_names[idx][3]
     return mm_name_mp_name_map
 
+def init_bindpose(bindpose_json, model_json):
+    '''
+    bindpose_json: output
+    '''
+    name = model_json["name"]
+    position = json_to_glm_vec(model_json["position"])
+    rotate = json_to_glm_quat(model_json["rotation"])
+    scale = json_to_glm_vec(model_json["scale"])
+    transform = np.array(calc_transform(position, rotate, scale))
+    bindpose_json[name] = transform.flatten().tolist()
+    childlist = model_json["child"]
+    for child in childlist:
+        init_bindpose(bindpose_json, child)
+
 def mediapipe_to_mixamo(mp_manager,
                         mixamo_dict_string,
                         video_path):
@@ -200,15 +220,19 @@ def mediapipe_to_mixamo(mp_manager,
     if mp_manager.fps > 0:
         time_factor = mp_manager.fps/fps
         fps = mp_manager.fps
+
     anim_result_json = {
         "fileName": os.path.basename(video_path),
         "duration": 0,
         "width":  cap.get(cv2.CAP_PROP_FRAME_WIDTH),
         "height": cap.get(cv2.CAP_PROP_FRAME_HEIGHT),
         "ticksPerSecond": fps,
+        "bindpose" : {
+        },
         "frames": [
         ]
     }
+    init_bindpose(anim_result_json["bindpose"], hip_node)
 
     try:
         root_node = ModelNode()
@@ -277,6 +301,9 @@ def mediapipe_to_mixamo2(mp_manager,
         fig = matplotlib.pyplot.figure()
         matplotlib.pyplot.show()
 
+    # one euro filter
+    # one_euro_filter = None
+
     # init mediapipe
     try:
         max_frame_num = mp_manager.max_frame_num
@@ -298,8 +325,14 @@ def mediapipe_to_mixamo2(mp_manager,
             cap_image, glm_list, visibility_list, hip2d_left, hip2d_right, leg2d = detect_pose_to_glm_pose(
                 mp_manager, cap_image, mp_idx_mm_idx_map)
             if glm_list[0] != None:
+                time =  math.floor(frame_num*time_factor)
+                # if one_euro_filter == None:
+                    # one_euro_filter = OneEuroFilter(np.zeros_like( np.array(glm_list)), np.array(glm_list))
+                # else:
+                    # glm_list = smooth_pose(one_euro_filter=one_euro_filter, pose = np.array(glm_list), time = frame_num)
+                    
                 bones_json = {
-                    "time": math.floor(frame_num*time_factor),
+                    "time": time,
                     "bones": []
                 }
                 mixamo_bindingpose_root_node.normalize(glm_list)

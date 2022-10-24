@@ -91,12 +91,14 @@ set(test_src
     animation/json_animation.cpp
     animation/assimp_animation.cpp
     animation/bone.cpp
+    animation/retargeter.cpp
 
     animation/animator.h
     animation/animation.h
     animation/assimp_animation.h
     animation/json_animation.h
     animation/bone.h
+    animation/retargeter.h
 )
 add_library(test STATIC ${test_src})
 

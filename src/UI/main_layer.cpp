@@ -210,10 +210,10 @@ namespace ui
             "Export",
             "ExportData"};
         std::array<bool *, 4> is_clicked_dir = {
-            &context_.menu.clicked_import_model,
-            &context_.menu.clicked_import_dir,
-            &context_.menu.clicked_export_animation,
-            &context_.menu.clicked_export_all_data};
+            &context_.menu.is_clicked_import_model,
+            &context_.menu.is_clicked_import_dir,
+            &context_.menu.is_clicked_export_animation,
+            &context_.menu.is_clicked_export_all_data};
         ImVec2 minSize = {650.0f, 400.0f}; // Half the display area
         const char *filters = FILTER_MODEL ",Json Animation (*.json){.json},.*";
         static bool py_modal = false;

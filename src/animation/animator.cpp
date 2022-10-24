@@ -59,7 +59,7 @@ namespace anim
         entity->set_local(glm::mat4(1.0f));
 
         // 바인딩 포즈
-        global_transformation *= armature->get_bind_pose();
+        global_transformation *= armature->get_bindpose();
 
         // 애니메이션
         auto bone = animation->find_bone(node_name);

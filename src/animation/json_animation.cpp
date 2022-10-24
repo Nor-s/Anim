@@ -1,8 +1,10 @@
 #include "json_animation.h"
+#include "bone.h"
+
+#include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
 #include <filesystem>
-#include "bone.h"
 
 namespace anim
 {
@@ -28,12 +30,13 @@ namespace anim
     {
         name_bone_map_.clear();
     }
+    // TODO: ifstream => Json::Reader
     void JsonAnimation::init()
     {
         try
         {
             std::filesystem::path path = std::filesystem::u8path((path_).c_str());
-            name_ = path.filename().string();
+            path_ = path.filename().string();
             type_ = AnimationType::Json;
             Json::Value root;
 #ifndef NDEBUG
@@ -45,13 +48,12 @@ namespace anim
             {
                 anim_stream.close();
             }
+            name_ = root.get("fileName", "animation").asString();
             duration_ = root.get("duration", "0").asFloat();
             fps_ = root.get("ticksPerSecond", "24").asFloat();
             const Json::Value frames = root["frames"];
-            if (frames != "null")
-            {
-                process_frames(frames);
-            }
+            process_frames(frames);
+            process_bindpose(root["bindpose"]);
         }
         catch (std::exception &e)
         {
@@ -63,6 +65,10 @@ namespace anim
     }
     void JsonAnimation::process_frames(const Json::Value &frames)
     {
+        if (frames == "null")
+        {
+            return;
+        }
         try
         {
             uint32_t size = static_cast<uint32_t>(frames.size());
@@ -116,6 +122,28 @@ namespace anim
 #endif
         }
     }
+
+    void JsonAnimation::process_bindpose(const Json::Value &bindpose)
+    {
+        if (bindpose == "null")
+        {
+            return;
+        }
+        for (auto &it : name_bone_map_)
+        {
+            Bone *bone = it.second.get();
+            const Json::Value &bone_bindpose = bindpose[it.first];
+            if (bone_bindpose != "null")
+            {
+                bone->set_bindpose(get_mat(bone_bindpose));
+            }
+        }
+        for(auto const& name: bindpose.getMemberNames())
+        {
+            name_bindpose_map_[name] =  get_mat(bindpose[name]);
+        }
+    }
+
     glm::vec3 JsonAnimation::get_position(const Json::Value &bone)
     {
         if (bone == "null")
@@ -139,5 +167,32 @@ namespace anim
             return glm::vec3(1.0f, 1.0f, 1.0f);
         }
         return glm::vec3(bone.get("x", "0.0").asFloat(), bone.get("y", "0.0").asFloat(), bone.get("z", "0.0").asFloat());
+    }
+    glm::mat4 JsonAnimation::get_mat(const Json::Value &mat_array)
+    {
+        if (mat_array == "null" || static_cast<uint32_t>(mat_array.size()) != 16u)
+        {
+            return glm::mat4(1.0f);
+        }
+        glm::mat4 to;
+        to[0][0] = mat_array[ 0*4 + 0].asFloat();
+        to[1][0] = mat_array[ 1*4 + 0].asFloat();
+        to[2][0] = mat_array[ 2*4 + 0].asFloat();
+        to[3][0] = mat_array[ 3*4 + 0].asFloat();
+        to[0][1] = mat_array[ 0*4 + 1].asFloat();
+        to[1][1] = mat_array[ 1*4 + 1].asFloat();
+        to[2][1] = mat_array[ 2*4 + 1].asFloat();
+        to[3][1] = mat_array[ 3*4 + 1].asFloat();
+        to[0][2] = mat_array[ 0*4 + 2].asFloat();
+        to[1][2] = mat_array[ 1*4 + 2].asFloat();
+        to[2][2] = mat_array[ 2*4 + 2].asFloat();
+        to[3][2] = mat_array[ 3*4 + 2].asFloat();
+        to[0][3] = mat_array[ 0*4 + 3].asFloat();
+        to[1][3] = mat_array[ 1*4 + 3].asFloat();
+        to[2][3] = mat_array[ 2*4 + 3].asFloat();
+        to[3][3] = mat_array[ 3*4 + 3].asFloat();
+        to = glm::transpose(to);
+
+        return to;
     }
 }

@@ -116,6 +116,7 @@ namespace anim
             name_bone_map_[name] = std::make_unique<Bone>();
             bone = name_bone_map_[name].get();
             bone->set_name(name);
+            bone->set_bindpose(name_bindpose_map_[name]);
             bone->replace_or_add_keyframe(glm::mat4(1.0f), 0.0f);
         }
     }

@@ -4,7 +4,6 @@
 #include <util/log.h>
 #include <glm/gtx/string_cast.hpp>
 
-
 namespace anim
 {
     Bone::Bone() = default;
@@ -12,7 +11,7 @@ namespace anim
         : name_(name),
           local_transform_(1.0f)
     {
-        bindpose_ = glm::inverse(inverse_binding_pose);
+        set_bindpose(glm::inverse(inverse_binding_pose));
         int num_positions = channel->mNumPositionKeys;
         int num_rotations = channel->mNumRotationKeys;
         int num_scales = channel->mNumScalingKeys;
@@ -82,6 +81,11 @@ namespace anim
     {
         update(animation_time, factor);
         return local_transform_;
+    }
+
+    const glm::mat4 &Bone::get_bindpose() const
+    {
+        return bindpose_;
     }
 
     const std::set<float> &Bone::get_time_set() const
@@ -161,27 +165,31 @@ namespace anim
     {
         name_ = name;
     }
-    void Bone::push_position(const glm::vec3 &pos, float time)
+    void Bone::set_bindpose(const glm::mat4 &bindpose)
     {
-        if (floor(time) != time)
+        bindpose_ = bindpose;
+    }
+    void Bone::push_position(const glm::vec3 &pos, float time, bool is_floor)
+    {
+        if (is_floor && floor(time) != time)
         {
             return;
         }
         positions_[time] = {pos, time};
         time_set_.insert(time);
     }
-    void Bone::push_rotation(const glm::quat &quat, float time)
+    void Bone::push_rotation(const glm::quat &quat, float time, bool is_floor)
     {
-        if (floor(time) != time)
+        if (is_floor && floor(time) != time)
         {
             return;
         }
         rotations_[time] = {quat, time};
         time_set_.insert(time);
     }
-    void Bone::push_scale(const glm::vec3 &scale, float time)
+    void Bone::push_scale(const glm::vec3 &scale, float time, bool is_floor)
     {
-        if (floor(time) != time)
+        if (is_floor && floor(time) != time)
         {
             return;
         }
@@ -222,7 +230,7 @@ namespace anim
     glm::mat4 Bone::interpolate_scaling(float animation_time)
     {
         const auto &[p0Index, p1Index] = get_start_end<KeyScale>(scales_, animation_time, KeyScale{glm::vec3(1.0f, 1.0f, 1.0f), 0.0f});
-        
+
         float scaleFactor = get_scale_factor(p0Index.get_time(),
                                              p1Index.get_time(), animation_time);
         return glm::scale(glm::mat4(1.0f), glm::mix(p0Index.scale, p1Index.scale, scaleFactor));
@@ -255,7 +263,8 @@ namespace anim
             is_add = true;
             scales_[time_stamp] = {s, time_stamp};
         }
-        if(is_add) {
+        if (is_add)
+        {
             time_set_.insert(time_stamp);
         }
     }
@@ -265,8 +274,8 @@ namespace anim
         float time_stamp = floorf(time) / factor_;
         auto [t, r, s] = DecomposeTransform(transform);
         auto [it_t, it_r, it_s] = std::tuple{positions_.find(time_stamp),
-                                          rotations_.find(time_stamp),
-                                          scales_.find(time_stamp)};
+                                             rotations_.find(time_stamp),
+                                             scales_.find(time_stamp)};
         sub_keyframe(time);
 
         auto erased_transform = get_local_transform(time, factor_);
@@ -275,30 +284,35 @@ namespace anim
         bool is_t_changed = !(lt.x - tolerance < t.x && t.x < lt.x + tolerance && lt.y - tolerance < t.y && t.y < lt.y + tolerance && lt.z - tolerance < t.z && t.z < lt.z + tolerance);
         bool is_r_changed = !(lr.x - tolerance < r.x && r.x < lr.x + tolerance && lr.y - tolerance < r.y && r.y < lr.y + tolerance && lr.z - tolerance < r.z && r.z < lr.z + tolerance);
         bool is_s_changed = !(ls.x - tolerance < s.x && s.x < ls.x + tolerance && ls.y - tolerance < s.y && s.y < ls.y + tolerance && ls.z - tolerance < s.z && s.z < ls.z + tolerance);
-        if(is_t_changed || is_r_changed || is_s_changed || time_stamp == 0.0f) {
+        if (is_t_changed || is_r_changed || is_s_changed || time_stamp == 0.0f)
+        {
             replace_or_add_keyframe(transform, time);
         }
     }
 
-    bool Bone::sub_keyframe(float time, bool is_animation_time) 
+    bool Bone::sub_keyframe(float time, bool is_animation_time)
     {
         float time_stamp = floorf(time) / factor_;
-        if(is_animation_time) {
+        if (is_animation_time)
+        {
             time_stamp = time;
         }
         auto [it_t, it_r, it_s] = std::tuple{positions_.find(time_stamp),
-                                          rotations_.find(time_stamp),
-                                          scales_.find(time_stamp)};
+                                             rotations_.find(time_stamp),
+                                             scales_.find(time_stamp)};
         bool is_erased = false;
-        if (it_t != positions_.end()) {
+        if (it_t != positions_.end())
+        {
             is_erased = true;
             positions_.erase(it_t);
         }
-        if(it_r != rotations_.end()) {
+        if (it_r != rotations_.end())
+        {
             is_erased = true;
             rotations_.erase(it_r);
         }
-        if(it_s != scales_.end()) {
+        if (it_s != scales_.end())
+        {
             is_erased = true;
             scales_.erase(it_s);
         }

@@ -15,17 +15,22 @@ namespace anim
     {
     public:
         PoseComponent();
+
+        Entity *get_root_entity();
+        Animator *get_animator();
+        AnimationComponent* get_animation_component();
+
         void set_bone_info_map(std::unordered_map<std::string, BoneInfo> &bone_info_map);
         void set_animator(Animator *animator);
         void set_animation_component(AnimationComponent *animation_component);
         void set_shader(Shader *shader);
         void set_armature_root(Entity *armature_root);
+
         void add_bone(const std::string &name, BoneInfo info);
         void sub_current_bone(const std::string &name);
         void update() override;
-        Entity *get_root_entity();
-        Animator *get_animator();
         void add_and_replace_bone(const std::string &name, const glm::mat4 &transform);
+
         Entity *find(int bone_id);
         Entity *find(int bone_id, Entity *entity);
 

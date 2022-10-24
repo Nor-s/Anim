@@ -24,6 +24,7 @@ namespace anim
         duration_ = animation->mDuration;
         fps_ = animation->mTicksPerSecond;
         process_bones(animation, scene->mRootNode);
+        process_bindpose(scene->mRootNode);
     }
     void AssimpAnimation::process_bones(const aiAnimation *animation, const aiNode *root_node)
     {
@@ -34,16 +35,25 @@ namespace anim
         {
             auto channel = animation->mChannels[i];
             std::string bone_name = channel->mNodeName.C_Str();
-            // bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
-            // auto find_mixamorig = bone_name.find("mixamorig");
-            // if (find_mixamorig != std::string::npos)
-            // {
-            //     bone_name = bone_name.substr(find_mixamorig + 9);
-            // }
+
             const aiNode *node = root_node->FindNode(channel->mNodeName);
             if (node)
             {
                 name_bone_map_[bone_name] = std::make_unique<Bone>(bone_name, channel, glm::inverse(AiMatToGlmMat(node->mTransformation)));
+            }
+        }
+    }
+    void AssimpAnimation::process_bindpose(const aiNode *node)
+    {
+        if (node)
+        {
+            std::string name(node->mName.C_Str());
+            auto bindpose = AiMatToGlmMat(node->mTransformation);
+            auto children_size = node->mNumChildren;
+            name_bindpose_map_[name] = bindpose;
+            for (unsigned int i = 0; i < children_size; ++i)
+            {
+                process_bindpose(node->mChildren[i]);
             }
         }
     }

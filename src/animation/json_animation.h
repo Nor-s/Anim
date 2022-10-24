@@ -4,6 +4,21 @@
     "fileName": "sample/mixamo_dance.gif",
     "duration": 1,
     "ticksPerSecond": 1,
+    "bindpose": {
+      "bone_name1": [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ],
+      "bone_name2": [
+        1, 0, 0, 0,
+        0, 1, 0, 0,
+        0, 0, 1, 0,
+        0, 0, 0, 1
+      ]
+      ...
+    },
     "frames": [
         {
             "time": 0,
@@ -61,11 +76,14 @@ namespace anim
 
     void process_bones(const Json::Value &bones, float time);
 
+    void process_bindpose(const Json::Value &bindpose);
+
     glm::vec3 get_position(const Json::Value &bone);
 
     glm::quat get_rotation(const Json::Value &bone);
 
     glm::vec3 get_scale(const Json::Value &bone);
+    glm::mat4 get_mat(const Json::Value &mat_array);
   };
 }
 #endif

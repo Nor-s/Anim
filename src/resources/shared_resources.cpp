@@ -82,10 +82,15 @@ namespace anim
     {
         for (auto &animation : animations)
         {
+            add_animation(animation);
+        }
+        LOG("Animation Add: " + std::to_string(animations_.size()));
+    }
+    void SharedResources::add_animation(std::shared_ptr<Animation> animation) {
+        if(animation) {
             animations_.push_back(std::move(animation));
             animations_.back()->set_id(animations_.size() - 1);
         }
-        LOG("Animation Add: " + std::to_string(animations_.size()));
     }
     void SharedResources::add_shader(const std::string &name, const char *vs_path, const char *fs_path)
     {

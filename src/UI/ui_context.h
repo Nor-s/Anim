@@ -12,6 +12,7 @@ namespace ui
         int current_animation_idx{-1};
         int new_animation_idx{-1};
         bool is_changed_animation{false};
+        bool is_clicked_retargeting{false};
         ComponentContext()
             : current_animation_idx(-1),
               new_animation_idx(-1),
@@ -44,19 +45,19 @@ namespace ui
     // import, export
     struct MenuContext
     {
-        bool clicked_import_model{false};
-        bool clicked_import_dir{false};
-        bool clicked_export_animation{false};
-        bool clicked_export_all_data{false};
+        bool is_clicked_import_model{false};
+        bool is_clicked_import_dir{false};
+        bool is_clicked_export_animation{false};
+        bool is_clicked_export_all_data{false};
         bool is_dialog_open{false};
         bool is_export_linear_interpolation{true};
         float import_scale{100.0f};
         std::string path{""};
         MenuContext()
-            : clicked_import_model(false),
-              clicked_import_dir(false),
-              clicked_export_animation(false),
-              clicked_export_all_data(false),
+            : is_clicked_import_model(false),
+              is_clicked_import_dir(false),
+              is_clicked_export_animation(false),
+              is_clicked_export_all_data(false),
               is_dialog_open(false),
               is_export_linear_interpolation(true),
               import_scale(100.0f)

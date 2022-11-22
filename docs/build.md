@@ -9,7 +9,12 @@ requirements
 
 ## **Windows(VS2022 amd64)**
 
--   MSVC 19.33.31517.0 (VS2022 amd64)
+-   MSVC 19.33.31517.0 (VS2022 amd64) 
+    -   workload
+         -  Desktop Development with C++
+         -  Universal Windows Platform Development
+         -   C++ CMake Tools for Windows
+         -    Python Development
 
     -   Visual Studio must satisfy the conditions described in [this document](https://github.com/python/cpython/tree/main/PCbuild) (for cpython)
 
@@ -18,6 +23,7 @@ requirements
     -   and, check c++ cmake tools
 
         ![](https://docs.microsoft.com/ko-kr/cpp/build/media/cmake-install-2019.png?view=msvc-170)
+        
 ### **Visual Studio**
 
 see [/docs/windows_build.pdf](/docs/windows_build.pdf)

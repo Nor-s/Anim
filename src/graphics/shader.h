@@ -19,6 +19,7 @@ namespace anim
         virtual const unsigned int get_id() const = 0;
         virtual void set_bool(const std::string &name, bool value) const = 0;
         virtual void set_int(const std::string &name, int value) const = 0;
+        virtual void set_uint(const std::string &name, int value) const = 0;
         virtual void set_float(const std::string &name, float value) const = 0;
         virtual void set_vec2(const std::string &name, const glm::vec2 &value) const = 0;
         virtual void set_vec2(const std::string &name, float x, float y) const = 0;

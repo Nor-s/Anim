@@ -39,13 +39,20 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
 {
     set_size(width, height);
 
-    framebuffer_.reset(new anim::Framebuffer{width, height, GL_RGB, true});
+    framebuffer_.reset(new anim::Framebuffer{anim::FramebufferSpec(width,
+                                                                   height,
+                                                                   4,
+                                                                   {anim::FramebufferTextureFormat::RGBA8, anim::FramebufferTextureFormat::RED_INTEGER},
+                                                                   anim::FramebufferTextureFormat::Depth)});
     if (framebuffer_->error())
     {
         anim::LOG("framebuffer error");
-        framebuffer_.reset(new anim::Framebuffer{width, height, GL_RGB, false});
+        framebuffer_.reset(new anim::Framebuffer{anim::FramebufferSpec(width,
+                                                                       height,
+                                                                       1,
+                                                                       {anim::FramebufferTextureFormat::RGBA8},
+                                                                       anim::FramebufferTextureFormat::Depth)});
     }
-    offscreen_framebuffer_.reset(new anim::Framebuffer{width, height, GL_RGB, false});
 }
 
 void MainScene::init_camera()
@@ -103,17 +110,13 @@ void MainScene::draw()
 
 void MainScene::picking(int x, int y, bool is_only_bone)
 {
-    glDisable(GL_BLEND);
-    glEnable(GL_DEPTH_TEST);
-    offscreen_framebuffer_->bind_with_depth({1.0f, 1.0f, 1.0f, 1.0f});
-    {
-        resources_->update_for_picking();
-    }
-    offscreen_framebuffer_->unbind();
-    auto pixel = offscreen_framebuffer_->read_pixel(x, y);
-    anim::LOG(std::to_string(pixel.x) + " " + std::to_string(pixel.y) + " " + std::to_string(pixel.z));
-    int pick_id = pixel.x + pixel.y * 256;
-    if (pick_id == 0x0000ffff)
+    uint32_t pixel_i = static_cast<uint32_t>(framebuffer_->read_pixel(x, y, 1));
+    uint32_t pixel_x = pixel_i  >> 8;
+    uint32_t pixel_y = pixel_i & 0x000000FF;
+    
+    anim::LOG(std::to_string(pixel_i) + ": "+ std::to_string(pixel_x) + " " + std::to_string(pixel_y));
+    int pick_id = pixel_x;
+    if (pick_id == 0x00000000)
     {
         anim::LOG("- - pick: background");
         set_selected_entity(nullptr);
@@ -123,10 +126,11 @@ void MainScene::picking(int x, int y, bool is_only_bone)
         auto entity = resources_->get_entity(pick_id);
         if (entity)
         {
+            anim::LOG("pick entity");
             set_selected_entity(entity->get_mutable_root());
             if (is_only_bone)
             {
-                if (pixel.z == 255)
+                if (pixel_y == 255)
                 {
                     set_selected_entity(entity);
                 }
@@ -135,7 +139,8 @@ void MainScene::picking(int x, int y, bool is_only_bone)
                     // mesh to armature
                     auto pose = selected_entity_->get_component<anim::PoseComponent>();
 
-                    set_selected_entity(pose->find(pixel.z));
+                    set_selected_entity(pose->find(pixel_y));
+                    anim::LOG("pick bone: " + selected_entity_->get_name() + " " + std::to_string(selected_entity_->get_component<anim::ArmatureComponent>()->get_id()));
                 }
             }
         }

@@ -23,7 +23,7 @@ namespace anim
     public:
         static inline bool isActivate = true;
         static inline bool isApplayLocalRotation = false;
-        glm::vec3 selectionColor{1.0f, 1.0f, 1.0f};
+        uint32_t selectionColor;
 
         static void setShape(std::unique_ptr<Mesh> shape);
 

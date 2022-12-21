@@ -10,6 +10,7 @@
 #include <map>
 #include <vector>
 #include <filesystem>
+#include <queue>
 
 #include "../graphics/shader.h"
 #include "../util/utility.h"
@@ -41,12 +42,6 @@ namespace anim
     {
         node_count_++;
         std::string model_name = std::string(ai_node->mName.C_Str());
-        // model_name = model_name.substr(model_name.find_last_of(':') + 1);
-        // auto find_mixamorig = model_name.find("mixamorig");
-        // if (find_mixamorig != std::string::npos)
-        // {
-        //     model_name = model_name.substr(find_mixamorig + 9);
-        // }
         model_node.reset(new ModelNode(AiMatToGlmMat(ai_node->mTransformation),
                                        model_name,
                                        ai_node->mNumChildren));
@@ -132,10 +127,12 @@ namespace anim
         // process material
         aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
         aiColor3D color{};
+
         material->Get(AI_MATKEY_COLOR_AMBIENT, color);
         mat_properties.ambient.x = color.r;
         mat_properties.ambient.y = color.g;
         mat_properties.ambient.z = color.b;
+
         material->Get(AI_MATKEY_COLOR_DIFFUSE, color);
         mat_properties.diffuse.x = color.r;
         mat_properties.diffuse.y = color.g;
@@ -145,6 +142,7 @@ namespace anim
         mat_properties.specular.x = color.r;
         mat_properties.specular.y = color.g;
         mat_properties.specular.z = color.b;
+
         float shininess{};
         material->Get(AI_MATKEY_SHININESS, shininess);
         mat_properties.shininess = shininess;
@@ -177,25 +175,23 @@ namespace anim
         {
             int bone_id = -1;
             std::string bone_name = mesh->mBones[bone_idx]->mName.C_Str();
-            // bone_name = bone_name.substr(bone_name.find_last_of(':') + 1);
-            // auto find_mixamorig = bone_name.find("mixamorig");
-            // if (find_mixamorig != std::string::npos)
-            // {
-            //     bone_name = bone_name.substr(find_mixamorig + 9);
-            // }
-            if (bone_info_map.find(bone_name) == bone_info_map.end())
+            auto bone_it = bone_info_map.find(bone_name);
+
+            if (bone_it == bone_info_map.end())
             {
                 BoneInfo new_bone_info{};
                 new_bone_info.id = bone_count;
                 new_bone_info.offset = AiMatToGlmMat(mesh->mBones[bone_idx]->mOffsetMatrix);
+
                 bone_info_map[bone_name] = new_bone_info;
-                bone_id = bone_count;
+
+                bone_id = new_bone_info.id;
                 bone_count++;
                 LOG("- - bone_name: " + bone_name + " bone_id: " + std::to_string(bone_id));
             }
             else
             {
-                bone_id = bone_info_map[bone_name].id;
+                bone_id = bone_it->second.id;
             }
 
             assert(bone_id != -1);

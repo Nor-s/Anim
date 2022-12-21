@@ -131,7 +131,7 @@ namespace anim
     {
         auto world = pose_->get_root_entity()->get_mutable_parent()->get_world_transformation();
         shader_->use();
-        shader_->set_vec3("selectionColor", selectionColor);
+        shader_->set_uint("selectionColor", selectionColor);
         world = world * model_;
         entity_->set_world_transformation(world);
         if (!isActivate)

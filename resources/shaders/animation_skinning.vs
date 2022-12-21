@@ -23,7 +23,7 @@ uniform mat4 finalBonesMatrices[MAX_BONES];
 out vec2 TexCoords;
 out vec3 Normal;
 out vec3 FragPos;
-out float boneId;
+flat out int boneId;
 
 void main()
 {
@@ -34,7 +34,7 @@ void main()
     vec3 totalNormal = vec3(0.0f);
 
     float maxWeight = 0.0;
-    int maxBoneId = 0;
+    int maxBoneId = boneIds[0];
 
     for(int i = 0 ; i < MAX_BONE_INFLUENCE ; i++)
     {
@@ -61,7 +61,7 @@ void main()
     Normal = mat3(model)* totalNormal;
     TexCoords = aTexCoords;
     FragPos = vec3(model * totalPosition);
-    boneId = float(maxBoneId)/255.0;
+    boneId = maxBoneId;
 
     // if(isOutline)
     //     gl_Position =  projection * view * model *vec4(outlineWidth*Normal +vec3(totalPosition), 1.0);

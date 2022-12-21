@@ -12,7 +12,7 @@ namespace anim
         }
         shader_->use();
         shader_->set_mat4("model", entity_->get_world_transformation());
-        shader_->set_vec3("selectionColor", selectionColor);
+        shader_->set_uint("selectionColor", selectionColor);
 
         for (auto &mesh : meshes_)
         {

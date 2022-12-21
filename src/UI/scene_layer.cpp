@@ -66,7 +66,7 @@ namespace ui
             }
 
             // draw scene framebuffer
-            ImGui::Image(reinterpret_cast<void *>(static_cast<intptr_t>(scene->get_mutable_framebuffer()->get_color_texture())), ImVec2{width_, height_}, ImVec2{0, 1}, ImVec2{1, 0});
+            ImGui::Image(reinterpret_cast<void *>(static_cast<intptr_t>(scene->get_mutable_framebuffer()->get_color_attachment())), ImVec2{width_, height_}, ImVec2{0, 1}, ImVec2{1, 0});
             if (width != width_ || height_ != height)
             {
                 scene->set_size(width_, height_);

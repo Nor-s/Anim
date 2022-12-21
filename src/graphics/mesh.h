@@ -45,7 +45,16 @@ namespace anim
                 {
                     bone_ids[i] = boneId;
                     weights[i] = weight;
-                    break;
+                    return;
+                }
+            }
+            for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+            {
+                if (weights[i] < weight)
+                {
+                    bone_ids[i] = boneId;
+                    weights[i] = weight;
+                    return;
                 }
             }
         }

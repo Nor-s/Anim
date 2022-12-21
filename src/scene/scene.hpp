@@ -88,7 +88,6 @@ protected:
     anim::Entity *selected_entity_{nullptr};
     std::shared_ptr<anim::SharedResources> resources_;
     std::shared_ptr<anim::Framebuffer> framebuffer_;
-    std::shared_ptr<anim::Framebuffer> offscreen_framebuffer_;
     std::shared_ptr<glcpp::Camera> camera_;
     float delta_time_ = 0.0f;
     uint32_t width_ = 800;

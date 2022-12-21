@@ -8,7 +8,7 @@
 namespace anim
 {
     PoseComponent::PoseComponent()
-        : bone_info_map_(), shader_(nullptr), animator_(nullptr), animation_component_(nullptr), armature_root_(nullptr), bone_count_(0)
+        : bone_info_map_(), shader_(nullptr), animator_(nullptr), animation_component_(nullptr), armature_root_(nullptr)
     {
         LOG("PoseComponent");
     }
@@ -18,7 +18,6 @@ namespace anim
         {
             bone_info_map_[entry.first] = BoneInfo{entry.second.get_id(), entry.second.get_offset()};
         }
-        bone_count_ = bone_info_map_.size();
     }
     void PoseComponent::set_animator(Animator *animator)
     {
@@ -39,7 +38,6 @@ namespace anim
             return;
         }
         bone_info_map_[name] = info;
-        bone_count_++;
     }
     void PoseComponent::set_armature_root(Entity *armature_root)
     {

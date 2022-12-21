@@ -1,6 +1,7 @@
 #version 330 core
 in vec2 TexCoords;
-out vec4 color;
+layout(location = 0) out vec4 color;
+layout(location = 1) out int color2;
 
 uniform vec2 iResolution;
 uniform vec3 outlineColor;
@@ -46,4 +47,5 @@ void main() {
     float edge = dist >th? 1 : 0.1;
  
     color = vec4(outlineColor, edge);
+    color2  = 0;
 }

@@ -40,7 +40,6 @@ namespace anim
         Animator *animator_{nullptr};
         AnimationComponent *animation_component_{nullptr};
         Entity *armature_root_{nullptr};
-        int bone_count_ = 0;
     };
 
 }

@@ -44,7 +44,7 @@ namespace anim
     }
     void Exporter::to_png(Framebuffer *framebuffer, const char *save_path)
     {
-        auto format = framebuffer->get_format();
+        auto format = framebuffer->get_color_format();
         auto width = framebuffer->get_width();
         auto height = framebuffer->get_height();
         auto FBO = framebuffer->get_fbo();

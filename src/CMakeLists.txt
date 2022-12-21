@@ -3,7 +3,6 @@ set(GLCPP_SRC
     glcpp/window.cpp
     glcpp/camera.cpp
     glcpp/application.hpp
-    # glcpp/cubemap.cpp
 )
 if(APPLE)
   SET(CMAKE_OSX_DEPLOYMENT_TARGET 12.4)

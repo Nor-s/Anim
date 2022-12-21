@@ -1,9 +1,12 @@
 #version 330 core
-out vec4 FragColor;
+
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out int EntityID;
 
 in vec2 TexCoords;
 in vec3 Normal;
 in vec3 FragPos;
+flat in int boneId;
 
 uniform sampler2D texture_diffuse1;
 layout (std140) uniform Matrices
@@ -32,7 +35,7 @@ struct DirLight {
 uniform DirLight dir_lights[NR_DIR_LIGHTS];
 
 uniform Material material;
-uniform vec3 selectionColor;
+uniform uint selectionColor;
 // uniform vec4 outlineColor;
 // uniform bool isOutline;
 
@@ -74,12 +77,10 @@ void main()
     vec3 result = vec3(0.0);
 
     result += CalcDirLight(dir_lights[0], norm, viewDir, mat_diffuse);
-    FragColor = vec4(result, 1.0);
-    // if(isOutline) {
-    //     FragColor = outlineColor;
-    // }
-
+    FragColor =  vec4(result, 1.0);
     // for  debug
+    // FragColor =  vec4((boneId+0.5)/ 124.0, 0.0, 0.0, 1.0);
     // FragColor = vec4(tmp/52.0, 0.0, 0.0, 1.0);
     // FragColor = vec4(vec3(diff), 1.0);
+    EntityID =  int(selectionColor) | boneId ;
 }

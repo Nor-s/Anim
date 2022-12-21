@@ -117,6 +117,10 @@ namespace anim::gl
     {
         glUniform1i(glGetUniformLocation(id_, name.c_str()), value);
     }
+    void GLShader::set_uint(const std::string &name, int value) const
+    {
+        glUniform1ui(glGetUniformLocation(id_, name.c_str()), value);
+    }
     // ------------------------------------------------------------------------
     void GLShader::set_float(const std::string &name, float value) const
     {

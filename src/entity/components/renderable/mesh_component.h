@@ -20,7 +20,7 @@ namespace anim
         static inline bool isActivate = true;
         static inline bool isWireframe = false;
         bool isDynamic{false};
-        glm::vec3 selectionColor{1.0f, 1.0f, 1.0f};
+        uint32_t selectionColor;
 
         ~MeshComponent() = default;
         void update() override;

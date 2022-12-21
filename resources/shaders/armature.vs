@@ -17,7 +17,7 @@ uniform mat4 model;
 out vec2 TexCoords;
 out vec3 Normal;
 out vec3 FragPos;
-out float boneId;
+flat out int boneId;
 
 void main()
 {
@@ -25,5 +25,5 @@ void main()
         Normal = vec3(mat3(model)*aNormal);
         TexCoords = vec2(0.0, 0.0) ;
     FragPos = vec3(model * vec4(aPos, 1.0));
-    boneId = 1.0;
+    boneId = 255;
 }

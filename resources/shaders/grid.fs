@@ -1,6 +1,7 @@
 #version 330 core
+layout(location = 0) out vec4 color;
+layout(location = 1) out int color2;
 
-out vec4 color;
 layout (std140) uniform Matrices
 {
     mat4 projection;
@@ -58,7 +59,7 @@ void main() {
 	vec3 R = near_vec + t * (far_vec-near_vec);
 	vec4 bg_color = vec4(vec3(0.3),0.5);
 	vec4 grid_color = vec4(vec3(0.6), 0.7);
-	vec4 grid_color2 = vec4(vec3(0.95), 0.7);
+	vec4 grid_color2 = vec4(vec3(1.0), 0.7);
 
 	vec4 x_color = vec4(0.9569, 0.3686, 0.3686, 1.0);
 	vec4 z_color = vec4(0.0549, 0.6235, 1.0, 1.0);
@@ -81,8 +82,7 @@ void main() {
 	color.rgb = mix(color.rgb, grid_color.rgb, grid_ratio);
 
 	float grid_ratio1 = get_grid(R.xz, scale*10);
-	color = bg_color;
-	color.rgb = mix(color.rgb, grid_color2.rgb, grid_ratio1* (1.0 - depth_fading));
+	color.rgb = mix(color.rgb, grid_color2.rgb, grid_ratio1 );//* (1.0 - depth_fading));
 
 	// axes color
     vec2 axes = get_axis(R.xz);
@@ -95,4 +95,7 @@ void main() {
 	color.a = max(color.a, axes.x*x_color.a);
 	color.a = max(color.a, axes.y*z_color.a);
 	color.a *=  angle_fading*depth_fading;
+
+	color2 = 0;
+
 }

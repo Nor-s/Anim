@@ -34,7 +34,6 @@ namespace anim
                                const std::shared_ptr<ModelNode> &model_node,
                                Entity *parent_entity, int child_num, Entity *root_entity);
         void update();
-        void update_for_picking();
         void set_ubo_projection(const glm::mat4 &projection);
         void set_ubo_view(const glm::mat4 &view);
         void set_dt(float dt);

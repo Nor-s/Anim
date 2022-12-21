@@ -26,26 +26,5 @@ namespace anim
     };
     template <typename T>
     TypeID ComponentBase<T>::type((TypeID)&T::type);
-
-    template <typename tComponent>
-    class ComponentManager
-    {
-    public:
-        std::vector<tComponent *> components;
-
-        template <class Function>
-        constexpr Function for_each(Function F)
-        {
-            return std::for_each(components.begin(), components.end(), F);
-        }
-    };
-
-    template <typename tComponent>
-    ComponentManager<tComponent> &GetComponentManager()
-    {
-        static ComponentManager<tComponent> g_manager;
-        return g_manager;
-    }
 }
-
 #endif

@@ -17,7 +17,8 @@ namespace anim
     }
     void PostProcessing::init(uint32_t width, uint32_t height)
     {
-        intermediate_framebuffer_.reset(new anim::Framebuffer(width, height, GL_RGB, true));
+        anim::FramebufferSpec spec(width, height, 1, {anim::FramebufferTextureFormat::RGB}, anim::FramebufferTextureFormat::Depth);
+        intermediate_framebuffer_.reset(new anim::Framebuffer(spec));
     }
     void PostProcessing::execuate_outline_with_depth(anim::Framebuffer *framebuffer, const OutlineInfo &outline_info)
     {

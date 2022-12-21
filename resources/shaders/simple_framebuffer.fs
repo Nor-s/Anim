@@ -1,5 +1,6 @@
 #version 330 core
-out vec4 FragColor;
+layout(location = 0) out vec4 FragColor;
+layout(location = 1) out int EntityID;
 
 in vec2 TexCoords;
 
@@ -9,4 +10,5 @@ uniform vec2 iResolution;
 void main()
 {
     FragColor = texture(screenTexture, TexCoords);
+    EntityID =  0;
 } 

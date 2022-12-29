@@ -40,8 +40,9 @@ namespace anim
                 return GL_R32I;
             case FramebufferTextureFormat::DEPTH24STENCIL8:
                 return GL_DEPTH24_STENCIL8;
+            default:
+                return GL_RGBA;
             }
-            return GL_RGBA;
         }
 
         GLenum GetDataType(const FramebufferTextureFormat &format)
@@ -50,8 +51,9 @@ namespace anim
             {
             case FramebufferTextureFormat::RED_INTEGER:
                 return GL_INT;
+            default:
+                return GL_UNSIGNED_BYTE;
             }
-            return GL_UNSIGNED_BYTE;
         }
 
         void AttachColorAttachment(uint32_t &id, int samples, uint32_t width, uint32_t height, const FramebufferTextureSpec &spec, int index)

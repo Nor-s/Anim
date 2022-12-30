@@ -79,13 +79,13 @@ namespace anim
         bool error();
         const int read_pixel(unsigned int x, unsigned int y, uint32_t color_attachment_idx)
         {
-            if (spec_.samples < 1)
+            if (spec_.samples > 1)
             {
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer_id_);
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediate_renderer_id_);
             }
             else
             {
-                glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediate_renderer_id_);
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer_id_);
             }
             glReadBuffer(GL_COLOR_ATTACHMENT0 + 1);
 

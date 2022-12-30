@@ -16,7 +16,7 @@ namespace anim
             switch (format)
             {
             case FramebufferTextureFormat::RGBA8:
-                return GL_RGB;
+                return GL_RGBA;
             case FramebufferTextureFormat::RGB:
                 return GL_RGB;
             case FramebufferTextureFormat::RED_INTEGER:
@@ -35,13 +35,13 @@ namespace anim
             case FramebufferTextureFormat::RGBA8:
                 return GL_RGBA8;
             case FramebufferTextureFormat::RGB:
-                return GL_RGB;
+                return GL_RGB8;
             case FramebufferTextureFormat::RED_INTEGER:
                 return GL_R32I;
             case FramebufferTextureFormat::DEPTH24STENCIL8:
                 return GL_DEPTH24_STENCIL8;
             default:
-                return GL_RGBA;
+                return GL_RGBA8;
             }
         }
 
@@ -53,6 +53,26 @@ namespace anim
                 return GL_INT;
             default:
                 return GL_UNSIGNED_BYTE;
+            }
+        }
+
+        inline constexpr void SetTexParameteri(const FramebufferTextureFormat &format)
+        {
+            // http://blog.daechan.net/2018/07/555-3-4-mipmap.html
+            switch (format)
+            {
+            case FramebufferTextureFormat::RED_INTEGER:
+                // when GL_LINEAR: glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, color_id[1], 0);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                break;
+
+            default:
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+                break;
             }
         }
 
@@ -72,11 +92,7 @@ namespace anim
             }
             else
             {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
+                SetTexParameteri(spec.texture_format);
                 glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, data_type, nullptr);
                 glGenerateMipmap(GL_TEXTURE_2D);
             }
@@ -114,24 +130,16 @@ namespace anim
             std::vector<GLenum> draw_buffers;
             for (int i = 0; i < spec.color_attachments_spec.size(); i++)
             {
-                // AttachColorAttachment(color_id[i], spec.samples, spec.width, spec.height, spec.color_attachments_spec[i], i);
+                AttachColorAttachment(color_id[i], spec.samples, spec.width, spec.height, spec.color_attachments_spec[i], i);
                 draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+                break;
             }
-            glGenTextures(1, &color_id[0]);
-            glBindTexture(GL_TEXTURE_2D, color_id[0]);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, spec.width, spec.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-
-            glGenerateMipmap(GL_TEXTURE_2D);
-
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_id[0], 0);
+            draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + 1);
 
             glGenTextures(1, &color_id[1]);
             glBindTexture(GL_TEXTURE_2D, color_id[1]);
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
             glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, spec.width, spec.height, 0, GL_RED_INTEGER, GL_INT, nullptr);
             glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, color_id[1], 0);
 
@@ -148,14 +156,6 @@ namespace anim
             {
                 AttachDepthRBO(depth_id, spec.samples, spec.width, spec.height, spec.depth_attachment_spec);
             }
-            glGenRenderbuffers(1, &depth_id);
-            glBindRenderbuffer(GL_RENDERBUFFER, depth_id);
-
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, spec.width, spec.height);
-
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_id);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
@@ -197,22 +197,27 @@ namespace anim
     {
         return renderer_id_;
     }
+
     uint32_t Framebuffer::get_color_attachment(uint32_t index) const
     {
         return screen_texture_id_;
     }
+
     uint32_t Framebuffer::get_width() const
     {
         return spec_.width;
     }
+
     uint32_t Framebuffer::get_height() const
     {
         return spec_.height;
     }
+
     GLenum Framebuffer::get_color_format(uint32_t idx) const
     {
         return util::ConvertFormat(spec_.color_attachments_spec[idx].texture_format);
     }
+
     float Framebuffer::get_aspect() const
     {
         return static_cast<float>(spec_.width) / static_cast<float>(spec_.height);
@@ -227,9 +232,11 @@ namespace anim
         glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
         glDrawArrays(GL_TRIANGLES, 0, 6);
     }
+
     void Framebuffer::init_framebuffer_with_MSAA()
     {
     }
+
     void Framebuffer::init_framebuffer()
     {
         is_error_ = util::GenFramebuffer(renderer_id_, spec_, color_id_, depth_id_);
@@ -249,6 +256,7 @@ namespace anim
         glEnableVertexAttribArray(1);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void *)(2 * sizeof(float)));
     }
+
     void Framebuffer::bind_without_clear()
     {
         glBindFramebuffer(GL_FRAMEBUFFER, renderer_id_);
@@ -262,6 +270,7 @@ namespace anim
 
         glClear(GL_COLOR_BUFFER_BIT);
     }
+
     void Framebuffer::bind_with_depth(const glm::vec4 &color)
     {
         bind_without_clear();
@@ -269,16 +278,19 @@ namespace anim
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     }
+
     void Framebuffer::bind_with_depth_and_stencil(const glm::vec4 &color)
     {
         bind_without_clear();
         glClearColor(color.x, color.y, color.z, color.a);
         glEnable(GL_DEPTH_TEST);
-        glStencilMask(~0); // https://community.khronos.org/t/how-to-clear-stencil-buffer-after-stencil-test/15882/4
+        // https://community.khronos.org/t/how-to-clear-stencil-buffer-after-stencil-test/15882/4
+        glStencilMask(~0);
         glDisable(GL_SCISSOR_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
         glDisable(GL_STENCIL_TEST);
     }
+
     void Framebuffer::unbind()
     {
         if (spec_.samples > 1)
@@ -300,6 +312,7 @@ namespace anim
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
+
     bool Framebuffer::error()
     {
         return is_error_;

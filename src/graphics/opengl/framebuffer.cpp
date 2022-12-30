@@ -94,15 +94,15 @@ namespace anim
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0);
 
-        // std::vector<GLenum> draw_buffers = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
-        // uint32_t screen_texture2_id;
-        // glGenTextures(1, &screen_texture2_id);
-        // glBindTexture(GL_TEXTURE_2D, screen_texture2_id);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        // glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width_, height_, 0, GL_RED_INTEGER, GL_INT, NULL);
-        // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, screen_texture2_id, 0);
-        // glDrawBuffers(draw_buffers.size(), draw_buffers.data());
+        std::vector<GLenum> draw_buffers = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+        uint32_t screen_texture2_id;
+        glGenTextures(1, &screen_texture2_id);
+        glBindTexture(GL_TEXTURE_2D, screen_texture2_id);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width_, height_, 0, GL_RED_INTEGER, GL_INT, NULL);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, screen_texture2_id, 0);
+        glDrawBuffers(draw_buffers.size(), draw_buffers.data());
     }
 
     void Framebuffer::attach_depth24_stencil8_RBO()

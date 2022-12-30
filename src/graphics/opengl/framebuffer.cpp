@@ -12,12 +12,11 @@ namespace anim
         set_quad_VAO();
         if (!is_msaa_)
         {
-            init_framebuffer();
         }
         else
         {
-            init_framebuffer_with_MSAA();
         }
+        init_framebuffer();
     }
 
     Framebuffer::~Framebuffer()
@@ -89,15 +88,21 @@ namespace anim
     {
         glGenTextures(1, &screen_texture_id_);
         glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
         glTexImage2D(GL_TEXTURE_2D, 0, format_, width_, height_, 0, format_, GL_UNSIGNED_BYTE, nullptr);
 
-        glGenerateMipmap(GL_TEXTURE_2D);
-
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0);
+
+        // std::vector<GLenum> draw_buffers = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+        // uint32_t screen_texture2_id;
+        // glGenTextures(1, &screen_texture2_id);
+        // glBindTexture(GL_TEXTURE_2D, screen_texture2_id);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        // glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        // glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width_, height_, 0, GL_RED_INTEGER, GL_INT, NULL);
+        // glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, screen_texture2_id, 0);
+        // glDrawBuffers(draw_buffers.size(), draw_buffers.data());
     }
 
     void Framebuffer::attach_depth24_stencil8_RBO()
@@ -120,7 +125,7 @@ namespace anim
         // create a multisampled color attachment texture
         glGenTextures(1, &msaa_texture_id_);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaa_texture_id_);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples_, GL_RGBA8, width_, height_, GL_TRUE);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples_, GL_RGBA, width_, height_, GL_TRUE);
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msaa_texture_id_, 0);
@@ -156,38 +161,25 @@ namespace anim
         // create a color attachment texture
         glGenTextures(1, &screen_texture_id_);
         glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0); // we only need a color buffer
+
+        uint32_t screen_texture2_id;
+        glGenTextures(1, &screen_texture2_id);
+        glBindTexture(GL_TEXTURE_2D, screen_texture2_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width_, height_, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, screen_texture2_id, 0);
+        glDrawBuffers(draw_buffers.size(), draw_buffers.data());
 
         if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
         {
 #ifndef NDEBUG
 
             std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
-#endif
-            is_error_ = true;
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        uint32_t inter2_fbo;
-        // configure second post-processing framebuffer
-        glGenFramebuffers(1, &inter2_fbo);
-        glBindFramebuffer(GL_FRAMEBUFFER, inter2_fbo);
-        uint32_t screen_texture2_id;
-        glGenTextures(1, &screen_texture2_id);
-        glBindTexture(GL_TEXTURE_2D, screen_texture2_id);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width_, height_, 0, GL_RED_INTEGER, GL_INT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture2_id, 0);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-#ifndef NDEBUG
-
-            std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer2 is not complete!" << std::endl;
 #endif
             is_error_ = true;
         }
@@ -245,9 +237,19 @@ namespace anim
     {
         if (is_msaa_)
         {
-            glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_);
-            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_FBO_);
-            glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+            // glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_);
+            // glReadBuffer(GL_COLOR_ATTACHMENT1);
+            // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_FBO_);
+            // glDrawBuffer(GL_COLOR_ATTACHMENT1);
+
+            // glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+            // glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_);
+            // glReadBuffer(GL_COLOR_ATTACHMENT0);
+            // glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_FBO_);
+            // glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+            // glBlitFramebuffer(0, 0, width_, height_, 0, 0, width_, height_, GL_COLOR_BUFFER_BIT, GL_NEAREST);
         }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }

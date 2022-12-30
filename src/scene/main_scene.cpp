@@ -39,7 +39,7 @@ void MainScene::init_framebuffer(uint32_t width, uint32_t height)
 {
     set_size(width, height);
 
-    framebuffer_.reset(new anim::Framebuffer{width, height, GL_RGB, true});
+    framebuffer_.reset(new anim::Framebuffer{width, height, GL_RGBA, false});
     if (framebuffer_->error())
     {
         anim::LOG("framebuffer error");

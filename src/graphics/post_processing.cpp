@@ -17,7 +17,7 @@ namespace anim
     }
     void PostProcessing::init(uint32_t width, uint32_t height)
     {
-        intermediate_framebuffer_.reset(new anim::Framebuffer(width, height, GL_RGB, true));
+        // intermediate_framebuffer_.reset(new anim::Framebuffer(width, height, GL_RGBA, false));
     }
     void PostProcessing::execuate_outline_with_depth(anim::Framebuffer *framebuffer, const OutlineInfo &outline_info)
     {

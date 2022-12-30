@@ -1,6 +1,7 @@
 #include "framebuffer.h"
 #include <iostream>
 #include "../shader.h"
+#include <vector>
 
 namespace anim
 {
@@ -123,7 +124,17 @@ namespace anim
         glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
 
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, msaa_texture_id_, 0);
-        // create a (also multisampled) renderbuffer object for depth and stencil attachments
+
+        glGenTextures(1, &msaa_texture2_id_);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, msaa_texture2_id_);
+        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples_, GL_R32I, width_, height_, GL_TRUE);
+        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + 1, GL_TEXTURE_2D_MULTISAMPLE, msaa_texture2_id_, 0);
+        std::vector<GLenum> draw_buffers = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+        glDrawBuffers(draw_buffers.size(), draw_buffers.data());
+
+        // create a (also multisampled) renderbuffer object for depth and stesncil attachments
         glGenRenderbuffers(1, &d24s8_RBO_);
         glBindRenderbuffer(GL_RENDERBUFFER, d24s8_RBO_);
         glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples_, GL_DEPTH24_STENCIL8, width_, height_);
@@ -155,6 +166,28 @@ namespace anim
 #ifndef NDEBUG
 
             std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
+#endif
+            is_error_ = true;
+        }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        uint32_t inter2_fbo;
+        // configure second post-processing framebuffer
+        glGenFramebuffers(1, &inter2_fbo);
+        glBindFramebuffer(GL_FRAMEBUFFER, inter2_fbo);
+        uint32_t screen_texture2_id;
+        glGenTextures(1, &screen_texture2_id);
+        glBindTexture(GL_TEXTURE_2D, screen_texture2_id);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, width_, height_, 0, GL_RED_INTEGER, GL_INT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture2_id, 0);
+
+        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        {
+#ifndef NDEBUG
+
+            std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer2 is not complete!" << std::endl;
 #endif
             is_error_ = true;
         }

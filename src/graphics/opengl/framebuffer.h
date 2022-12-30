@@ -30,16 +30,16 @@ namespace anim
         {
             glBindFramebuffer(GL_READ_FRAMEBUFFER, FBO_);
 
-            glReadBuffer(GL_COLOR_ATTACHMENT0);
+            glReadBuffer(GL_COLOR_ATTACHMENT1);
 
-            unsigned char data[4];
-            glReadPixels(x, y, 1, 1, format_, GL_UNSIGNED_BYTE, data);
+            int data;
+            glReadPixels(x, y, 1, 1, GL_RED_INTEGER, GL_INT, &data);
 
             glReadBuffer(GL_NONE);
 
             glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
-            return {data[0], data[1], data[2]};
+            return {data, data, data};
         }
         void attach_depth24_stencil8(Framebuffer *framebuffer = nullptr)
         {
@@ -68,11 +68,12 @@ namespace anim
         uint32_t FBO_ = 0;
         uint32_t intermediate_FBO_ = 0;
         uint32_t msaa_texture_id_ = 0;
+        uint32_t msaa_texture2_id_ = 0;
         uint32_t screen_texture_id_ = 0;
         uint32_t d24s8_RBO_ = 0;
         uint32_t quad_VAO_ = 0;
         uint32_t quad_VBO_ = 0;
-        int samples_ = 4;
+        int samples_ = 1;
         bool is_error_ = false;
 
         inline static const float quad_vertices_[24] = {

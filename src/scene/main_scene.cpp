@@ -85,7 +85,7 @@ void MainScene::draw_to_framebuffer()
     framebuffer_->unbind();
     if (selected_entity_)
     {
-        resources_->mPostProcessing->execuate_outline_with_depth(framebuffer_.get());
+        // resources_->mPostProcessing->execuate_outline_with_depth(framebuffer_.get());
     }
 
 #ifndef NDEBUG

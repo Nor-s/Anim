@@ -229,96 +229,11 @@ namespace anim
     }
     void Framebuffer::init_framebuffer_with_MSAA()
     {
-        // configure MSAA framebuffer
-        // --------------------------
-        glGenFramebuffers(1, &renderer_id_);
-        glBindFramebuffer(GL_FRAMEBUFFER, renderer_id_);
-        // create a multisampled color attachment texture
-        color_id_.resize(2);
-        glGenTextures(1, &color_id_[0]);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, color_id_[0]);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, spec_.samples, GL_RGBA8, spec_.width, spec_.height, GL_TRUE);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D_MULTISAMPLE, color_id_[0], 0);
-
-        glGenTextures(1, &color_id_[1]);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, color_id_[1]);
-        glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, spec_.samples, GL_R32I, spec_.width, spec_.height, GL_TRUE);
-        glBindTexture(GL_TEXTURE_2D_MULTISAMPLE, 0);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D_MULTISAMPLE, color_id_[1], 0);
-
-        std::vector<GLenum> draw_buffers;
-        for (int i = 0; i < 2; i++)
-        {
-            draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
-        }
-        if (draw_buffers.size() > 0)
-        {
-            glDrawBuffers(draw_buffers.size(), draw_buffers.data());
-        }
-        // create a (also multisampled) renderbuffer object for depth and stencil attachments
-        glGenRenderbuffers(1, &depth_id_);
-        glBindRenderbuffer(GL_RENDERBUFFER, depth_id_);
-        glRenderbufferStorageMultisample(GL_RENDERBUFFER, spec_.samples, GL_DEPTH24_STENCIL8, spec_.width, spec_.height);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_id_);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-#ifndef NDEBUG
-            std::cout << "ERROR::FRAMEBUFFER::MSAA Framebuffer is not complete!" << std::endl;
-#endif
-            is_error_ = true;
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-        glGenFramebuffers(1, &intermediate_renderer_id_);
-        glBindFramebuffer(GL_FRAMEBUFFER, intermediate_renderer_id_);
-        // create a color attachment texture
-        glGenTextures(1, &screen_texture_id_);
-        glBindTexture(GL_TEXTURE_2D, screen_texture_id_);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, spec_.width, spec_.height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, screen_texture_id_, 0); // we only need a color buffer
-
-        uint32_t screen_texture_id_2;
-        glGenTextures(1, &screen_texture_id_2);
-        glBindTexture(GL_TEXTURE_2D, screen_texture_id_2);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, spec_.width, spec_.height, 0, GL_RED_INTEGER, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, screen_texture_id_2, 0); // we only need a color buffer
-        if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        {
-#ifndef NDEBUG
-
-            std::cout << "ERROR::FRAMEBUFFER:: Intermediate framebuffer is not complete!" << std::endl;
-#endif
-            is_error_ = true;
-        }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        intermediate_color_id_ = screen_texture_id_;
     }
     void Framebuffer::init_framebuffer()
     {
-        if (spec_.samples > 1)
-        {
-            // std::vector<uint32_t> tmp_color;
-            // uint32_t tmp_depth;
-            // FramebufferSpec intermediate_spec(spec_.width, spec_.height, 1, {FramebufferTextureFormat::RGBA8});
-
-            // is_error_ = is_error_ || util::GenFramebuffer(intermediate_renderer_id_, intermediate_spec, tmp_color, tmp_depth);
-
-            // intermediate_color_id_ = tmp_color[0];
-            // screen_texture_id_ = intermediate_color_id_;
-            init_framebuffer_with_MSAA();
-        }
-        else
-        {
-            is_error_ = util::GenFramebuffer(renderer_id_, spec_, color_id_, depth_id_);
-            screen_texture_id_ = color_id_[0];
-        }
+        is_error_ = util::GenFramebuffer(renderer_id_, spec_, color_id_, depth_id_);
+        screen_texture_id_ = color_id_[0];
     }
 
     void Framebuffer::set_quad_VAO()

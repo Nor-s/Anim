@@ -62,6 +62,7 @@ namespace anim
             GLenum format = ConvertFormat(spec.texture_format);
             GLenum internal_format = ConvertInternalFormat(spec.texture_format);
             GLenum texture_target = GetTextureTarget(is_msaa);
+            GLenum data_type = GetDataType(spec.texture_format);
 
             glGenTextures(1, &id);
             glBindTexture(texture_target, id);
@@ -71,13 +72,12 @@ namespace anim
             }
             else
             {
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
                 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-                glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, GL_UNSIGNED_BYTE, nullptr);
-                // glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width_, height_, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+                glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, data_type, nullptr);
                 glGenerateMipmap(GL_TEXTURE_2D);
             }
             glBindTexture(texture_target, 0);
@@ -114,9 +114,27 @@ namespace anim
             std::vector<GLenum> draw_buffers;
             for (int i = 0; i < spec.color_attachments_spec.size(); i++)
             {
-                AttachColorAttachment(color_id[i], spec.samples, spec.width, spec.height, spec.color_attachments_spec[i], i);
+                // AttachColorAttachment(color_id[i], spec.samples, spec.width, spec.height, spec.color_attachments_spec[i], i);
                 draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
             }
+            glGenTextures(1, &color_id[0]);
+            glBindTexture(GL_TEXTURE_2D, color_id[0]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, spec.width, spec.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+
+            glGenerateMipmap(GL_TEXTURE_2D);
+
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_id[0], 0);
+
+            glGenTextures(1, &color_id[1]);
+            glBindTexture(GL_TEXTURE_2D, color_id[1]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, spec.width, spec.height, 0, GL_RED_INTEGER, GL_INT, nullptr);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, color_id[1], 0);
+
             if (draw_buffers.size() > 0)
             {
                 glDrawBuffers(draw_buffers.size(), draw_buffers.data());
@@ -125,10 +143,19 @@ namespace anim
             {
                 glDrawBuffer(GL_NONE);
             }
+
             if (spec.depth_attachment_spec.texture_format != FramebufferTextureFormat::None)
             {
                 AttachDepthRBO(depth_id, spec.samples, spec.width, spec.height, spec.depth_attachment_spec);
             }
+            glGenRenderbuffers(1, &depth_id);
+            glBindRenderbuffer(GL_RENDERBUFFER, depth_id);
+
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, spec.width, spec.height);
+
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, depth_id);
 
             if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
             {
@@ -146,6 +173,7 @@ namespace anim
     Framebuffer::Framebuffer(const FramebufferSpec &spec)
         : spec_(spec)
     {
+        spec_.samples = 1;
         set_quad_VAO();
         init_framebuffer();
     }

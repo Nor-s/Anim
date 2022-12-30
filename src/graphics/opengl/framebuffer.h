@@ -36,29 +36,33 @@ namespace anim
     struct FramebufferSpec
     {
         FramebufferSpec() = delete;
-        FramebufferSpec(uint32_t framebuffer_width, uint32_t framebuffer_height, uint32_t msaa_samples, std::initializer_list<FramebufferTextureSpec> color_attachments, FramebufferTextureSpec depth_attachment = FramebufferTextureFormat::None) 
-        : width(framebuffer_width), height(framebuffer_height), samples(msaa_samples), color_attachments_spec(color_attachments), depth_attachment_spec(depth_attachment) {}
+        FramebufferSpec(uint32_t framebuffer_width, uint32_t framebuffer_height, uint32_t msaa_samples, std::initializer_list<FramebufferTextureSpec> color_attachments, FramebufferTextureSpec depth_attachment = FramebufferTextureFormat::None)
+            : width(framebuffer_width), height(framebuffer_height), samples(msaa_samples), color_attachments_spec(color_attachments), depth_attachment_spec(depth_attachment) {}
 
         uint32_t width, height;
         std::vector<FramebufferTextureSpec> color_attachments_spec;
-		FramebufferTextureSpec depth_attachment_spec = FramebufferTextureFormat::None;
+        FramebufferTextureSpec depth_attachment_spec = FramebufferTextureFormat::None;
         uint32_t samples = 1;
     };
 
-    namespace util{
+    namespace util
+    {
         inline GLenum GetTextureTarget(bool is_msaa);
         inline GLenum ConvertFormat(const FramebufferTextureFormat &format);
         inline GLenum GetDataType(const FramebufferTextureFormat &format);
         inline void AttachColorAttachment(uint32_t &id, int samples, uint32_t width, uint32_t height, const FramebufferTextureSpec &spec, int index);
         inline void AttachDepthRBO(uint32_t &id, int samples, uint32_t width, uint32_t height, const FramebufferTextureSpec &spec);
-        inline bool GenFramebuffer(uint32_t &id, const FramebufferSpec &spec, std::vector<uint32_t> & color_id, uint32_t &depth_id);
+        inline bool GenFramebuffer(uint32_t &id, const FramebufferSpec &spec, std::vector<uint32_t> &color_id, uint32_t &depth_id);
     }
 
     class Framebuffer
     {
     public:
+        /**
+         * spec_.samples = 1 forced
+         */
         Framebuffer() = delete;
-        Framebuffer(const FramebufferSpec& spec);
+        Framebuffer(const FramebufferSpec &spec);
         ~Framebuffer();
         uint32_t get_fbo() const;
         uint32_t get_color_attachment(uint32_t index = 0) const;
@@ -75,10 +79,12 @@ namespace anim
         bool error();
         const int read_pixel(unsigned int x, unsigned int y, uint32_t color_attachment_idx)
         {
-            if(spec_.samples < 1) {
+            if (spec_.samples < 1)
+            {
                 glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer_id_);
             }
-            else {
+            else
+            {
                 glBindFramebuffer(GL_READ_FRAMEBUFFER, intermediate_renderer_id_);
             }
             glReadBuffer(GL_COLOR_ATTACHMENT0 + 1);

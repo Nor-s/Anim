@@ -132,16 +132,7 @@ namespace anim
             {
                 AttachColorAttachment(color_id[i], spec.samples, spec.width, spec.height, spec.color_attachments_spec[i], i);
                 draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + i);
-                break;
             }
-            draw_buffers.push_back(GL_COLOR_ATTACHMENT0 + 1);
-
-            glGenTextures(1, &color_id[1]);
-            glBindTexture(GL_TEXTURE_2D, color_id[1]);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_R32I, spec.width, spec.height, 0, GL_RED_INTEGER, GL_INT, nullptr);
-            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, color_id[1], 0);
 
             if (draw_buffers.size() > 0)
             {

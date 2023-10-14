@@ -108,13 +108,13 @@ void MainScene::draw()
     framebuffer_->draw(*framebuffer_shader);
 }
 
-void MainScene::picking(int x, int y, bool is_only_bone)
+void MainScene::picking(int x, int y, bool is_bone_picking_mode)
 {
     uint32_t pixel_i = static_cast<uint32_t>(framebuffer_->read_pixel(x, y, 1));
-    uint32_t pixel_x = pixel_i  >> 8;
+    uint32_t pixel_x = pixel_i >> 8;
     uint32_t pixel_y = pixel_i & 0x000000FF;
-    
-    anim::LOG(std::to_string(pixel_i) + ": "+ std::to_string(pixel_x) + " " + std::to_string(pixel_y));
+
+    anim::LOG(std::to_string(pixel_i) + ": " + std::to_string(pixel_x) + " " + std::to_string(pixel_y));
     int pick_id = pixel_x;
     if (pick_id == 0x00000000)
     {
@@ -128,7 +128,7 @@ void MainScene::picking(int x, int y, bool is_only_bone)
         {
             anim::LOG("pick entity");
             set_selected_entity(entity->get_mutable_root());
-            if (is_only_bone)
+            if (is_bone_picking_mode)
             {
                 if (pixel_y == 255)
                 {

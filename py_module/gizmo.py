@@ -3,6 +3,7 @@ import math
 
 g_is_abs = True
 
+# http://www.opengl-tutorial.org/kr/intermediate-tutorials/tutorial-17-quaternions/
 def calc_quat(start, end, is_abs =False):
         global g_is_abs
         cos_theta = glm.dot(start, end)
@@ -14,7 +15,7 @@ def calc_quat(start, end, is_abs =False):
         if(cos_theta < -1.0 + 0.001) :
             axis = glm.cross(glm.vec3(0.0,0.0,1.0), start)
             if glm.length2(axis) < 0.01 :
-                glm.cross(glm.vec3(1.0, 0.0, 0.0), start)
+                axis = glm.cross(glm.vec3(1.0, 0.0, 0.0), start)
             axis = glm.normalize(axis)
             return glm.mat4(glm.angleAxis(glm.radians(180.0), axis))
         s = math.sqrt((1.0 + cos_theta)*2.0)

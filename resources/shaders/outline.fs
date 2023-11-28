@@ -10,6 +10,7 @@ uniform float outlineThreshold;
 
 uniform sampler2D screenTexture;
 
+// ref https://cutecatgame.tistory.com/14
 void make_kernel(inout float kernel[9], sampler2D tex, vec2 coord)
 {
 	float w = outlineWidth /iResolution.x;

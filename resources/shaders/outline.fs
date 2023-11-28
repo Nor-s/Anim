@@ -15,25 +15,25 @@ void make_kernel(inout float kernel[9], sampler2D tex, vec2 coord)
 {
 	float w = outlineWidth /iResolution.x;
 	float h = outlineWidth / iResolution.y;
-    vec3 grey_scale = vec3(0.299, 0.587, 0.114);
 
-	kernel[0] = length(dot(texture(tex, coord + vec2( -w, -h)).xyz, grey_scale));
-	kernel[1] = length(dot(texture(tex, coord + vec2(0.0, -h)).xyz, grey_scale));
-	kernel[2] = length(dot(texture(tex, coord + vec2(  w, -h)).xyz, grey_scale));
-	kernel[3] = length(dot(texture(tex, coord + vec2( -w, 0.0)).xyz, grey_scale));
-	kernel[4] = length(dot(texture(tex, coord).xyz, grey_scale));
-	kernel[5] = length(dot(texture(tex, coord + vec2(  w, 0.0)).xyz, grey_scale));
-	kernel[6] = length(dot(texture(tex, coord + vec2( -w, h)).xyz, grey_scale));
-	kernel[7] = length(dot(texture(tex, coord + vec2(0.0, h)).xyz, grey_scale));
-	kernel[8] = length(dot(texture(tex, coord + vec2(  w, h)).xyz, grey_scale));
+	kernel[0] = length(texture(tex, coord + vec2( -w, -h)).xyz);
+	kernel[1] = length(texture(tex, coord + vec2(0.0, -h)).xyz);
+	kernel[2] = length(texture(tex, coord + vec2(  w, -h)).xyz);
+	kernel[3] = length(texture(tex, coord + vec2( -w, 0.0)).xyz);
+	kernel[4] = length(texture(tex, coord).xyz);
+	kernel[5] = length(texture(tex, coord + vec2(  w, 0.0)).xyz);
+	kernel[6] = length(texture(tex, coord + vec2( -w, h)).xyz);
+	kernel[7] = length(texture(tex, coord + vec2(0.0, h)).xyz);
+	kernel[8] = length(texture(tex, coord + vec2(  w, h)).xyz);
 }
 void main() {
-    float xFilter[9] = float[9](-2,0,2,
+    // sobel
+    float xFilter[9] = float[9](-1,0,1,
                                 -2,0,2,
-                                -2,0,2);
-    float yFilter[9] = float[9](2,2,2,
+                                -1,0,1);
+    float yFilter[9] = float[9](1,2,1,
                                 0,0,0,
-                                -2,-2,-2 );
+                                -1,-2,-1 );
     float kernel[9];
     make_kernel(kernel, screenTexture, TexCoords);  //gl_TexCoord[0].st 
        
@@ -44,8 +44,7 @@ void main() {
         sy += kernel[i] * yFilter[i];
     }
     float dist = sqrt(sx * sx + sy * sy);
-    float th = outlineThreshold;
-    float edge = dist >th? 1 : 0.1;
+    float edge = dist > outlineThreshold? 1 : 0.1;
  
     color = vec4(outlineColor, edge);
     color2  = 0;

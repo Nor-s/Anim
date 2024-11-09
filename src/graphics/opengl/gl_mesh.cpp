@@ -3,6 +3,7 @@
 #include "../shader.h"
 
 #include <glad/glad.h>
+#include "../animation/morph_target.h"
 using namespace anim;
 
 namespace anim::gl
@@ -54,18 +55,19 @@ std::unique_ptr<Mesh> CreateBiPyramid()
 		vertices.push_back(vert);
 	}
 
-	return std::make_unique<GLMesh>(vertices);
+	return std::make_unique<GLMesh>("Bypyramid", vertices);
 }
 
-GLMesh::GLMesh(const std::vector<Vertex>& vertices,
+GLMesh::GLMesh(std::string_view mesh_name,
+			   const std::vector<Vertex>& vertices,
 			   const std::vector<unsigned int>& indices,
 			   const std::vector<Texture>& textures,
 			   const MaterialProperties& mat_properties)
-	: Mesh(vertices, indices, textures, mat_properties)
+	: Mesh(mesh_name, vertices, indices, textures, mat_properties)
 {
 	init_buffer();
 }
-GLMesh::GLMesh(const std::vector<Vertex>& vertices) : Mesh(vertices)
+GLMesh::GLMesh(std::string_view mesh_name, const std::vector<Vertex>& vertices) : Mesh(mesh_name, vertices)
 {
 	init_buffer();
 }
@@ -91,6 +93,10 @@ void GLMesh::draw(anim::Shader& shader)
 	shader.set_vec3("dir_lights[0].ambient", 0.5f);
 	shader.set_vec3("dir_lights[0].diffuse", 0.8f);
 	shader.set_vec3("dir_lights[0].specular", 0.6f);
+	shader.set_float("target_weights[0]", weights_[0]);
+	shader.set_float("target_weights[1]", weights_[1]);
+	shader.set_float("target_weights[2]", weights_[2]);
+
 	for (unsigned int i = 0; i < textures_.size(); i++)
 	{
 		glActiveTexture(GL_TEXTURE0 + i);	 // active proper texture unit before binding
@@ -127,6 +133,29 @@ void GLMesh::draw_outline(anim::Shader& shader)
 	draw(shader);
 
 	glDisable(GL_STENCIL_TEST);
+}
+void GLMesh::init_morph(size_t location, const MorphTargetDeltas* morph_deltas)
+{
+	if (MORPH_VBO_[location] != 0)
+	{
+		glDeleteBuffers(1, &MORPH_VBO_[location]);
+	}
+	glGenBuffers(1, &MORPH_VBO_[location]);
+	glBindVertexArray(VAO_);
+	glBindBuffer(GL_ARRAY_BUFFER, MORPH_VBO_[location]);
+
+	const auto& position = morph_deltas->position_delta;
+	glBufferData(GL_ARRAY_BUFFER, position.size() * sizeof(glm::vec3), &position[0], GL_STATIC_DRAW);
+
+	glEnableVertexAttribArray(7 + location);
+	// vertex position
+	glVertexAttribPointer(7 + location, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0);
+
+	glBindVertexArray(0);
+}
+void GLMesh::set_morph_weight(size_t location, float weight)
+{
+	weights_[location] = weight;
 }
 void GLMesh::draw()
 {

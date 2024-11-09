@@ -7,9 +7,11 @@
 #include <entity/components/renderable/mesh_component.h>
 #include <entity/components/realtime_component.h>
 #include <entity/components/animation_component.h>
+#include <entity/components/morphtarget_component.h>
 #include <entity/components/renderable/armature_component.h>
 #include <entity/components/ik_control_component.h>
 #include <animation/animation.h>
+#include <animation/morph_target.h>
 
 using namespace anim;
 
@@ -47,6 +49,12 @@ void ComponentLayer::draw(ComponentContext& context, Scene* scene)
 					animation && ImGui::CollapsingHeader("Animation"))
 				{
 					draw_animation(context, resources, root, animation);
+					ImGui::Separator();
+				}
+				if (auto morph_target = root->get_component<MorphTargetComponent>();
+					morph_target && ImGui::CollapsingHeader("MorphTarget"))
+				{
+					draw_morphtarget(morph_target);
 					ImGui::Separator();
 				}
 				if (auto realtime_component = root->get_component<RealTimeComponent>();
@@ -248,6 +256,19 @@ void ComponentLayer::draw_mesh(anim::MeshComponent* mesh)
 	for (auto& mat : material)
 	{
 		ImGui::ColorPicker3(("diffuse " + std::to_string(idx)).c_str(), &mat->diffuse[0]);
+	}
+}
+
+void ComponentLayer::draw_morphtarget(anim::MorphTargetComponent* morph_component)
+{
+	const auto& morph_targets = morph_component->get_morph_targets();
+	auto& weights = const_cast<std::vector<float>&>(morph_component->get_weight());
+
+	for (int i = 0; i < morph_targets.size(); i++)
+	{
+		float w = weights[i];
+		DragFloatProperty(morph_targets[i]->get_name().c_str(), w, 0.01f, 0.0f, 1.0f, {150, 0}, "%.2f");
+		morph_component->on_changed(i, w);
 	}
 }
 

@@ -7,19 +7,28 @@ layout (location = 4) in vec3 bitangent;
 layout (location = 5) in ivec4 boneIds; // because MAX_BONE_INFLUENCE == 4
 layout (location = 6) in vec4 weights;
 
+layout (location = 7) in vec3 atargetDelta1;
+layout (location = 8) in vec3 atargetDelta2;
+layout (location = 9) in vec3 atargetDelta3;
+
 layout (std140) uniform Matrices
 {
     mat4 projection;
     mat4 view;
 };
+
+const int MAX_TARGETS = 3;
+
 uniform mat4 model;
 // uniform bool isOutline;
 // uniform float outlineWidth=1.0;
 
 
+const float target_w=0;
 const int MAX_BONES = 128;
 const int MAX_BONE_INFLUENCE = 4;
 uniform mat4 finalBonesMatrices[MAX_BONES];
+uniform float target_weights[MAX_TARGETS];
 out vec2 TexCoords;
 out vec3 Normal;
 out vec3 FragPos;
@@ -27,7 +36,11 @@ flat out int boneId;
 
 void main()
 {
-    vec4 pos = vec4(aPos, 1.0f);
+   
+    vec3 pos_ = aPos + target_weights[0]*atargetDelta1;
+    pos_ = pos_ + target_weights[1]*atargetDelta2;
+    pos_ = pos_ + target_weights[2]*atargetDelta3;
+    vec4 pos = vec4(pos_, 1.0f);
     vec3 norm = aNormal;
     vec4 totalPosition = vec4(0.0f);
     vec4 totalFragPosition = vec4(0.0f);

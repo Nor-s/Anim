@@ -2,6 +2,7 @@
 #include "shared_resources.h"
 
 #include "../animation/animator.h"
+#include "../animation/morph_target.h"
 #include "../animation/animation.h"
 #include "../graphics/shader.h"
 #include "../graphics/opengl/gl_shader.h"
@@ -16,6 +17,7 @@
 #include "../entity/components/renderable/polygon_component.h"
 #include "../entity/components/animation_component.h"
 #include "../entity/components/transform_component.h"
+#include "../entity/components/morphtarget_component.h"
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -51,13 +53,14 @@ std::shared_ptr<Shader> SharedResources::get_mutable_shader(const std::string& n
 void SharedResources::import(const char* path, float scale)
 {
 	Importer import{};
-	auto [model, animations] = import.read_file(path);
+	auto [model, animations, morph_targets] = import.read_file(path);
 
 	add_animations(animations);
 
 	if (auto entity = add_entity(model, path); entity)
 	{
 		entity->set_local(glm::scale(entity->get_local(), glm::vec3(scale)));
+		add_morph_target(entity.get(), model, std::move(morph_targets));
 	}
 }
 void SharedResources::export_animation(Entity* entity, const char* save_path, bool is_linear)
@@ -107,6 +110,39 @@ void SharedResources::add_animation(std::shared_ptr<Animation> animation)
 void SharedResources::add_shader(const std::string& name, const char* vs_path, const char* fs_path)
 {
 	shaders_[name] = std::make_shared<gl::GLShader>(vs_path, fs_path);
+}
+
+void SharedResources::add_morph_target(Entity* entity,
+									   std::shared_ptr<Model>& model,
+									   std::vector<std::shared_ptr<MorphTarget>>&& morph_targets)
+{
+	if (morph_targets.size() == 0)
+		return;
+	auto mesh_name_to_node_name = model->get_mesh_name_node_name_map();
+	auto* morph_target_component = entity->add_component<MorphTargetComponent>();
+
+	for (auto& morph_target : morph_targets)
+	{
+		// auto name = morph_target->get_name();
+		const auto& mesh_names = morph_target->get_mesh_names();
+		morph_target->reset_mesh();
+
+		for (int i = 0; i < mesh_names.size(); i++)
+		{
+			auto node_name = mesh_name_to_node_name[mesh_names[i]];
+			auto* node = entity->find(node_name);
+			std::shared_ptr<Mesh> mesh = nullptr;
+
+			if (auto mesh_component = node->get_component<MeshComponent>(); mesh_component)
+			{
+				mesh = mesh_component->get_mesh(mesh_names[i]);
+			}
+
+			morph_target->push_back(mesh);
+		}
+	}
+
+	morph_target_component->set_morph_targets(std::move(morph_targets));
 }
 void SharedResources::update()
 {

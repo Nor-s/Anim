@@ -31,7 +31,6 @@ public:
 
 	void set_name(const std::string& name);
 	void add_children(std::shared_ptr<Entity>& children);
-	void set_sub_child_num(int num);
 	const std::string& get_name()
 	{
 		return name_;

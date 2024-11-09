@@ -10,6 +10,7 @@
 
 namespace anim
 {
+class MorphTargetDeltas;
 class Shader;
 struct Vertex
 {
@@ -97,21 +98,29 @@ class Mesh
 {
 public:
 	// Mesh::Mesh() = default;
-	Mesh(const std::vector<Vertex>& vertices,
+	Mesh(std::string_view mesh_name,
+		 const std::vector<Vertex>& vertices,
 		 const std::vector<unsigned int>& indices,
 		 const std::vector<Texture>& textures,
 		 const MaterialProperties& mat_properties);
-	Mesh(const std::vector<Vertex>& vertices);
+	Mesh(std::string_view mesh_name, const std::vector<Vertex>& vertices);
 	// virtual ~Mesh();
 	virtual ~Mesh() = default;
 	virtual void draw(Shader& shader) = 0;
 	virtual void draw_outline(anim::Shader& shader) = 0;
+	virtual void init_morph(size_t location, const MorphTargetDeltas* morph_deltas) = 0;
+	virtual void set_morph_weight(size_t location, float weight) = 0;
 	MaterialProperties& get_mutable_mat_properties()
 	{
 		return mat_properties_;
 	}
+	const std::string& get_mesh_name()
+	{
+		return mesh_name_;
+	}
 
 protected:
+	std::string mesh_name_;
 	std::vector<Vertex> vertices_;
 	std::vector<unsigned int> indices_;
 	std::vector<Texture> textures_;

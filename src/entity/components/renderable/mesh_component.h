@@ -7,15 +7,21 @@
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
+#include <ranges>
+#include <algorithm>
+#include "mesh.h"
 
 namespace anim
 {
-class Mesh;
 class Shader;
 class Entity;
+class SharedResources;
 struct MaterialProperties;
+
 class MeshComponent : public ComponentBase<MeshComponent>
 {
+	friend class SharedResources;
+
 public:
 	static inline bool isActivate = true;
 	static inline bool isWireframe = false;
@@ -30,6 +36,14 @@ public:
 	void set_entity(Entity* entity);
 
 	std::vector<MaterialProperties*> get_mutable_mat();
+
+protected:
+	std::shared_ptr<Mesh> get_mesh(const std::string& name) const
+	{
+		auto it = std::ranges::find_if(
+			meshes_, [&name](const std::shared_ptr<Mesh>& mesh) { return mesh->get_mesh_name() == name; });
+		return it != meshes_.end() ? *it : nullptr;
+	}
 
 private:
 	std::vector<std::shared_ptr<Mesh>> meshes_;

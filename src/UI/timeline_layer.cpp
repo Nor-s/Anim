@@ -14,6 +14,7 @@
 #include <animation/animator.h>
 #include <animation/bone.h>
 #include <entity/components/pose_component.h>
+#include <entity/components/morphtarget_component.h>
 #include <entity/components/animation_component.h>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -259,7 +260,6 @@ void TimelineLayer::draw_keyframes(UiContext& ui_context, const Animation* anima
 						context.is_stop = true;
 						selected_bone_list.push_back(std::make_pair(bone.second.get(), key));
 					}
-
 					else
 					{
 						if (is_inside_border)
@@ -295,10 +295,52 @@ void TimelineLayer::draw_keyframes(UiContext& ui_context, const Animation* anima
 
 				for (auto& bone : selected_bone_list)
 				{
-					bone.first->sub_keyframe(bone.second, true);
+					bone.first->remove_keyframe(bone.second, true);
 				}
 				ImGui::EndNeoTimeLine();
 			}
+		}
+		ImGui::EndNeoGroup();
+	}
+
+	if (auto* morph_component = root_entity_->get_component<MorphTargetComponent>();
+		morph_component && ImGui::BeginNeoGroup("Morph", &is_opened_morph_))
+	{
+		const auto& morph_datas = animation->get_morph_datas();
+		std::vector<std::pair<int, uint32_t>> selected_morph_list;
+
+		for (auto& morph_data : morph_datas)
+		{
+			int id = morph_data.first;
+			const AnimData<float>& morph_anim_data = morph_data.second;
+			const auto& name = morph_component->get_name(id);
+			if (ImGui::BeginNeoTimeline(name.data()))
+			{
+				const auto& frame_datas = morph_anim_data.get_all_datas();
+				for (const auto& frame_info : frame_datas)
+				{
+					bool is_hovered = false;
+					bool change_selected_entity = false;
+					bool is_inside_border = false;
+					uint32_t ukey = frame_info.frame;
+					if (ImGui::Keyframe(&ukey, border, &is_inside_border, &is_hovered) && is_hovered &&
+						ImGui::IsItemClicked())
+					{
+						change_selected_entity = true;
+					}
+					if (is_selected_keyframe_delete && is_inside_border)
+					{
+						context.is_stop = true;
+						selected_morph_list.emplace_back(id, ukey);
+					}
+				}
+				ImGui::EndNeoTimeLine();
+			}
+		}
+		for (auto& morph_info : selected_morph_list)
+		{
+			auto [id, frame] = morph_info;
+			const_cast<Animation*>(animation)->remove_morph(id, frame);
 		}
 		ImGui::EndNeoGroup();
 	}

@@ -69,7 +69,7 @@ public:
 
 	void update();
 
-	void insert_and_update_bone();
+	void insert_or_update_bone();
 
 private:
 	PoseComponent* pose_;

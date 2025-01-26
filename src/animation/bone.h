@@ -102,9 +102,9 @@ public:
 		return &scales_[time].scale;
 	}
 
-	void replace_or_add_keyframe(const glm::mat4& transform, float time);
-	void replace_or_sub_keyframe(const glm::mat4& transform, float time);
-	bool sub_keyframe(float time, bool is_animation_time = false);
+	void insert_or_update_keyframe(const glm::mat4& transform, float time);
+	void remove_or_update_keyframe(const glm::mat4& transform, float time);
+	bool remove_keyframe(float time, bool is_animation_time = false);
 
 private:
 	template <class T>

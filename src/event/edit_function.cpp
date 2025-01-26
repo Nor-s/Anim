@@ -58,7 +58,7 @@ void Update_EntityTransform(anim::Entity* entity, const glm::mat4& new_transform
 	entity->set_local(new_transform);
 	if (armature != nullptr)
 	{
-		armature->insert_and_update_bone();
+		armature->insert_or_update_bone();
 	}
 
 	// TODO: push history when armature is nullptr

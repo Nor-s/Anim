@@ -12,12 +12,14 @@ layout (std140) uniform Matrices
     mat4 projection;
     mat4 view;
 };
+
 uniform mat4 model;
 flat out int boneId;
 
 out vec2 TexCoords;
 out vec3 Normal;
 out vec3 FragPos;
+
 void main()
 {
     TexCoords = aTexCoords;    

@@ -62,7 +62,7 @@ void anim::RealTimeComponent::pre_update()
 			auto scale = JsonUtil::GetScale(bones[idx]["scale"]);
 			glm::mat4 transform =
 				glm::translate(glm::mat4(1.0f), position) * glm::mat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
-			get_owner()->get_component<PoseComponent>()->insert_and_update_bone(bone_name, transform);
+			get_owner()->get_component<PoseComponent>()->insert_or_update_bone(bone_name, transform);
 		}
 	}
 	catch (std::exception& e)

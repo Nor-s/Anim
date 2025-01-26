@@ -42,6 +42,8 @@ private:
 	std::shared_ptr<TextEditLayer> text_editor_;
 	bool is_hovered_zoom_slider_{false};
 	bool is_opened_transform_{true};
+	bool is_opened_morph_{true};
+
 	bool is_recording_{true};
 	uint32_t current_frame_{0u};
 	Scene* scene_;

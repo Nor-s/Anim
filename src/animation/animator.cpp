@@ -1,4 +1,5 @@
 #include "animator.h"
+#include "animator.h"
 
 #include <glm/gtx/matrix_decompose.hpp>
 #include "entity.h"
@@ -6,6 +7,7 @@
 #include "../util/utility.h"
 #include "shader.h"
 #include "../entity/components/animation_component.h"
+#include "../entity/components/morphtarget_component.h"
 #include "../entity/components/renderable/armature_component.h"
 #include "animation.h"
 #include "json_animation.h"
@@ -13,6 +15,7 @@
 
 #include <assimp/scene.h>
 #include <assimp/Importer.hpp>
+#include <queue>
 
 namespace anim
 {
@@ -42,12 +45,15 @@ void Animator::update_animation(AnimationComponent* animation_component, Entity*
 	assert(animation_component && root && shader);
 
 	factor_ = animation_component->get_ticks_per_second_factor();
-	calculate_bone_transform(root, animation_component->get_mutable_animation(), glm::mat4(1.0f));
+	auto* animation = animation_component->get_mutable_animation();
+	calculate_bone_transform(root, animation, glm::mat4(1.0f));
+
 	shader->use();
 	for (int i = 0; i < MAX_BONE_NUM; ++i)
 	{
 		shader->set_mat4("finalBonesMatrices[" + std::to_string(i) + "]", final_bone_matrices_[i]);
 	}
+	update_morph(root, animation, shader);
 }
 
 void Animator::calculate_bone_transform(Entity* entity, Animation* animation, const glm::mat4& parentTransform)
@@ -82,6 +88,25 @@ void Animator::calculate_bone_transform(Entity* entity, Animation* animation, co
 	{
 		calculate_bone_transform(children[i].get(), animation, global_transformation);
 	}
+}
+void Animator::update_morph(Entity* root, Animation* animation, Shader* shader)
+{
+	auto* morphtarget_component = root->get_mutable_root()->get_component<MorphTargetComponent>();
+	if (morphtarget_component == nullptr)
+		return;
+
+	const auto& morph_datas = animation->get_morph_datas();
+	MorphDatas sorted_morph_data;
+	for (const auto& morph_info : morph_datas)
+	{
+		const auto [id, datas] = morph_info;
+		float weight = datas.get_data(current_time_, 0.0f);
+		sorted_morph_data.emplace_back(weight, id);
+	}
+	std::sort(sorted_morph_data.begin(), sorted_morph_data.end(), std::greater<std::pair<float, int>>());
+
+	morphtarget_component->update_morph_datas(sorted_morph_data, GetMaxMorph());
+	morphtarget_component->set_shader(*shader);
 }
 const float Animator::get_current_time() const
 {

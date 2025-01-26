@@ -263,12 +263,20 @@ void ComponentLayer::draw_morphtarget(anim::MorphTargetComponent* morph_componen
 {
 	const auto& morph_targets = morph_component->get_morph_targets();
 	auto& weights = const_cast<std::vector<float>&>(morph_component->get_weight());
-
+	auto* pose = morph_component->get_owner()->get_component<PoseComponent>();
 	for (int i = 0; i < morph_targets.size(); i++)
 	{
 		float w = weights[i];
-		DragFloatProperty(morph_targets[i]->get_name().c_str(), w, 0.01f, 0.0f, 1.0f, {150, 0}, "%.2f");
-		morph_component->on_changed(i, w);
+		glm::vec4 btn_color = morph_component->is_active(i) ? glm::vec4(0.82f, 0.24f, 0.24f, 1.0f) : glm::vec4(-1.0f);
+		glm::vec4 frame_color = morph_component->is_active(i) ? glm::vec4(0.64f, 0.32f, 0.08f, 1.0f) : glm::vec4(-1.0f);
+		DragFloatPropertyWithColor(morph_targets[i]->get_name().c_str(), w,btn_color, frame_color, 0.01f, 0.0f, 1.0f,
+								   {150, 0}, "%.2f");
+		if (w == weights[i])
+		{
+			continue;
+		}
+		
+		pose->insert_or_update_morph(i, w);
 	}
 }
 

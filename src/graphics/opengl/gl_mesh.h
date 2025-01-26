@@ -21,7 +21,6 @@ public:
 	void draw(anim::Shader& shader) override;
 	void draw_outline(anim::Shader& shader) override;
 	virtual void init_morph(size_t location, const MorphTargetDeltas* morph_deltas) override;
-	virtual void set_morph_weight(size_t location, float weight) override;
 
 private:
 	void init_buffer();
@@ -29,8 +28,7 @@ private:
 
 private:
 	unsigned int VAO_, VBO_, EBO_;
-	unsigned int MORPH_VBO_[3] = {0, 0, 0};
-	float weights_[3] = {0.0f, 0.0f, 0.0f};
+	std::vector<unsigned int> MORPH_VBO_;
 };
 }	 // namespace anim::gl
 #endif

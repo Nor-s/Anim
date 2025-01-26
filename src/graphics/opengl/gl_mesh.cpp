@@ -93,9 +93,6 @@ void GLMesh::draw(anim::Shader& shader)
 	shader.set_vec3("dir_lights[0].ambient", 0.5f);
 	shader.set_vec3("dir_lights[0].diffuse", 0.8f);
 	shader.set_vec3("dir_lights[0].specular", 0.6f);
-	shader.set_float("target_weights[0]", weights_[0]);
-	shader.set_float("target_weights[1]", weights_[1]);
-	shader.set_float("target_weights[2]", weights_[2]);
 
 	for (unsigned int i = 0; i < textures_.size(); i++)
 	{
@@ -136,6 +133,11 @@ void GLMesh::draw_outline(anim::Shader& shader)
 }
 void GLMesh::init_morph(size_t location, const MorphTargetDeltas* morph_deltas)
 {
+	if (MORPH_VBO_.size() <= location)
+	{
+		MORPH_VBO_.emplace_back(0);
+	}
+
 	if (MORPH_VBO_[location] != 0)
 	{
 		glDeleteBuffers(1, &MORPH_VBO_[location]);
@@ -152,10 +154,6 @@ void GLMesh::init_morph(size_t location, const MorphTargetDeltas* morph_deltas)
 	glVertexAttribPointer(7 + location, 3, GL_FLOAT, GL_FALSE, 0, (void*) 0);
 
 	glBindVertexArray(0);
-}
-void GLMesh::set_morph_weight(size_t location, float weight)
-{
-	weights_[location] = weight;
 }
 void GLMesh::draw()
 {

@@ -4,6 +4,8 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <string_view>
+ 
+#define MAX_MORPH 3
 
 namespace anim
 {
@@ -18,10 +20,17 @@ class AnimationComponent;
 class Animator
 {
 public:
+	static int GetMaxMorph()
+	{
+		return MAX_MORPH;
+	}
+
+public:
 	Animator();
 	void update(float dt);
 	void update_animation(AnimationComponent* animation, Entity* root, Shader* shader);
 	void calculate_bone_transform(Entity* entity, Animation* animation, const glm::mat4& parentTransform);
+	void update_morph(Entity* entity, Animation* animation, Shader* shader);
 	const float get_current_time() const;
 	const float get_start_time() const;
 	const float get_end_time() const;

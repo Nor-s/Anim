@@ -67,9 +67,11 @@ set(test_src
     entity/components/transform_component.cpp
     entity/components/animation_component.cpp
     entity/components/pose_component.cpp
+    entity/components/morphtarget_component.cpp
     entity/components/renderable/armature_component.cpp
     entity/components/renderable/mesh_component.cpp
     entity/components/renderable/polygon_component.cpp
+
     
     entity/entity.h
     entity/components/component.h

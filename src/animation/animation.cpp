@@ -1,4 +1,6 @@
 #include "animation.h"
+#include "animation.h"
+#include "animation.h"
 #include "bone.h"
 #include <string>
 #include <map>
@@ -116,13 +118,13 @@ const int Animation::get_id() const
 {
 	return id_;
 }
-void Animation::insert_and_update_keyframe(const std::string& name, const glm::mat4& transform, float time)
+void Animation::insert_or_update_keyframe(const std::string& name, const glm::mat4& transform, float time)
 {
 	auto bone = find_bone(name);
 	if (bone)
 	{
 		// LOG("bone: " + name);
-		bone->replace_or_add_keyframe(transform, time);
+		bone->insert_or_update_keyframe(transform, time);
 	}
 	else
 	{
@@ -131,8 +133,13 @@ void Animation::insert_and_update_keyframe(const std::string& name, const glm::m
 		bone = name_bone_map_[name].get();
 		bone->set_name(name);
 		bone->set_bindpose(name_bindpose_map_[name]);
-		bone->replace_or_add_keyframe(glm::mat4(1.0f), 0.0f);
+		bone->insert_or_update_keyframe(glm::mat4(1.0f), 0.0f);
 	}
+}
+void Animation::insert_or_update_morph(const AnimDataID index, const float weight, const float time)
+{
+	auto [it, success] = morph_datas_.try_emplace(index, AnimData<float>{});
+	it->second.set_data(weight, time);
 }
 void Animation::remove_keyframe(const std::string& name, float time)
 {
@@ -140,8 +147,22 @@ void Animation::remove_keyframe(const std::string& name, float time)
 	if (bone)
 	{
 		LOG("bone: " + name);
-		bone->sub_keyframe(time);
+		bone->remove_keyframe(time);
 	}
+}
+
+void Animation::remove_morph(const AnimDataID& index, float time)
+{
+	auto it = morph_datas_.find(index);
+	if (it != morph_datas_.end())
+	{
+		it->second.remove_data(time);
+	}
+}
+
+void Animation::remove_morph_index(const AnimDataID& index)
+{
+	morph_datas_.erase(index);
 }
 
 void Animation::update_keyframe(const std::string& name, const glm::mat4& transform, float time)
@@ -150,7 +171,7 @@ void Animation::update_keyframe(const std::string& name, const glm::mat4& transf
 	if (bone)
 	{
 		LOG("bone: " + name);
-		bone->replace_or_sub_keyframe(transform, time);
+		bone->remove_or_update_keyframe(transform, time);
 	}
 }
 

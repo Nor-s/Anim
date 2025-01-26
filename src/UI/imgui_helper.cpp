@@ -133,10 +133,20 @@ inline void BeginDragProperty(const char* label, const ImVec2& btn_size)
 	ImGui::Button(label, btn_size);
 	ImGui::SameLine();
 }
+void BeginDragPropertyWithoutColor(const char* label, const ImVec2& btn_size)
+{
+	ImGui::PushID(label);
+	ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2{0.f, 0.f});
+}
 inline void EndDragProperty()
 {
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor(6);
+	ImGui::PopID();
+}
+void EndDragPropertyWithoutColor()
+{
+	ImGui::PopStyleVar();
 	ImGui::PopID();
 }
 bool DragFloatProperty(const char* label,
@@ -153,6 +163,50 @@ bool DragFloatProperty(const char* label,
 	BeginDragProperty(label, btn_size);
 	is_value_changed |= ImGui::DragFloat("##drag", &value, step, min, max, format);
 	EndDragProperty();
+
+	return is_value_changed;
+}
+bool DragFloatPropertyWithColor(const char* label,
+					   float& value,
+					   const glm::vec4& a_btn_color,
+					   const glm::vec4& a_frame_color,
+					   float step,
+					   float min,
+					   float max,
+					   const ImVec2& btn_size,
+					   const char* format,
+					   const std::string& help_message)
+{
+	bool is_value_changed = false;
+	ImGuiStyle& style = ImGui::GetStyle();
+	ImVec4 btn_color = a_btn_color.a == -1 ? style.Colors[ImGuiCol_ButtonHovered] : GlmVec4ToImVec4(a_btn_color);
+
+	auto framebg_color = style.Colors[ImGuiCol_Button];
+	auto framebg_hovered_color = style.Colors[ImGuiCol_ButtonHovered];
+	auto framebg_active_color = style.Colors[ImGuiCol_ButtonActive];
+	if (a_frame_color.a != -1)
+	{
+		framebg_color = GlmVec4ToImVec4(a_frame_color);
+		framebg_active_color = framebg_color;
+		framebg_hovered_color = framebg_color;
+		framebg_color.w *= 0.5f;
+		framebg_hovered_color.w *= 0.9;
+		framebg_active_color.w *= 0.7;
+	}
+
+	BeginDragPropertyWithoutColor(label, btn_size);
+	{
+		auto btn_setter = ButtonColorSetter(btn_color);
+		ImGui::PushStyleColor(ImGuiCol_FrameBg, framebg_color);
+		ImGui::PushStyleColor(ImGuiCol_FrameBgActive, framebg_active_color);
+		ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, framebg_hovered_color);
+		ImGui::Button(label, btn_size);
+		ImGui::SameLine();
+		is_value_changed |= ImGui::DragFloat("##drag", &value, step, min, max, format);
+		ImGui::PopStyleColor(3);
+
+	}
+	EndDragPropertyWithoutColor();
 
 	return is_value_changed;
 }
@@ -223,5 +277,15 @@ int ToggleButton(const char* label, bool* v, const ImVec2& size, bool* signal)
 							 &label_size, style.ButtonTextAlign, &bb);
 
 	return hovered_count;
+}
+ButtonColorSetter::ButtonColorSetter(ImVec4 btn_color)
+{
+	ImGui::PushStyleColor(ImGuiCol_Button, btn_color);	  											
+	ImGui::PushStyleColor(ImGuiCol_ButtonHovered, btn_color);	
+	ImGui::PushStyleColor(ImGuiCol_ButtonActive, btn_color);
+}
+ButtonColorSetter::~ButtonColorSetter()
+{
+	ImGui::PopStyleColor(3);
 }
 }	 // namespace ui

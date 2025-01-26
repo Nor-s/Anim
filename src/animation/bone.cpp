@@ -251,7 +251,7 @@ glm::mat4 Bone::interpolate_scaling(float animation_time)
 	return glm::scale(glm::mat4(1.0f), glm::mix(p0Index.scale, p1Index.scale, scaleFactor));
 }
 
-void Bone::replace_or_add_keyframe(const glm::mat4& transform, float time)
+void Bone::insert_or_update_keyframe(const glm::mat4& transform, float time)
 {
 	float time_stamp = floorf(time) / factor_;
 	auto [lt, lr, ls] = DecomposeTransform(get_local_transform(time, factor_));
@@ -287,13 +287,13 @@ void Bone::replace_or_add_keyframe(const glm::mat4& transform, float time)
 	}
 }
 
-void Bone::replace_or_sub_keyframe(const glm::mat4& transform, float time)
+void Bone::remove_or_update_keyframe(const glm::mat4& transform, float time)
 {
 	float time_stamp = floorf(time) / factor_;
 	auto [t, r, s] = DecomposeTransform(transform);
 	auto [it_t, it_r, it_s] =
 		std::tuple{positions_.find(time_stamp), rotations_.find(time_stamp), scales_.find(time_stamp)};
-	sub_keyframe(time);
+	remove_keyframe(time);
 
 	auto erased_transform = get_local_transform(time, factor_);
 	auto [lt, lr, ls] = DecomposeTransform(erased_transform);
@@ -306,11 +306,11 @@ void Bone::replace_or_sub_keyframe(const glm::mat4& transform, float time)
 						  s.y < ls.y + tolerance && ls.z - tolerance < s.z && s.z < ls.z + tolerance);
 	if (is_t_changed || is_r_changed || is_s_changed || time_stamp == 0.0f)
 	{
-		replace_or_add_keyframe(transform, time);
+		insert_or_update_keyframe(transform, time);
 	}
 }
 
-bool Bone::sub_keyframe(float time, bool is_animation_time)
+bool Bone::remove_keyframe(float time, bool is_animation_time)
 {
 	float time_stamp = floorf(time) / factor_;
 	if (is_animation_time)

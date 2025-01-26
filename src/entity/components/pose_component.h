@@ -7,10 +7,11 @@
 #include "../../graphics/shader.h"
 
 #include <unordered_map>
+#include <deque>
 
 namespace anim
 {
-class AnimationComponent;
+
 class PoseComponent : public ComponentBase<PoseComponent>
 {
 public:
@@ -29,7 +30,8 @@ public:
 	void add_bone(const std::string& name, BoneInfo info);
 	void sub_current_bone(const std::string& name);
 	void update() override;
-	void insert_and_update_bone(const std::string& name, const glm::mat4& transform);
+	void insert_or_update_bone(const std::string& name, const glm::mat4& transform);
+	void insert_or_update_morph(int index, const float weight);
 
 	Entity* find(int bone_id);
 	Entity* find(int bone_id, Entity* entity);

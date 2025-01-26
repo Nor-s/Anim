@@ -11,9 +11,19 @@ inline ImVec2 SumImVec2(const ImVec2& a, const ImVec2& b);
 inline ImVec2 SubImVec2(const ImVec2& a, const ImVec2& b);
 inline ImVec4 GlmVec4ToImVec4(const glm::vec4& v);
 
+class ButtonColorSetter
+{
+public:
+	ButtonColorSetter(ImVec4 btn_color);
+	~ButtonColorSetter();
+};
+
 void HelpMarker(const char* desc);
 inline void BeginDragProperty(const char* label, const ImVec2& btn_size = {0.0f, 0.0f});
-inline void EndDragProperty(const char* label);
+inline void BeginDragPropertyWithoutColor(const char* label, const ImVec2& btn_size = {0.0f, 0.0f});
+inline void EndDragProperty();
+inline void EndDragPropertyWithoutColor();
+
 bool DragFPropertyXYZ(const char* label,
 					  float* value,
 					  float step = 0.01f,
@@ -36,6 +46,16 @@ bool DragFloatProperty(const char* label,
 					   const ImVec2& btn_size = {0.0f, 0.0f},
 					   const char* format = "%.0f",
 					   const std::string& help_message = "");
+bool DragFloatPropertyWithColor(const char* label,
+								float& value,
+								const glm::vec4& btn_color = glm::vec4(-1.0f),
+								const glm::vec4& frame_color = glm::vec4(-1.0f),
+								float step = 1.0f,
+								float min = -1000.0f,
+								float max = 1000.0f,
+								const ImVec2& btn_size = {0.0f, 0.0f},
+								const char* format = "%.0f",
+								const std::string& help_message = "");
 bool DragIntProperty(const char* label,
 					 int& value,
 					 float step = 1,

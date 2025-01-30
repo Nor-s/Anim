@@ -25,6 +25,9 @@
 | ![IK](https://github.com/user-attachments/assets/33419952-1904-4037-bec6-8b5b08f66141) |![CCDIK_100](https://github.com/user-attachments/assets/7c5f6383-453f-49d0-b0cb-56aef4bada9b) |![FABRIK_100](https://github.com/user-attachments/assets/677a5fd8-c76f-4315-92c9-9128215f4d5e) |
 
 
+| Morph target|
+|-|
+| ![morph](https://github.com/user-attachments/assets/e5c669ab-eea3-4bd0-abc3-bb61da195ea4)|
 
 ## **Demo**
 

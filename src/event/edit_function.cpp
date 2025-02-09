@@ -206,7 +206,10 @@ void Update_ApplyFABRIK(anim::Entity* start_entity,
 		Chain(anim::ArmatureComponent* a_bone) : bone(a_bone), world(glm::vec3(0.0f)), distance(0.0f)
 		{
 			world = anim::TransformComponent(bone->get_owner()->get_world_transformation()).get_translation();
-			distance = glm::length(anim::TransformComponent(a_bone->get_bindpose()).get_translation());
+			auto scale = anim::TransformComponent(bone->get_owner()->get_local()).get_scale();
+			auto parent_world =
+				anim::TransformComponent(bone->get_owner()->get_parent()->get_world_transformation()).get_translation();
+			distance = glm::distance(world, parent_world);
 		}
 		Chain(const glm::vec3& a_world) : bone(nullptr), world(a_world), distance(0.0f)
 		{

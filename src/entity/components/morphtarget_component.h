@@ -24,6 +24,10 @@ struct MorphInfo
 {
 	size_t morph_target_index;
 	size_t location;
+	MorphInfo(size_t a_index, size_t a_location)
+	: morph_target_index(a_index), location(a_location)
+	{
+	}
 };
 
 class MorphTargetComponent : public ComponentBase<MorphTargetComponent>

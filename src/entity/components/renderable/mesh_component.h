@@ -7,7 +7,6 @@
 #include <memory>
 #include <vector>
 #include <glm/glm.hpp>
-#include <ranges>
 #include <algorithm>
 #include "mesh.h"
 
@@ -40,8 +39,8 @@ public:
 protected:
 	std::shared_ptr<Mesh> get_mesh(const std::string& name) const
 	{
-		auto it = std::ranges::find_if(
-			meshes_, [&name](const std::shared_ptr<Mesh>& mesh) { return mesh->get_mesh_name() == name; });
+		auto it = std::find_if(
+			meshes_.begin(), meshes_.end(), [&name](const std::shared_ptr<Mesh>& mesh) { return mesh->get_mesh_name() == name; });
 		return it != meshes_.end() ? *it : nullptr;
 	}
 

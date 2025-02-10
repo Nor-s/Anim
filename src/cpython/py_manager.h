@@ -6,6 +6,7 @@
 #include <thread>
 #include <functional>
 #include <mutex>
+#include <vector>
 
 namespace anim
 {

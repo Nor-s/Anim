@@ -41,11 +41,11 @@ public:
 	{
 		uint32_t frame;
 		T value;
-		bool operator==(const FrameInfo& other)
+		bool operator==(const FrameInfo& other) const
 		{
 			return frame == other.frame;
 		}
-		bool operator<(const FrameInfo& other)
+		bool operator<(const FrameInfo& other) const
 		{
 			return frame < other.frame;
 		}

@@ -8,7 +8,11 @@ namespace util
 {
 GLenum GetTextureTarget(bool is_msaa)
 {
+#ifndef __EMSCRIPTEN__
 	return is_msaa ? GL_TEXTURE_2D_MULTISAMPLE : GL_TEXTURE_2D;
+#else
+	return GL_TEXTURE_2D;
+#endif
 }
 
 GLenum ConvertFormat(const FramebufferTextureFormat& format)
@@ -92,11 +96,13 @@ void AttachColorAttachment(uint32_t& id,
 
 	glGenTextures(1, &id);
 	glBindTexture(texture_target, id);
+#ifndef __EMSCRIPTEN__
 	if (is_msaa)
 	{
 		glTexImage2DMultisample(GL_TEXTURE_2D_MULTISAMPLE, samples, internal_format, width, height, GL_TRUE);
 	}
 	else
+#endif
 	{
 		SetTexParameteri(spec.texture_format);
 		glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, data_type, nullptr);
@@ -146,7 +152,8 @@ bool GenFramebuffer(uint32_t& id, const FramebufferSpec& spec, std::vector<uint3
 	}
 	else
 	{
-		glDrawBuffer(GL_NONE);
+		GLenum DrawBuffers[1] = {GL_NONE};
+		glDrawBuffers(1, DrawBuffers);
 	}
 
 	if (spec.depth_attachment_spec.texture_format != FramebufferTextureFormat::None)
@@ -294,19 +301,22 @@ void Framebuffer::unbind()
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer_id_);
 		glReadBuffer(GL_COLOR_ATTACHMENT0);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_renderer_id_);
-		glDrawBuffer(GL_COLOR_ATTACHMENT0);
+		GLenum DrawBuffers0[1] = {GL_COLOR_ATTACHMENT0};
+		glDrawBuffers(1, DrawBuffers0);
 		glBlitFramebuffer(0, 0, spec_.width, spec_.height, 0, 0, spec_.width, spec_.height, GL_COLOR_BUFFER_BIT,
 						  GL_NEAREST);
 
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, renderer_id_);
 		glReadBuffer(GL_COLOR_ATTACHMENT1);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, intermediate_renderer_id_);
-		glDrawBuffer(GL_COLOR_ATTACHMENT1);
+		GLenum DrawBuffers1[1] = {GL_COLOR_ATTACHMENT1};
+		glDrawBuffers(1, DrawBuffers1);
 		glBlitFramebuffer(0, 0, spec_.width, spec_.height, 0, 0, spec_.width, spec_.height, GL_COLOR_BUFFER_BIT,
 						  GL_NEAREST);
 
 		glReadBuffer(GL_NONE);
-		glDrawBuffer(GL_NONE);
+		GLenum DrawBuffers2[1] = {GL_NONE};
+		glDrawBuffers(1, DrawBuffers2);
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

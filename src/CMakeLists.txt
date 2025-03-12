@@ -10,7 +10,7 @@ endif()
 
 add_library(glcpp STATIC ${GLCPP_SRC})
 
-set(LIBs STB_IMAGE imgui glad  jsoncpp_static hiredis)
+set(LIBs STB_IMAGE imgui glad  jsoncpp_static)
 
 
 if(MSVC)
@@ -35,11 +35,11 @@ else()
 endif()
 
 message("==========================================================")
-# python
-add_executable(test_python  cpython/main.cpp cpython/py_manager.cpp)
-target_link_libraries(test_python PUBLIC Python3::Python pybind11::pybind11 pybind11::embed)
-add_library(py  cpython/py_manager.cpp)
-target_link_libraries(py PUBLIC Python3::Python pybind11::pybind11 pybind11::embed)
+# # python
+# add_executable(test_python  cpython/main.cpp cpython/py_manager.cpp)
+# target_link_libraries(test_python PUBLIC Python3::Python pybind11::pybind11 pybind11::embed)
+# add_library(py  cpython/py_manager.cpp)
+# target_link_libraries(py PUBLIC Python3::Python pybind11::pybind11 pybind11::embed)
 
 # new
 set(test_src
@@ -160,13 +160,13 @@ if(MSVC)
   if (CMAKE_BUILD_TYPE  MATCHES Release)
       target_link_options(Anim PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
   endif()
-  target_link_libraries(Anim  glcpp core py)
+  target_link_libraries(Anim  glcpp core)
 elseif(WIN32)
     target_compile_options(Anim  PRIVATE -Wall -Werror -std=c++20 -static)
     target_link_libraries(Anim  glcpp)
     target_include_directories(Anim  PUBLIC ./)
 else()
-    target_link_libraries(Anim  glcpp core py)
+    target_link_libraries(Anim  glcpp core)
 endif()
 
 message("==========================================================")

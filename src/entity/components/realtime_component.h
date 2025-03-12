@@ -4,10 +4,24 @@
 #include "component.h"
 #include <string>
 
+#ifdef __USE_REDIS__
 #include "hiredis.h"
 
 struct redisContext;
 struct redisReply;
+#endif
+
+#ifndef __USE_REDIS__
+
+struct redisContext
+{
+};
+
+struct redisReply
+{
+};
+
+#endif
 
 namespace anim
 {
@@ -19,10 +33,12 @@ public:
 	}
 	~RedisGuard()
 	{
+#ifdef __USE_REDIS__
 		if (reply_)
 		{
 			freeReplyObject(reply_);
 		}
+#endif
 	}
 	redisReply* get()
 	{

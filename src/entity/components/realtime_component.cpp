@@ -1,6 +1,9 @@
 #include "realtime_component.h"
+
+#ifdef __USE_REDIS__
 #include "hiredis/hiredis.h"
 #include "hiredis/hiredis_ssl.h"
+#endif
 
 #include <iostream>
 #include <filesystem>
@@ -28,6 +31,7 @@ anim::RealTimeComponent::~RealTimeComponent()
 
 void anim::RealTimeComponent::pre_update()
 {
+#ifdef __USE_REDIS__
 	if (!b_is_connected_)
 	{
 		Bone::SetUseInterpolate(true);
@@ -67,14 +71,16 @@ void anim::RealTimeComponent::pre_update()
 	}
 	catch (std::exception& e)
 	{
-#ifndef NDEBUG
+#ifdef NDEBUG
 		std::cout << e.what() << std::endl;
 #endif
 	}
+#endif
 }
 
 void anim::RealTimeComponent::connect()
 {
+#ifdef __USE_REDIS__
 	try
 	{
 		if (b_is_connected_)
@@ -101,10 +107,12 @@ void anim::RealTimeComponent::connect()
 	{
 		b_is_connected_ = false;
 	}
+#endif
 }
 
 void anim::RealTimeComponent::disconnect()
 {
+#ifdef __USE_REDIS__
 	if (b_is_connected_)
 	{
 		resp_ = (redisReply*) redisCommand(conn_, "LPUSH mq {\"end\":\"1\"}");
@@ -114,4 +122,5 @@ void anim::RealTimeComponent::disconnect()
 		conn_ = nullptr;
 		b_is_connected_ = false;
 	}
+#endif
 }

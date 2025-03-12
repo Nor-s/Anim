@@ -1,9 +1,9 @@
 #ifndef ANIM_GRAPHICS_OPENGL_IMAGE_H
 #define ANIM_GRAPHICS_OPENGL_IMAGE_H
 
-#include <glad/glad.h>
-#include <glm/glm.hpp>
 #include <string>
+
+#include "glh.h"
 
 namespace anim
 {

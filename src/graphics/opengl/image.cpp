@@ -27,7 +27,7 @@ void Image::draw(Shader& shader)
 }
 void Image::set_quad_VAO()
 {
-	glGenVertexArrays(1, &quad_VAO_);
+	// glGenVertexArrays(1, &quad_VAO_);
 	glGenBuffers(1, &quad_VBO_);
 	glBindVertexArray(quad_VAO_);
 	glBindBuffer(GL_ARRAY_BUFFER, quad_VBO_);

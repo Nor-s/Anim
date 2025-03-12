@@ -47,7 +47,7 @@ MainLayer::~MainLayer()
 
 void MainLayer::init(GLFWwindow* window)
 {
-	const char* glsl_version = "#version 330";
+	const char* glsl_version = "#version 300 es";
 
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();

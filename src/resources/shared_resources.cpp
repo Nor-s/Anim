@@ -29,11 +29,15 @@ SharedResources::SharedResources()
 {
 	mPostProcessing.reset(new PostProcessing());
 
+	printf("initanimator\n");
 	init_animator();
+	printf("init shader\n");
 	init_shader();
+	printf("end shader\n");
 	root_entity_.reset(new Entity("All", entity_list_.size()));
 	root_entity_->set_root(root_entity_.get());
 	entity_list_.push_back(root_entity_);
+	printf("createmesh\n");
 
 	ArmatureComponent::setShape(gl::CreateBiPyramid());
 }
@@ -171,29 +175,49 @@ void SharedResources::init_shader()
 
 	mPostProcessing->set_shaders(shaders_["framebuffer"].get(), shaders_["outline"].get());
 
+	printf("end shaders\n");
 	auto model_id = get_mutable_shader("model")->get_id();
 	auto animation_id = get_mutable_shader("animation")->get_id();
 	auto armature_id = get_mutable_shader("armature")->get_id();
 	auto grid_id = get_mutable_shader("grid")->get_id();
 	auto debug_id = get_mutable_shader("debug")->get_id();
 
+	printf("%d\n", glGetError());
+
+	const char* version = (const char*) glGetString(GL_VERSION);
+	printf("OpenGL ES Version: %s\n", version);
+
+	printf("ids: %d, %d, %d", model_id, animation_id, armature_id);
+
+	// TODO: WASM ERROR
+	printf("uniform index\n");
 	unsigned int uniform_block_id_model = glGetUniformBlockIndex(model_id, "Matrices");
+
+	printf("%d\n", glGetError());
+
+	printf("1uniform index\n");
 	unsigned int uniform_block_id_animation = glGetUniformBlockIndex(animation_id, "Matrices");
+	printf("2uniform index\n");
 	unsigned int uniform_block_id_armature = glGetUniformBlockIndex(armature_id, "Matrices");
+	printf("3uniform index\n");
 	unsigned int uniform_block_id_grid = glGetUniformBlockIndex(grid_id, "Matrices");
+	printf("4uniform index\n");
 	unsigned int uniform_block_id_debug = glGetUniformBlockIndex(debug_id, "Matrices");
 
+	printf("uniform block binding\n");
 	glUniformBlockBinding(model_id, uniform_block_id_model, 0);
 	glUniformBlockBinding(animation_id, uniform_block_id_animation, 0);
 	glUniformBlockBinding(armature_id, uniform_block_id_armature, 0);
 	glUniformBlockBinding(grid_id, uniform_block_id_grid, 0);
 	glUniformBlockBinding(debug_id, uniform_block_id_debug, 0);
 
+	printf("gen buffers\n");
 	glGenBuffers(1, &matrices_UBO_);
 	glBindBuffer(GL_UNIFORM_BUFFER, matrices_UBO_);
 	glBufferData(GL_UNIFORM_BUFFER, 2 * sizeof(glm::mat4), NULL, GL_STATIC_DRAW);
 	glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+	printf("bind buffer range\n");
 	glBindBufferRange(GL_UNIFORM_BUFFER, 0, matrices_UBO_, 0, 2 * sizeof(glm::mat4));
 }
 void SharedResources::set_ubo_projection(const glm::mat4& projection)

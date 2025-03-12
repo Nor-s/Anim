@@ -1,3 +1,10 @@
+#ifdef __EMSCRIPTEN__
+// For emscripten, instead of using glad we use its built-in support for OpenGL:
+#include <GLES3/gl3.h>
+#else
+#include <glad/glad.h>
+#endif
+
 #include "gl_shader.h"
 #include <fstream>
 #include <sstream>
@@ -69,11 +76,12 @@ GLShader::GLShader(const char* vertex_path, const char* fragment_path, const cha
 	unsigned int geometry = 0;
 	if (geometry_path != nullptr)
 	{
-		const char* gShaderCode = geometry_code.c_str();
-		geometry = glCreateShader(GL_GEOMETRY_SHADER);
-		glShaderSource(geometry, 1, &gShaderCode, NULL);
-		glCompileShader(geometry);
-		check_compile_errors(geometry, "GEOMETRY");
+		geometry_path = nullptr;
+		// const char* gShaderCode = geometry_code.c_str();
+		// geometry = glCreateShader(GL_GEOMETRY_SHADER);
+		// glShaderSource(geometry, 1, &gShaderCode, NULL);
+		// glCompileShader(geometry);
+		// check_compile_errors(geometry, "GEOMETRY");
 	}
 	// shader Program
 	id_ = glCreateProgram();

@@ -1,4 +1,6 @@
-#version 330 core
+#version 300 es
+precision highp float;
+
 in vec2 TexCoords;
 layout(location = 0) out vec4 color;
 layout(location = 1) out int color2;
@@ -28,12 +30,12 @@ void make_kernel(inout float kernel[9], sampler2D tex, vec2 coord)
 }
 void main() {
     // sobel
-    float xFilter[9] = float[9](-1,0,1,
-                                -2,0,2,
-                                -1,0,1);
-    float yFilter[9] = float[9](1,2,1,
-                                0,0,0,
-                                -1,-2,-1 );
+    float xFilter[9] = float[9](-1.0,0.0,1.0,
+                                -2.0,0.0,2.0,
+                                -1.0,0.0,1.0);
+    float yFilter[9] = float[9](1.0,2.0,1.0,
+                                0.0,0.0,0.0,
+                                -1.0,-2.0,-1.0 );
     float kernel[9];
     make_kernel(kernel, screenTexture, TexCoords);  //gl_TexCoord[0].st 
        
@@ -44,7 +46,7 @@ void main() {
         sy += kernel[i] * yFilter[i];
     }
     float dist = sqrt(sx * sx + sy * sy);
-    float edge = dist > outlineThreshold? 1 : 0.1;
+    float edge = dist > outlineThreshold ? 1.0 : 0.1;
  
     color = vec4(outlineColor, edge);
     color2  = 0;

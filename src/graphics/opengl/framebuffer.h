@@ -1,7 +1,8 @@
 #ifndef ANIM_GRAPHICS_OPENGL_FRAMEBUFFER_H
 #define ANIM_GRAPHICS_OPENGL_FRAMEBUFFER_H
 
-#include <glad/glad.h>
+#include "glh.h"
+
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>

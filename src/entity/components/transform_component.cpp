@@ -1,12 +1,4 @@
 #include "transform_component.h"
-#include "transform_component.h"
-#include "transform_component.h"
-#include "transform_component.h"
-#include "transform_component.h"
-#include "transform_component.h"
-#include "transform_component.h"
-#include "transform_component.h"
-#include "transform_component.h"
 #include "../../util/utility.h"
 
 #include <iostream>

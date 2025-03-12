@@ -1,8 +1,8 @@
+#include "glh.h"
 
 #include "gl_mesh.h"
 #include "../shader.h"
 
-#include <glad/glad.h>
 #include "../animation/morph_target.h"
 using namespace anim;
 

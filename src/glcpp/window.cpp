@@ -1,3 +1,4 @@
+#include "glh.h"
 #include "window.h"
 
 namespace glcpp
@@ -35,6 +36,8 @@ void Window::init_glfw()
 	{
 		throw std::runtime_error("GLFW couldn't be initialized.");
 	}
+
+	// glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
@@ -52,12 +55,20 @@ void Window::init_glfw()
 		throw std::runtime_error("GLFW failed to create window");
 	}
 	glfwMakeContextCurrent(handle_);
+#ifndef __EMSCRIPTEN__
 	// glad: load all OpenGL function pointers
 	// ---------------------------------------
 	if (!gladLoadGLLoader((GLADloadproc) glfwGetProcAddress))
 	{
 		throw std::runtime_error("Failed to initialize GLAD");
 	}
+#endif
+
+	// const char* version = (const char*) glGetString(GL_VERSION);
+	// std::cout << "OpenGL ES Version: " << version << std::endl;
+
+	// const char* shadingVersion = (const char*) glGetString(GL_SHADING_LANGUAGE_VERSION);
+	// std::cout << "GLSL Version: " << shadingVersion << std::endl;
 }
 void Window::destroy_window()
 {

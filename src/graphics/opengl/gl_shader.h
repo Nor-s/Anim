@@ -1,9 +1,10 @@
 #ifndef ANIM_GRAPHICS_OPENGL_GL_SHADER_H
 #define ANIM_GRAPHICS_OPENGL_GL_SHADER_H
 
+#include "glh.h"
+
 #include "../shader.h"
 
-#include <glad/glad.h>
 #include <glm/glm.hpp>
 
 #include <string>

@@ -2,7 +2,8 @@
 #include "opengl/image.h"
 #include "opengl/framebuffer.h"
 #include "shader.h"
-#include <glad/glad.h>
+
+#include "glh.h"
 
 namespace anim
 {

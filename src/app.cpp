@@ -1,5 +1,5 @@
+#include "glh.h"
 #include "app.h"
-
 #include <stb/stb_image.h>
 #include "glcpp/camera.h"
 #include "glcpp/window.h"
@@ -20,8 +20,10 @@
 #include "event/edit_function.h"
 #include "resources/exporter.h"
 
+#ifdef __USE_EMBEDED_PYTHON__
 #include "cpython/py_manager.h"
 #include <pybind11/embed.h>
+#endif
 
 namespace fs = std::filesystem;
 
@@ -45,6 +47,7 @@ App::~App()
 
 void App::init(uint32_t width, uint32_t height, const std::string& title)
 {
+	printf("init");
 	stbi_set_flip_vertically_on_load(true);
 	init_window(width, height, title);
 	init_ui();
@@ -54,6 +57,7 @@ void App::init(uint32_t width, uint32_t height, const std::string& title)
 }
 void App::init_window(uint32_t width, uint32_t height, const std::string& title)
 {
+	printf("init window");
 	window_ = std::make_unique<glcpp::Window>(width, height, title);
 	window_->set_factor();
 	window_->set_user_pointer(this);
@@ -61,6 +65,7 @@ void App::init_window(uint32_t width, uint32_t height, const std::string& title)
 }
 void App::init_callback()
 {
+	printf("init callback");
 	window_->set_scroll_callback(scroll_callback);
 	window_->set_mouse_button_callback(mouse_btn_callback);
 	window_->set_cursor_pos_callback(mouse_callback);
@@ -71,15 +76,19 @@ void App::init_callback()
 }
 void App::init_ui()
 {
+	printf("\ninit ui\n");
 	ui_ = std::make_unique<ui::MainLayer>();
 	ui_->init(window_->get_handle());
 }
 void App::init_shared_resources()
 {
+	printf("init sr");
 	shared_resources_ = std::make_shared<anim::SharedResources>();
+	printf("\nend sr\n");
 }
 void App::init_scene(uint32_t width, uint32_t height)
 {
+	printf("init scene");
 	scenes_.push_back(std::make_shared<MainScene>(width, height, shared_resources_));
 
 	import_model_or_animation("./resources/models/mannequiny.fbx");
@@ -146,11 +155,11 @@ void App::update_time()
 }
 void App::post_update()
 {
-	process_timeline_context();
-	process_menu_context();
-	process_scene_context();
-	process_component_context();
-	process_python_context();
+	// process_timeline_context();
+	// process_menu_context();
+	// process_scene_context();
+	// process_component_context();
+	// process_python_context();
 }
 void App::process_timeline_context()
 {
@@ -268,6 +277,7 @@ void App::process_component_context()
 }
 void App::process_python_context()
 {
+#ifdef __USE_EMBEDED_PYTHON_
 	auto& ui_context = ui_->get_context();
 	auto& py_context = ui_context.python;
 	auto* py = anim::PyManager::get_instance();
@@ -293,6 +303,7 @@ void App::process_python_context()
 		}
 	}
 	py->update();
+#endif
 }
 
 void App::import_model_or_animation(const char* const path)

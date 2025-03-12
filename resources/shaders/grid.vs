@@ -1,4 +1,6 @@
-#version 330 core
+#version 300 es
+precision highp float;
+
 //https://github.com/martin-pr/possumwood/wiki/Skybox
 //https://github.com/martin-pr/possumwood/wiki/Infinite-ground-plane-using-GLSL-shaders
 // http://asliceofrendering.com/scene%20helper/2020/01/05/InfiniteGrid/

@@ -1,4 +1,6 @@
-#version 330 core
+#version 300 es
+precision highp float;
+
 layout(location = 0) out vec4 color;
 layout(location = 1) out int color2;
 
@@ -7,13 +9,14 @@ layout (std140) uniform Matrices
     mat4 projection;
     mat4 view;
 };
-uniform float width =2.0;
-uniform int scale =100;
+
+float width =2.0;
+float scale =100.0;
 
 
 in vec3 near_vec;
 in vec3 far_vec;
-out vec4 frag_color;
+
 #define linearstep(p0, p1, v) (clamp(((v) - (p0)) / abs((p1) - (p0)), 0.0, 1.0))
 
 //https://github.com/martin-pr/possumwood/wiki/Infinite-ground-plane-using-GLSL-shaders
@@ -81,7 +84,7 @@ void main() {
 	color = bg_color;
 	color.rgb = mix(color.rgb, grid_color.rgb, grid_ratio);
 
-	float grid_ratio1 = get_grid(R.xz, scale*10);
+	float grid_ratio1 = get_grid(R.xz, scale*10.0);
 	color.rgb = mix(color.rgb, grid_color2.rgb, grid_ratio1 );//* (1.0 - depth_fading));
 
 	// axes color

@@ -1,7 +1,14 @@
 cmake_minimum_required(VERSION 3.21)
-include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
+# include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 message("Using CMake version ${CMAKE_VERSION}")
+
+# if($ENV{COMPILE_FOR_WASM})
+# 	set(COMPILE_DEFINITIONS _PLATFORM_WASM)
+# 	set(CMAKE_TOOLCHAIN_FILE $ENV{EMSDK_HOME}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake)
+# 	set(CMAKE_EXECUTABLE_SUFFIX ".html")
+# endif()
+
 
 # for CCACHE
 if(APPLE)
@@ -25,26 +32,6 @@ endif()
 message("CMAKE_RUNTIME_OUTPUT_DIRECTORY : ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message("CMAKE_BINARY_DIR : ${CMAKE_BINARY_DIR}")
 
-#  for apple ccache
-if(APPLE)
-  get_property(RULE_LAUNCH_COMPILE GLOBAL PROPERTY RULE_LAUNCH_COMPILE)
-  if(RULE_LAUNCH_COMPILE AND CMAKE_GENERATOR STREQUAL "Xcode")
-      # Set up wrapper scripts
-      configure_file(launch-c.in launch-c)
-      configure_file(launch-cxx.in launch-cxx)
-      execute_process(COMMAND chmod a+rx
-                               "${CMAKE_BINARY_DIR}/launch-c"
-                               "${CMAKE_BINARY_DIR}/launch-cxx"
-      )
-      # Set Xcode project attributes to route compilation and linking
-      # through our scripts
-      set(CMAKE_XCODE_ATTRIBUTE_CC         "${CMAKE_BINARY_DIR}/launch-c")
-      set(CMAKE_XCODE_ATTRIBUTE_CXX        "${CMAKE_BINARY_DIR}/launch-cxx")
-      set(CMAKE_XCODE_ATTRIBUTE_LD         "${CMAKE_BINARY_DIR}/launch-c")
-      set(CMAKE_XCODE_ATTRIBUTE_LDPLUSPLUS "${CMAKE_BINARY_DIR}/launch-cxx")
-  endif()
-endif()
-
 
 # for output directory
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
@@ -55,33 +42,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 file(COPY resources DESTINATION ${CMAKE_BINARY_DIR}/bin)
 file(COPY imgui.ini DESTINATION ${CMAKE_BINARY_DIR}/bin)
 file(COPY LICENSE DESTINATION ${CMAKE_BINARY_DIR}/bin)
-
-message("==========================================================")
-message("Build python")
-if (APPLE)
-  execute_process(COMMAND sh "scripts/build_python_osx.sh" WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}) 
-  if (NOT EXISTS ${CMAKE_BINARY_DIR}/bin/python/bin/python)
-    file(COPY ${CMAKE_CURRENT_LIST_DIR}/python DESTINATION ${CMAKE_BINARY_DIR}/bin)
-  endif()
-  file(COPY mp_mocap DESTINATION ${CMAKE_BINARY_DIR}/bin/python/lib/python3.10/site-packages)
-elseif(WIN32)
-  execute_process(COMMAND cmd /C ${CMAKE_CURRENT_SOURCE_DIR}/scripts/build_python.bat
-    WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR})
-  if (NOT EXISTS ${CMAKE_BINARY_DIR}/bin/python/python.exe)
-    file(COPY ${CMAKE_CURRENT_LIST_DIR}/python DESTINATION ${CMAKE_BINARY_DIR}/bin)
-    file(COPY ${CMAKE_CURRENT_LIST_DIR}/python/python310.dll DESTINATION ${CMAKE_BINARY_DIR}/bin)
-    file(COPY ${CMAKE_CURRENT_LIST_DIR}/python/python3.dll DESTINATION ${CMAKE_BINARY_DIR}/bin)
-  endif()
-  file(COPY mp_mocap DESTINATION ${CMAKE_BINARY_DIR}/bin/python/Lib/site-packages)
-else()
-  execute_process(COMMAND sh "scripts/build_python_linux.sh" WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}) 
-  if (NOT EXISTS ${CMAKE_BINARY_DIR}/bin/python/bin/python)
-    file(COPY ${CMAKE_CURRENT_LIST_DIR}/python DESTINATION ${CMAKE_BINARY_DIR}/bin)
-  endif()
-  file(COPY mp_mocap DESTINATION ${CMAKE_BINARY_DIR}/bin/python/lib/python3.10/site-packages)
-
-endif()
-message("==========================================================")
 
 message("Compiler")
 message(STATUS " - ID       \t: ${CMAKE_CXX_COMPILER_ID}")
@@ -94,67 +54,39 @@ option(GLFW_BUILD_DOCS OFF)
 option(ASSIMP_BUILD_ZLIB ON)
 option(ASSIMP_BUILD_TESTS OFF)
 option(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
-if(WIN32)
-  option(ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR OFF)
-  set(ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR OFF)
-endif()
+option(ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR OFF)
+set(ASSIMP_RAPIDJSON_NO_MEMBER_ITERATOR OFF)
 set(ASSIMP_BUILD_ZLIB ON)
 set(ASSIMP_BUILD_TESTS OFF)
 set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+set(BUILD_SHARED_LIBS OFF)
+
+
+
+find_package(OpenGL REQUIRED)
+include_directories(${OPENGL_INCLUDE_DIR})
+
+include_directories(SYSTEM external external/)
+add_compile_options(-Wno-nontrivial-memcall)
+
+
 
 # add external libraries
-message("GLAD")
 add_subdirectory(external/glad/)
-message("STB")
-add_library(STB_IMAGE "external/stb/stb_image.cpp")
-
-
-if(WIN32)
-  message("GLFW")
-  add_subdirectory(external/glfw/)
-  message("IMGUI")
-  add_subdirectory(external/imgui/)
-  message("ASSIMP")
-  add_subdirectory(external/assimp/)
-else()
-  add_subdirectory(external/imgui/)
-  add_subdirectory(external/assimp/)
-  add_subdirectory(external/glfw/)
-endif()
-
-message("hiredis")
-add_subdirectory(external/hiredis)
-message("jsoncpp")
+add_library(STB_IMAGE STATIC "external/stb/stb_image.cpp")
+add_subdirectory(external/glfw/)
+add_subdirectory(external/imgui/)
+add_subdirectory(external/assimp/)
+message("------------glfw")
 add_subdirectory(external/jsoncpp)
-message("GLM")
 add_subdirectory(external/glm/)
 
-message("Python" ${CMAKE_BINARY_DIR}/bin/python/)
-set(Python3_ROOT_DIR ${CMAKE_BINARY_DIR}/bin/python)
-set(CMAKE_FIND_ROOT_PATH ${CMAKE_BINARY_DIR})
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-
-find_package(Python3 3.10  EXACT COMPONENTS Interpreter Development REQUIRED)
-GET_TARGET_PROPERTY(\_lib Python3::Python IMPORTED_IMPLIB)
-MESSAGE(STATUS "Python3::Python ${\_lib}")
-GET_TARGET_PROPERTY(\_lib Python3::Python IMPORTED_IMPLIB_DEBUG)
-MESSAGE(STATUS "Python3::Python (Debug) ${\_lib}")
-GET_TARGET_PROPERTY(\_lib Python3::Python IMPORTED_IMPLIB_RELEASE)
-MESSAGE(STATUS "Python3::Python (Release) ${\_lib}")
-message(STATUS "Python3 Executable: ${Python3_EXECUTABLE}")
-message(STATUS "Python3 Include Dirs: ${Python3_INCLUDE_DIRS}")
-message(STATUS "Python3 Library: ${Python3_LIBRARY}")
-
-message("pybind11")
-add_subdirectory(external/pybind11)
-message(STATUS "Found pybind11 v${pybind11_VERSION}: ${pybind11_INCLUDE_DIRS} ${pybind11_DEFINITIONS} ${pybind11_LIBRARIES}")
-message("==========================================================")
-
-
 add_subdirectory(src)
-add_dependencies (imgui glfw)
-add_dependencies(STB_IMAGE imgui)
-add_dependencies(glcpp assimp)
-add_subdirectory(playground/export_test)
+# add_dependencies (imgui glfw)
+# add_dependencies(STB_IMAGE imgui)
+# add_dependencies(glcpp assimp)
+# add_subdirectory(playground/export_test)
+
+
+# add_subdirectory(test/external_wasm)
+# add_subdirectory(test/anim_wasm)

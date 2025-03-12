@@ -1,4 +1,6 @@
-#version 330 core
+#version 300 es
+precision highp float;
+
 
 layout(location = 0) out vec4 FragColor;
 layout(location = 1) out int EntityID;

@@ -74,19 +74,19 @@ add_compile_options(-Wno-nontrivial-memcall)
 # add external libraries
 add_subdirectory(external/glad/)
 add_library(STB_IMAGE STATIC "external/stb/stb_image.cpp")
-add_subdirectory(external/glfw/)
+# add_subdirectory(external/glfw/)
 add_subdirectory(external/imgui/)
 add_subdirectory(external/assimp/)
 message("------------glfw")
 add_subdirectory(external/jsoncpp)
 add_subdirectory(external/glm/)
 
-add_subdirectory(src)
+# add_subdirectory(src)
 # add_dependencies (imgui glfw)
 # add_dependencies(STB_IMAGE imgui)
 # add_dependencies(glcpp assimp)
 # add_subdirectory(playground/export_test)
 
 
-# add_subdirectory(test/external_wasm)
-# add_subdirectory(test/anim_wasm)
+add_subdirectory(test/external_wasm)
+add_subdirectory(test/anim_wasm)

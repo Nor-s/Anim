@@ -31,7 +31,7 @@ namespace fs = std::filesystem;
 
 void error_callback(int code, const char* description)
 {
-	printf("error %d: %s\n", code, description);
+	printf("---- error %d: %s\n", code, description);
 }
 #endif
 
@@ -96,10 +96,10 @@ void App::init_scene(uint32_t width, uint32_t height)
 }
 void App::loop()
 {
-	glfwSwapInterval(0);
+	// glfwSwapInterval(0);
 	start_time_ = static_cast<float>(glfwGetTime());
 
-	while (!window_->should_close())
+	// while (!window_->should_close())
 	{
 		update();
 
@@ -155,11 +155,11 @@ void App::update_time()
 }
 void App::post_update()
 {
-	// process_timeline_context();
-	// process_menu_context();
-	// process_scene_context();
-	// process_component_context();
-	// process_python_context();
+	process_timeline_context();
+	process_menu_context();
+	process_scene_context();
+	process_component_context();
+	process_python_context();
 }
 void App::process_timeline_context()
 {
@@ -338,7 +338,7 @@ void App::draw_scene()
 
 void App::post_draw()
 {
-	glfwSwapBuffers(window_->get_handle());
+	// glfwSwapBuffers(window_->get_handle());
 
 	glfwPollEvents();
 }

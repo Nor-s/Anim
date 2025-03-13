@@ -1,4 +1,7 @@
 #include "glh.h"
+#include <GLFW/emscripten_glfw3.h>
+#include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
 #include "window.h"
 
 namespace glcpp
@@ -32,14 +35,23 @@ void Window::process_events()
 
 void Window::init_glfw()
 {
+	glfwInitHint(GLFW_PLATFORM, GLFW_PLATFORM_EMSCRIPTEN);
+
 	if (!glfwInit())
 	{
 		throw std::runtime_error("GLFW couldn't be initialized.");
 	}
 
+#ifdef __EMSCRIPTEN__
 	// glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+
+	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ES_API);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+#else
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+#endif
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 #ifndef NDEBUG
 	glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);

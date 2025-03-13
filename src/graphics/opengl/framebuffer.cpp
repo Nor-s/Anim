@@ -88,6 +88,9 @@ void AttachColorAttachment(uint32_t& id,
 						   const FramebufferTextureSpec& spec,
 						   int index)
 {
+#ifdef __EMSCRIPTEN__
+	samples = 1;
+#endif
 	bool is_msaa = samples > 1;
 	GLenum format = ConvertFormat(spec.texture_format);
 	GLenum internal_format = ConvertInternalFormat(spec.texture_format);
@@ -106,7 +109,8 @@ void AttachColorAttachment(uint32_t& id,
 	{
 		SetTexParameteri(spec.texture_format);
 		glTexImage2D(GL_TEXTURE_2D, 0, internal_format, width, height, 0, format, data_type, nullptr);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		if (internal_format != GL_R32I)	   // mipmap error with integer format (webgl)
+			glGenerateMipmap(GL_TEXTURE_2D);
 	}
 	glBindTexture(texture_target, 0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + index, texture_target, id, 0);
@@ -114,16 +118,21 @@ void AttachColorAttachment(uint32_t& id,
 
 void AttachDepthRBO(uint32_t& id, int samples, uint32_t width, uint32_t height, const FramebufferTextureSpec& spec)
 {
+#ifdef __EMSCRIPTEN__
+	samples = 1;
+#endif
 	bool is_msaa = samples > 1;
 	GLenum format = ConvertFormat(spec.texture_format);
 
 	glGenRenderbuffers(1, &id);
 	glBindRenderbuffer(GL_RENDERBUFFER, id);
+#ifndef __EMSCRIPTEN__
 	if (is_msaa)
 	{
 		glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, format, width, height);
 	}
 	else
+#endif
 	{
 		glRenderbufferStorage(GL_RENDERBUFFER, format, width, height);
 	}
@@ -176,7 +185,9 @@ bool GenFramebuffer(uint32_t& id, const FramebufferSpec& spec, std::vector<uint3
 
 Framebuffer::Framebuffer(const FramebufferSpec& spec) : spec_(spec)
 {
+#ifdef __EMSCRIPTEN__
 	spec_.samples = 1;
+#endif
 	set_quad_VAO();
 	init_framebuffer();
 }
@@ -262,35 +273,46 @@ void Framebuffer::set_quad_VAO()
 
 void Framebuffer::bind_without_clear()
 {
+	static const GLenum draw_buffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 	glBindFramebuffer(GL_FRAMEBUFFER, renderer_id_);
+	glDrawBuffers(2, draw_buffers);
+
 	glViewport(0, 0, spec_.width, spec_.height);
 }
 
 void Framebuffer::bind(const glm::vec4& color)
 {
 	bind_without_clear();
-	glClearColor(color.x, color.y, color.z, color.a);
-
-	glClear(GL_COLOR_BUFFER_BIT);
+	const float transparent[] = {color.x, color.y, color.z, color.a};
+	glClearBufferfv(GL_COLOR, 0, transparent);
+	const float red[] = {0, 0, 0, 0};
+	// glClearBufferfv(GL_COLOR, 1, red);
 }
 
 void Framebuffer::bind_with_depth(const glm::vec4& color)
 {
 	bind_without_clear();
-	glClearColor(color.x, color.y, color.z, color.a);
-
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	const float transparent[] = {color.x, color.y, color.z, color.a};
+	glClearBufferfv(GL_COLOR, 0, transparent);
+	const float red[] = {0, 0, 0, 0};
+	// glClearBufferfv(GL_COLOR, 1, red);
+	glClear(GL_DEPTH_BUFFER_BIT);
 }
 
 void Framebuffer::bind_with_depth_and_stencil(const glm::vec4& color)
 {
 	bind_without_clear();
-	glClearColor(color.x, color.y, color.z, color.a);
+
+	const float transparent[] = {color.x, color.y, color.z, color.a};
+	const float red[] = {0, 0, 0, 0};
+
 	glEnable(GL_DEPTH_TEST);
 	// https://community.khronos.org/t/how-to-clear-stencil-buffer-after-stencil-test/15882/4
 	glStencilMask(~0);
 	glDisable(GL_SCISSOR_TEST);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+	glClearBufferfv(GL_COLOR, 0, transparent);
+	// glClearBufferfv(GL_COLOR, 1, red);
+	glClear(GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glDisable(GL_STENCIL_TEST);
 }
 

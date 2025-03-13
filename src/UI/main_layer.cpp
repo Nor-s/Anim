@@ -53,7 +53,8 @@ void MainLayer::init(GLFWwindow* window)
 	ImGui::CreateContext();
 
 	ImGuiIO& io = ImGui::GetIO();
-	(void) io;
+	io.IniFilename = "./resources/imgui.ini";
+
 	io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;	 // Enable Keyboard Controls
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;		 // Enable Docking
 	ImGui::StyleColorsLight();

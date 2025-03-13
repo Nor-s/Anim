@@ -1,0 +1,12 @@
+{
+  "name": "pnp",
+  "version": "0.1.0",
+  "private": true,
+  "homepage": "https://nor-s.github.io/Anim-demo/",
+  "devDependencies": {
+    "gh-pages": "^6.3.0"
+  },
+  "scripts": {
+    "deploy": "gh-pages -d ."
+  }
+}

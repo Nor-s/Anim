@@ -15,9 +15,7 @@ set(LIBs STB_IMAGE imgui glad  jsoncpp_static hiredis)
 
 if(MSVC)
    target_compile_options(glcpp PUBLIC  "/utf-8")
-  if (CMAKE_BUILD_TYPE MATCHES Release)
-    target_link_options(glcpp PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
- endif()
+   target_link_options(glcpp PUBLIC "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>" "$<$<CONFIG:Release>:/ENTRY:mainCRTStartup>")
   target_link_libraries(glcpp PUBLIC ${LIBs} glm assimp::assimp)
   target_include_directories(glcpp PUBLIC ./ ./glcpp ../ ${CMAKE_HOME_DIRECTORY}/external)
 
@@ -156,10 +154,8 @@ event/edit_function.h
 )
 
 if(MSVC)
-  target_compile_options(Anim PUBLIC   "/utf-8")#  target_link_options(Anim PUBLIC "/INCREMENTAL")
-  if (CMAKE_BUILD_TYPE  MATCHES Release)
-      target_link_options(Anim PUBLIC "/INCREMENTAL" "/SUBSYSTEM:windows" "/ENTRY:mainCRTStartup")
-  endif()
+  target_compile_options(Anim PRIVATE "/utf-8")
+  target_link_options(Anim PRIVATE "$<$<CONFIG:Release>:/SUBSYSTEM:WINDOWS>" "$<$<CONFIG:Release>:/ENTRY:mainCRTStartup>")
   target_link_libraries(Anim  glcpp core py)
 elseif(WIN32)
     target_compile_options(Anim  PRIVATE -Wall -Werror -std=c++20 -static)

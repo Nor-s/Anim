@@ -1,0 +1,11 @@
+# Runtime dependencies used by the embedded motion-capture integration.
+matplotlib==3.9.2
+numpy==1.26.4
+opencv-contrib-python==4.10.0.84
+PyGLM==2.7.1
+redis==5.2.0
+absl-py==2.1.0
+attrs==24.2.0
+flatbuffers==24.3.25
+protobuf==4.25.5
+sounddevice==0.5.1

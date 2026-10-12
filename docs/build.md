@@ -1,103 +1,49 @@
-# **Build**
+# Build Anim on Windows
 
-Note: The path must be in English, no spaces.
+## Requirements
 
-requirements
+- Visual Studio 2022 with the Desktop development with C++ workload and Windows SDK
+- CMake 3.25 or newer
+- Git
+- Python 3.10 x64
 
--   CMake (version >= 3.21)
--   git
+The source tree contains GLFW, GLM, jsoncpp, Assimp, hiredis, ImGui, GLAD,
+pybind11, and stb. CMake builds the native libraries that are needed by Anim;
+GLM, pybind11, and stb are header/source-only dependencies. CPython itself is
+not built from source. The local Python 3.10 environment is created by the setup
+script, which avoids rebuilding CPython and unrelated extension modules.
 
-## **Windows(VS2022 amd64)**
+## Configure and build
 
--   MSVC 19.33.31517.0 (VS2022 amd64) 
-    -   workload
-         -  Desktop Development with C++
-         -  Universal Windows Platform Development
-         -   C++ CMake Tools for Windows
-         -    Python Development
+From the repository root in PowerShell:
 
-    -   Visual Studio must satisfy the conditions described in [this document](https://github.com/python/cpython/tree/main/PCbuild) (for cpython)
-
-        > Install Microsoft Visual Studio with Python workload and Python native development component.
-
-    -   and, check c++ cmake tools
-
-        ![](https://docs.microsoft.com/ko-kr/cpp/build/media/cmake-install-2019.png?view=msvc-170)
-        
-### **Visual Studio**
-
-see [/docs/windows_build.pdf](/docs/windows_build.pdf)
-
-### **Terminal**
-
-```
-git clone --recursive https://github.com/Nor-s/Anim.git
-cd Anim
-mkdir build
-cd build
+```powershell
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts/setup.ps1
+cmake --preset windows-release
+cmake --build --preset windows-release
 ```
 
-#### **Cmake**
+The executable is `build/bin/Anim.exe`. The build directory also contains the
+Python environment and copied application resources. Release builds do not
+generate PDB files.
 
-```
-cmake ..   -DCMAKE_CXX_COMPILER="C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.33.31517/bin/Hostx64/x64/cl.exe"
-cmake --build . --config Release
-```
+To launch from the repository root:
 
-or
-
-```
-cmake .. -G "Visual Studio 17 2022" -A x64
-cmake --build . --config Release
+```powershell
+& .\build\bin\Anim.exe
 ```
 
-output files path: build/bin/Release/
+The older motion-capture notebooks and their sample files are kept in
+`playground/mocap`. Run Jupyter with that directory as its working directory
+when using relative paths inside the notebooks.
 
-You need to move the files to this folder: build/bin/
+## Dependencies
 
-#### **Cmake with Ninja**
+Third-party versions are pinned in the repository's submodule entries. Their
+source builds are configured with tests, examples, documentation, and optional
+command-line tools disabled. Runtime Python packages are pinned in
+`scripts/requirements-runtime.txt` and installed into `build/bin/python`.
 
-
-```
-cmake .. -G Ninja -DCMAKE_CXX_COMPILER="C:/Program Files/Microsoft Visual Studio/2022/Preview/VC/Tools/MSVC/14.33.31517/bin/Hostx64/x64/cl.exe"
-
-ninja
-```
-
-or
-
-```
-cmake  .. -G Ninja
-ninja
-```
-
-## **Linux**
-
--   ~~gcc 9.4.0 x86_64-linux-gnu~~
-
-## **Mac OS (silicon)**
-
--   Clang 13.0.0 arm64-apple-darwin21.2.0
--   Python 3.10 and newer
--   Homebrew 3.5.9
-
-```bash
-xcode-select --install
-brew install pkg-config openssl@1.1 xz gdbm tcl-tk
-```
-
-```bash
-git clone --recursive https://github.com/Nor-s/Anim.git
-cd Anim
-
-mkdir build
-cd build
-cmake ..
-make
-```
-
-
-## **Error handling**
-
--   when building cpython (https error)
-    - https://stackoverflow.com/questions/54175042/python-3-7-anaconda-environment-import-ssl-dll-load-fail-error
+If CMake cannot locate Python, remove only the generated `build` directory and
+rerun the setup and configure commands. Do not delete or move the source folders
+under `external`.

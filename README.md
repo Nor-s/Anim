@@ -1,4 +1,4 @@
-# **Anim v0.1.0**
+# **Anim**
 
 | Animation tool             | Video to Animation (only mixamorig character) |
 | -------------------------- | --------------------------------------------- |
@@ -48,7 +48,15 @@
 
 ## **Build**
 
-see [build.md](/docs/build.md)
+See [the Windows build guide](docs/build.md). The supported local setup uses
+Visual Studio 2022, CMake, and Python 3.10; CMake configure does not build a
+second Python interpreter.
+
+## **Development files**
+
+- `playground/mocap` contains the motion-capture notebooks and their sample data.
+- `playground/legacy/mp_mocap2` preserves the older experimental Python package.
+- `external` contains the pinned native and header-only dependencies.
 
 ## **External**
 

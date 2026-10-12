@@ -8,6 +8,7 @@
 #endif
 
 #include <filesystem>
+#include <fstream>
 
 #include <iostream>
 
@@ -90,12 +91,23 @@ PyManager::PyManager()
 	auto lib_path = home_path / "Lib";
 	auto site_path = lib_path / "site-packages";
 	auto app_path = exe_path / "mp_mocap";
-	auto dll_path = home_path / "DLLs";
-
-	auto python_path = lib_path.wstring() + L";" + dll_path.wstring() + L";" + site_path.wstring() + L";" +
-					   app_path.wstring() + L";" + home_path.wstring() + L";" + exe_path.wstring();
-	// Py_SetPythonHome(pythonHome.c_str());
-	//  Py_SetPythonHome(L"/Users/soongunno/githubRepo/Anim/Anim/build/bin/python/bin");
+	auto base_path = home_path;
+	std::ifstream venv_config(home_path / "pyvenv.cfg");
+	std::string config_line;
+	while (std::getline(venv_config, config_line))
+	{
+		constexpr char home_prefix[] = "home = ";
+		if (config_line.rfind(home_prefix, 0) == 0)
+		{
+			base_path = std::filesystem::u8path(config_line.substr(sizeof(home_prefix) - 1));
+			break;
+		}
+	}
+	auto base_lib_path = base_path / "Lib";
+	auto base_dll_path = base_path / "DLLs";
+	auto python_path = base_lib_path.wstring() + L";" + base_dll_path.wstring() + L";" + lib_path.wstring() + L";" +
+					   site_path.wstring() + L";" + app_path.wstring() + L";" + home_path.wstring() + L";" +
+					   exe_path.wstring();
 	Py_SetPath(python_path.c_str());
 #ifndef NDEBUG
 	// std::wcout << pythonPath << "\n";

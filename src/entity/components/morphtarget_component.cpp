@@ -58,8 +58,8 @@ void MorphTargetComponent::on_changed(size_t a_idx, float a_weight)
 void MorphTargetComponent::update_morph_datas(MorphDatas& datas, size_t count)
 {
 	size_t size = std::min(datas.size(), count);
-	std::deque<std::pair<int, float>> temp;
-	for (int i = 0; i < size; i++)
+	std::deque<std::pair<size_t, float>> temp;
+	for (size_t i = 0; i < size; i++)
 	{
 		auto& data = datas[i];
 		float weight = data.first;
@@ -83,7 +83,7 @@ void MorphTargetComponent::update_morph_datas(MorphDatas& datas, size_t count)
 	{
 		on_changed(data.first, data.second);
 	}
-	for (int i = size; i < datas.size(); i++)
+	for (size_t i = size; i < datas.size(); i++)
 	{
 		auto& [weight, index] = datas[i];
 		weights_[index] = weight;
